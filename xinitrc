@@ -34,7 +34,7 @@ fi
 
 export PATH="$PATH:$HOME/p/i3:$HOME/p/i3/build"
 
-setxkbmap it
+setxkbmap it -option 'caps:ctrl_modifier'
 xset r rate 200 40
 xinput set-prop 'UNIW0001:00 093A:0255 Touchpad' 'libinput Tapping Enabled' 1
 xinput set-prop 'UNIW0001:00 093A:0255 Touchpad' 'libinput Natural Scrolling Enabled' 1
