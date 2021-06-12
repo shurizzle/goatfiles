@@ -1,0 +1,11 @@
+exec_always --no-startup-id ~/.config/i3/startpolybar
+exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec --no-startup-id xfce4-power-manager
+exec --no-startup-id blueman-applet
+
+exec_always --no-startup-id ~/.config/i3/startxob
+
+exec --no-startup-id xss-lock -- ~/.config/i3/lockscreen
+
+exec --no-startup-id alacritty
+exec --no-startup-id firefox

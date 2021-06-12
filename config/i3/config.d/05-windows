@@ -1,0 +1,3 @@
+for_window [class="Blueman-manager"] floating enable
+for_window [class="Xfce4-power-manager-settings"] floating enable
+for_window [class="Pavucontrol"] floating enable

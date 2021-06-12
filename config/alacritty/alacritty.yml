@@ -1,0 +1,58 @@
+window:
+  startup_mode: Windowed
+  decorations: none
+
+font:
+  normal:
+    family: Hack
+    style: Regular
+  bold:
+    family: Hack
+    style: Bold
+  italic:
+    family: Hack
+    style: Italic
+  bold_italic:
+    family: Hack
+    style: Bold Italic
+  size: 8
+  use_thin_strokes: true
+
+colors:
+# Default colors
+  primary:
+    background: '0x282828'
+    foreground: '0xeeeeee'
+
+  cursor:
+    text: '0x000000'
+    cursor: '0xffffff'
+
+  # Normal colors
+  normal:
+    black:   '0x282828'
+    red:     '0xc8213d'
+    green:   '0x169C51'
+    yellow:  '0xDAAF19'
+    blue:    '0x2F6CFF'
+    magenta: '0xC14ABE'
+    cyan:    '0x48C6DB'
+    white:   '0xCBCBCB'
+
+  # Bright colors
+  bright:
+    black:   '0x505050'
+    red:     '0xC7213D'
+    green:   '0x1ef15f'
+    yellow:  '0xFFE300'
+    blue:    '0x00aeff'
+    magenta: '0xFF40BE'
+    cyan:    '0x48FFFF'
+    white:   '0xffffff'
+
+cursor:
+  style:
+    shape: Beam
+    blinking: Off
+    hide_when_typing: false
+

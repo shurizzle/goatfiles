@@ -1,0 +1,26 @@
+#!/bin/sh
+
+CHAN="xfce4-power-manager"
+PROP="/xfce4-power-manager/presentation-mode"
+
+is_caffeinate() {
+  [ "$(xfconf-query -c "$CHAN" -p "$PROP")" = true ]
+}
+
+print_state() {
+  if is_caffeinate; then
+    echo ' '
+  else
+    echo ' '
+  fi
+}
+
+while true; do
+  print_state
+  xfconf-query -c "$CHAN" -p "$PROP" -m | \
+    while read LINE; do
+      if [ "$LINE" = "set: $PROP" ]; then
+        print_state
+      fi
+    done
+done

@@ -1,0 +1,17 @@
+set $mod Mod4
+set $alt Mod1
+
+set $ws1 1:
+set $ws2 2:
+
+workspace $ws1 output eDP1
+workspace $ws2 output eDP1
+
+set $left h
+set $down j
+set $up k
+set $right l
+
+set $term alacritty
+
+set $menu i3-dmenu-desktop --dmenu='rofi -i -dmenu'

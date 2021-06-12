@@ -1,0 +1,39 @@
+#!/bin/sh
+
+STEP=5
+
+usage() {
+  echo "Usage: $0 [lower|raise]"
+}
+
+get_value() {
+  printf '%.0f\n' "$(light -G)"
+}
+
+if [ $# != 1 ]; then
+  usage
+  exit 1
+fi
+
+case "$1" in
+  raise)
+    light -A "$STEP"
+    ;;
+  lower)
+    light -U "$STEP"
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac
+
+get_value
+
+if [ -n "$WAYLAND_DISPLAY" ]; then
+  [ -e "$HOME/.local/run/wob/$WAYLAND_DISPLAY/pipe" ] && \
+    get_value > "$HOME/.local/run/wob/$WAYLAND_DISPLAY/pipe"
+elif [ -n "$DISPLAY" ]; then
+  [ -e "$HOME/.local/run/xob/$DISPLAY/pipe" ] && \
+    get_value > "$HOME/.local/run/xob/$DISPLAY/pipe"
+fi

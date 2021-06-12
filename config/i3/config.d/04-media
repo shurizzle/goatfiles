@@ -1,0 +1,6 @@
+bindsym XF86AudioRaiseVolume exec --no-startup-id ~/.config/i3/volumectl raise
+bindsym XF86AudioLowerVolume exec --no-startup-id ~/.config/i3/volumectl lower
+bindsym XF86AudioMute exec --no-startup-id ~/.config/i3/volumectl toggle
+
+bindsym XF86MonBrightnessUp exec --no-startup-id ~/.config/i3/lightctl raise
+bindsym XF86MonBrightnessDown exec --no-startup-id ~/.config/i3/lightctl lower

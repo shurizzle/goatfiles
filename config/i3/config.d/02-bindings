@@ -1,0 +1,90 @@
+bindsym $mod+Return exec $term
+
+bindsym $mod+q kill
+
+bindsym $alt+space exec $menu
+
+bindsym ctrl+. exec "sleep 1 && xset s activate"
+
+bindsym $mod+shift+r exec "~/.config/i3/config.sh && i3-msg reload"
+
+# Exit sway (logs you out of your Wayland session)
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+
+bindsym $mod+Shift+d mode "disabled"
+mode "disabled" {
+  bindsym $mod+Shift+d mode "default"
+}
+
+bindsym $mod+Ctrl+$left workspace prev
+bindsym $mod+Ctrl+$right workspace next
+
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+
+# You can "split" the current object of your focus with
+# $mod+b or $mod+v, for horizontal and vertical splits
+# respectively.
+bindsym $mod+b splith
+bindsym $mod+v splitv
+
+# Switch the current container between different layout styles
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# Make the current focus fullscreen
+bindsym $mod+f fullscreen
+
+# Toggle the current focus between tiling and floating mode
+bindsym $mod+Shift+space floating toggle
+
+# Swap focus between the tiling area and the floating area
+bindsym $mod+space focus mode_toggle
+
+# Move focus to the parent container
+bindsym $mod+a focus parent
+
+# Move focus to the parent container
+bindsym $mod+d focus child
+
+mode "resize" {
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
+set $exit "exit: [l]ogout [r]eboot [s]hutdown"
+
+mode $exit {
+  bindsym l exec i3-msg exit
+  bindsym r exec systemctl reboot
+  bindsym s exec systemctl poweroff
+
+  bindsym Escape mode "default"
+  bindsym Return mode "defaul"
+}
+bindsym $mod+x mode $exit
+
+floating_modifier $mod
+focus_follows_mouse yes
+mouse_follows_focus yes
+mouse_warping output
