@@ -16,7 +16,7 @@ return {
     'Hack Nerd Font Mono',
     'Noto Color Emoji',
   }),
-  font_size = 9,
+  font_size = wezterm.target_triple == "x86_64-unknown-linux-gnu" and 9 or 11,
 
   colors = {
     background = '#282828',
