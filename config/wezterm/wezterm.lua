@@ -11,8 +11,11 @@ return {
   use_ime = true,
   enable_tab_bar = false,
   audible_bell = 'Disabled',
-  enable_wayland = true,
-  font = wezterm.font('Hack Nerd Font Mono'),
+  enable_wayland = false,
+  font = wezterm.font_with_fallback({
+    'Hack Nerd Font Mono',
+    'Noto Color Emoji',
+  }),
   font_size = 9,
 
   colors = {
