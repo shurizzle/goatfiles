@@ -4,18 +4,31 @@ window:
 
 font:
   normal:
-    family: Hack
+    family: monospace
     style: Regular
+
   bold:
-    family: Hack
+    family: monospace
     style: Bold
+
   italic:
-    family: Hack
+    family: monospace
     style: Italic
+
   bold_italic:
-    family: Hack
+    family: monospace
     style: Bold Italic
-  size: 8
+
+  size: 9
+
+  offset:
+    x: 0
+    y: 0
+
+  glyph_offset:
+    x: 0
+    y: 0
+
   use_thin_strokes: true
 
 colors:
@@ -34,7 +47,7 @@ colors:
     red:     '0xc8213d'
     green:   '0x169C51'
     yellow:  '0xDAAF19'
-    blue:    '0x2F6CFF'
+    blue:    '0x2F90FE'
     magenta: '0xC14ABE'
     cyan:    '0x48C6DB'
     white:   '0xCBCBCB'
