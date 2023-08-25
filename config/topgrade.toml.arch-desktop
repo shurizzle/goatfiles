@@ -43,6 +43,7 @@ run_in_tmux = true
 # Additional git repositories to pull
 repos = [
   "~/.config/kitty",
+  "~/.config/goatfiles",
   #    "~/src/*/",
   #    "~/.config/something"
   #    "~/.config/nvim",
