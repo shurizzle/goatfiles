@@ -5,6 +5,10 @@ FENNEL ?= fennel
 all: $(OUT)
 
 $(OUT): $(SRC)
-	$(FENNEL) --require-as-include --skip-include wezterm -c $< > $@
+	tmpfile="$$(mktemp)" && \
+		echo "$$tmpfile" && \
+		trap 'rm -rf "$$tmpfile"' EXIT && \
+	  $(FENNEL) --require-as-include --skip-include wezterm -c $< > "$$tmpfile" && \
+		mv "$$tmpfile" $@
 
 .PHONY: all
