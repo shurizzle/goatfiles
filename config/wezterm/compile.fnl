@@ -11,19 +11,12 @@
 (fn path-join [...] (table.concat [...] *dir-sep*))
 
 (fn slurp [path]
-  (let [f (assert (io.open path :rb))
-        content (f:read :*all)]
-    (f:close)
-    content))
+  (with-open [f (assert (io.open path :rb))]
+    (f:read :*all)))
 
 (fn spit [content path]
-  (let [(f err) (io.open path :wb)]
-    (if f
-        (do
-          (f:write content)
-          (f:close))
-        (error err)))
-  nil)
+  (with-open [f (assert (io.open path :wb))]
+    (f:write content)))
 
 (local *in*  (path-join *cur-dir* :wezterm.fnl))
 (local *out* (path-join *cur-dir* :wezterm.lua))
