@@ -1,0 +1,23 @@
+#!/bin/sh
+
+SCRIPTPATH="$(
+  cd -- "$(dirname "$0")" >/dev/null 2>&1 || true
+  pwd -P
+)"
+
+set -eu
+
+cd "$SCRIPTPATH"
+
+if fennel -e '(require :luv)' 2>/dev/null >/dev/null; then
+  fennel install.fnl "$@"
+elif lua -e "require'luv'" 2>/dev/null >/dev/null; then
+  lua fennel install.fnl "$@"
+elif luajit -e "require'luv'" 2>/dev/null >/dev/null; then
+  luajit fennel install.fnl "$@"
+elif which nvim 2>/dev/null >/dev/null; then
+  nvim -u NONE --headless -l fennel install.fnl "$@"
+else
+  echo "Cannot find a valid lua version with luv support" >&2
+  exit 1
+fi
