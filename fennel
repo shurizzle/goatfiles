@@ -5,11 +5,17 @@ do
 		local dir_sep = package.config:sub(1, 1)
 		local lib = debug.getinfo(1).source
 		if dir_sep ~= "/" then lib = string.gsub(lib, "%" .. dir_sep, "/") end
-		lib = string.gsub(lib, "^@(.+/)[^/]+$", "%1") .. "fennel.lua"
+		local ok
+		lib, ok = string.gsub(lib, "^@(.*/)[^/]+$", "%1")
+		if ok == 0 then lib = "./" end
+		lib = lib .. "fennel.lua"
 		if dir_sep ~= "/" then lib = string.gsub(lib, "/", dir_sep) end
-		package.preload["fennel"] = function(...)
+		package.preload.fennel = function(...)
 			local f = assert(loadfile(lib))
-			return f(...)
+			package.preload.fennel = f
+			f = f(...)
+			package.preload.fennel = function(...) return f end
+			return f
 		end
 	end
 end
