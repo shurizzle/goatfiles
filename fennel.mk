@@ -7,6 +7,8 @@ ifneq (, $(shell which luajit))
 FENNEL := luajit $(dir $(abspath $(lastword $(MAKEFILE_LIST))))fennel
 else ifneq (, $(shell which lua))
 FENNEL := lua $(dir $(abspath $(lastword $(MAKEFILE_LIST))))fennel
+else ifneq (, $(shell which nvim))
+FENNEL := nvim -u NONE --headless -l $(dir $(abspath $(lastword $(MAKEFILE_LIST))))fennel
 else
 $(error "No fennel or lua/luajit in PATH")
 endif
