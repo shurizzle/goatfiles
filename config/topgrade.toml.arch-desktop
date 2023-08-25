@@ -1,8 +1,9 @@
+[misc]
 # Don't ask for confirmations
 #assume_yes = true
 
 # Disable specific steps - same options as the command line flag
-disable = ["vim"]
+disable = []
 
 # Ignore failures for these steps
 #ignore_failures = ["powershell"]
@@ -14,7 +15,7 @@ disable = ["vim"]
 #no_retry = true
 
 # Run inside tmux
-#run_in_tmux = true
+run_in_tmux = true
 
 # List of remote machines with Topgrade installed on them
 #remote_topgrades = ["toothless", "pi", "parnas"]
@@ -41,9 +42,10 @@ disable = ["vim"]
 #max_concurrency = 5
 # Additional git repositories to pull
 repos = [
+  "~/.config/kitty",
   #    "~/src/*/",
   #    "~/.config/something"
-  "~/.config/nvim",
+  #    "~/.config/nvim",
 ]
 
 # Don't pull the predefined git repos
@@ -62,7 +64,10 @@ repos = [
 # Custom commands
 [commands]
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
-"Neovim" = "nvim --headless +'autocmd User PackerComplete quitall' +PackerSync"
+# "Pacman clean" = "yay -Ycc && yes | yay -Scc"
+"Pacman clean" = "paru -c && sudo sh -c 'yes y | paru -Scc'"
+"Cargo clean" = "cargo clean-all -i -s 10MB ~/.cargo && cargo cache -a"
+"ghcup clean" = "ghcup gc"
 
 [brew]
 #greedy_cask = true
