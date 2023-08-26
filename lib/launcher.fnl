@@ -26,7 +26,9 @@
       (dir _) (*file*:match pat)]
   (tset _G (fennel.mangle :*project*) dir)
   (set fennel.path (.. fennel.path ";" dir sep :?.fnl))
-  (set fennel.path (.. fennel.path ";" dir sep :? sep :init.fnl)))
+  (set fennel.path (.. fennel.path ";" dir sep :? sep :init.fnl))
+  (set fennel.macro-path (.. fennel.macro-path ";" dir sep :?.fnl))
+  (set fennel.macro-path (.. fennel.macro-path ";" dir sep :? sep :init.fnl)))
 
 (match (. arg 1)
   :install (require :install)
