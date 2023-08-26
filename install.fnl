@@ -62,3 +62,28 @@
                   (realpath)
                   (assert "invalid directory")))
 (local *project* (assert (dirname *file*) "invalid directory"))
+
+(fn file-exists [file]
+  (not (not (uv.fs_stat file))))
+
+(fn create-symlink [src dest]
+  (match (uv.fs_readlink dest)
+    (where path (= :string (type path)))
+      (if (= path src)
+          nil
+          (error (.. dest " is unmanaged, remove manually to continue")))
+    (_ _ :ENOENT) (assert (uv.fs_symlink src dest {}))
+    (_ _ :EINVAL)
+      (error (.. dest " is unmanaged, remove manually to continue"))
+    (_ err _) (error err)))
+
+(fn remove-symlink [src dest]
+  (match (uv.fs_readlink dest)
+    (where path (= :string (type path)))
+      (if (= path src)
+          (assert (uv.fs_unlink dest))
+          (error (.. dest " is unmanaged, remove manually")))
+    (_ err :ENOENT) nil
+    (_ err :EINVAL)
+      (error (.. dest " is unmanaged, remove manually"))
+    (_ err _) (error err)))
