@@ -22,25 +22,24 @@
 (local pieces [])
 
 (fn add-piece [name]
-  (let [piece (require (.. :pieces. name))]
-    (if
-      (= :function (type piece.cond)) (set piece.cond (piece.cond))
-      (= :boolean (type piece.cond)) nil
-      (= nil piece.cond) (set piece.cond true)
-      (error (.. "inval condition " (view piece.cond) " for piece " name)))
-    (tset pieces name piece)))
+  (when (and (not= name :alacritty)
+             (not= name :init)
+             (not= name :util))
+    (let [piece (require (.. :pieces. name))]
+      (if
+        (= :function (type piece.cond)) (set piece.cond (piece.cond))
+        (= :boolean (type piece.cond)) nil
+        (= nil piece.cond) (set piece.cond true)
+        (error (.. "inval condition " (view piece.cond) " for piece " name)))
+      (tset pieces name piece))))
 
-(let [base (path-join *project* :pieces)]
+(let [base (path-join *project* :lib :pieces)]
   (each [entry _ (open-dir base)]
-    (when (not= :init.fnl entry)
-      (if (= (entry:sub -4) :.fnl)
-          (when (is-file (path-join base entry))
-            (add-piece (entry:sub 1 -5)))
-          (let [init (path-join base entry :init.fnl)]
-            (when (is-file init)
-              (add-piece entry)))))))
-
-; disable alacritty
-(set pieces.alacritty nil)
+    (if (= (entry:sub -4) :.fnl)
+        (when (is-file (path-join base entry))
+          (add-piece (entry:sub 1 -5)))
+        (let [init (path-join base entry :init.fnl)]
+          (when (is-file init)
+            (add-piece entry))))))
 
 pieces
