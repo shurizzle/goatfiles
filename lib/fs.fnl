@@ -52,9 +52,13 @@
 
   (-normalize-dirname (raw-join ...)))
 
+(local path-sep (let [{: is} (require :platform)]
+                  (if is.windows ";" ":")))
+
 {:dir-sep *dir-sep*
  : realpath
  : dirname
  : filename
  : path-split
- : path-join}
+ : path-join
+ : path-sep}
