@@ -5,9 +5,10 @@
     (list? cond)
       (do
         (assert-compile (> (length cond) 1) "invalid condition" cond)
-        (assert-compile (and (sym? (. cond 1))
-                             (or (= :and (tostring (. cond 1)))
-                                 (= :or  (tostring (. cond 1)))))
+        (assert-compile (sym? (. cond 1)) "invalid condition" cond)
+        (assert-compile (or (= :and (tostring (. cond 1)))
+                            (= :or  (tostring (. cond 1)))
+                            (= :not (tostring (. cond 1))))
                         "invalid condition" cond)
         (for [i 2 (length cond)]
           (tset cond i (condition platform (. cond i))))
