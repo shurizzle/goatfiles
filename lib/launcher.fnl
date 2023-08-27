@@ -30,18 +30,24 @@
   (set fennel.macro-path (.. fennel.macro-path ";" dir sep :? sep :init.fnl))
 
   ; XXX: do NOT use async versions in "fs" module
-  (local realpath uv.fs_realpath)
   (local {: path-join} (require :fs))
+  (local realpath uv.fs_realpath)
   (tset _G (fennel.mangle :*project*) (realpath (path-join dir :..))))
 
-(if (uv.loop_alive)
-    (uv.stop))
+(when (uv.loop_alive)
+  (uv.stop)
+  (uv.loop_close))
 
 (local routines [])
 
-(match (table.remove arg 1)
-  :install (table.insert routines (coroutine.create (require :install)))
-  _ (error (.. "invalid action " (. arg 1))))
+(let [{: path-join} (require :fs)
+      action (table.remove arg 1)
+      action-path (path-join *project* :lib :actions (.. action :.fnl))
+      fd (io.open action-path :rb)]
+  (if fd
+      (io.close fd)
+      (error (.. "invalid action " action)))
+  (table.insert routines (coroutine.create (fn [] (fennel.dofile action-path)))))
 
 (fn run-routines []
   (var i 1)
@@ -57,11 +63,11 @@
   (if (> (length routines) 0)
       (let [continue? (uv.run (or ?mode :once))]
         (run-routines)
-        (and continue? (> (length routines) 0)))
+        (> (length routines) 0))
       false))
 
 (fn loop []
   (while (step)))
 
-(when (step :nowait)
-  (loop))
+(run-routines)
+(loop)

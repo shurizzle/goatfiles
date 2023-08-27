@@ -9,7 +9,7 @@ set -eu
 
 LIB="$SCRIPTPATH/lib/launcher.fnl"
 FENNEL="$SCRIPTPATH/fennel"
-GLOBALS='*file*,*project*,pattern-quote'
+GLOBALS='*file*,*project*,pattern-quote,unpack'
 ACTION="install"
 
 if fennel -e '(require :luv)' 2>/dev/null >/dev/null; then
