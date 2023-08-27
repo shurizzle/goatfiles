@@ -1,14 +1,15 @@
 (local uv (require :luv))
+(local {: realpath : symlink : lstat : unlink} (require :fs))
 
 (fn create-symlink [src dest ?opts]
   (fn link []
     (io.stdout:write (.. "ln -s " src " " dest "\n"))
-    (assert (uv.fs_symlink src dest ?opts)))
+    (assert (symlink src dest ?opts)))
 
-  (match (uv.fs_lstat dest)
+  (match (lstat dest)
     (where md (= :table (type md)))
       (if (= md.type :link)
-          (match (uv.fs_realpath dest)
+          (match (realpath dest)
             (where path (= :string (type path)))
               (if (= path src)
                   nil
@@ -22,12 +23,12 @@
 (fn remove-symlink [src dest]
   (fn unlink []
     (io.stdout:write (.. "rm -f " src))
-    (assert (uv.fs_unlink dest)))
+    (assert (unlink dest)))
 
-  (match (uv.fs_lstat dest)
+  (match (lstat dest)
     (where md (= :table (type md)))
       (if (= md.type :link)
-          (match (uv.fs_realpath dest)
+          (match (realpath dest)
             (where path (= :string (type path)))
               (if (= path src)
                   (unlink)
@@ -37,6 +38,12 @@
           (.. dest " is unmanaged, remove it manually"))
     (_ _ :ENOENT) nil
     (_ err _) (error err)))
+
+(fn need-cmds [& cmds]
+  (each [_ cmd (ipairs cmds)]
+    :todo
+    )
+  nil)
 
 {: create-symlink
  : remove-symlink}

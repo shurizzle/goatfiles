@@ -9,7 +9,7 @@
 
 (fn dst []
   (match-platform
-    (or linux bsd) (path-join (os.getenv :HOME) :.config :topgrade.toml)))
+    unix (path-join (os.getenv :HOME) :.config :topgrade.toml)))
 
 (fn up []
   (create-symlink (src) (dst)))

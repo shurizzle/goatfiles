@@ -7,7 +7,7 @@
 
 (fn dst []
   (match-platform
-    (or linux bsd) (path-join (os.getenv :HOME) :.config :wezterm)))
+    unix (path-join (os.getenv :HOME) :.config :wezterm)))
 
 (fn up []
   (create-symlink (src) (dst) {:dir true}))

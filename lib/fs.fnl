@@ -1,7 +1,7 @@
-(local uv (require :luv))
+(local {: make-promise : await : resolve : reject} (require :async))
 
 (local *dir-sep* (package.config:sub 1 1))
-(local realpath uv.fs_realpath)
+
 (fn select-ex [n ...]
   (local x (select n ...))
   x)
@@ -55,10 +55,44 @@
 (local path-sep (let [{: is} (require :platform)]
                   (if is.windows ";" ":")))
 
+(local {: uv-wrapper} (require :uv-util))
+
+(fn realpath [path]
+  (let [(f cb) (uv-wrapper :fs_realpath)]
+    (f path cb)))
+(fn symlink [path new-path ?flags]
+  (let [(f cb) (uv-wrapper :fs_symlink)]
+    (f path new-path ?flags cb)))
+(fn stat [path]
+  (let [(f cb) (uv-wrapper :fs_stat)]
+    (f path cb)))
+(fn lstat [path]
+  (let [(f cb) (uv-wrapper :fs_lstat)]
+    (f path cb)))
+(fn unlink [path]
+  (let [(f cb) (uv-wrapper :fs_unlink)]
+    (f path cb)))
+(fn scandir* [path]
+  (let [(f cb) (uv-wrapper :fs_scandir)]
+    (f path cb)))
+
+(fn scandir [path]
+  (let [fs (scandir* path)
+        uv (require :luv)]
+    (fn []
+      (match (uv.fs_scandir_next fs)
+        (nil err _) (if err (error err) nil)
+        (where entry (not= nil entry)) entry))))
+
 {:dir-sep *dir-sep*
- : realpath
  : dirname
  : filename
  : path-split
  : path-join
- : path-sep}
+ : path-sep
+ : realpath
+ : symlink
+ : lstat
+ : stat
+ : unlink
+ : scandir}
