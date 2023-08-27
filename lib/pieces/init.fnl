@@ -4,15 +4,13 @@
 
 (fn open-dir [path]
   (match (uv.fs_scandir path)
-    nil #nil
+    (nil _ :ENOENT) #nil
+    (nil err _) (error err)
     (where fs (not= nil fs))
       (fn []
         (match (uv.fs_scandir_next fs)
-          nil nil
-          (where entry (not= nil entry)) entry
-          (_ err _) (error err)))
-    (_ _ :ENOENT) #nil
-    (_ err _) (error err)))
+          (nil err _) (if err (error err) nil)
+          (where entry (not= nil entry)) entry))))
 
 (fn is-file [path]
   (match (uv.fs_stat path)
