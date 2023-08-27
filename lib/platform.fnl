@@ -32,7 +32,7 @@
           :dfbsd    (= os :dragonflybsd)
           :nbsd     (= os :netbsd)
           :obsd     (= os :openbsd)
-          :termux   (not= nil vim.env.TERMUX_APP_PID)
+          :termux   (not= nil (_G.os.getenv :TERMUX_APP_PID))
           :unknown  (= os :unknown)})
 
 (each [k v (pairs {:windows      :win
