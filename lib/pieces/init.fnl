@@ -40,4 +40,7 @@
             (when (is-file init)
               (add-piece entry)))))))
 
+; disable alacritty
+(set pieces.alacritty nil)
+
 pieces
