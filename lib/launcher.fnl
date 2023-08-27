@@ -30,6 +30,6 @@
   (set fennel.macro-path (.. fennel.macro-path ";" dir sep :?.fnl))
   (set fennel.macro-path (.. fennel.macro-path ";" dir sep :? sep :init.fnl)))
 
-(match (. arg 1)
+(match (table.remove arg 1)
   :install (require :install)
   _ (error (.. "invalid action " (. arg 1))))
