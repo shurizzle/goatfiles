@@ -35,3 +35,6 @@
 (match (table.remove arg 1)
   :install (require :install)
   _ (error (.. "invalid action " (. arg 1))))
+
+(if (not (uv.loop_alive))
+    (uv.run))
