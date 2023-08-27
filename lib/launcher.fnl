@@ -24,11 +24,13 @@
       esep (pattern-quote sep)
       pat (.. "^(.*)" esep "[^" esep "]+$")
       (dir _) (*file*:match pat)]
-  (tset _G (fennel.mangle :*project*) dir)
   (set fennel.path (.. fennel.path ";" dir sep :?.fnl))
   (set fennel.path (.. fennel.path ";" dir sep :? sep :init.fnl))
   (set fennel.macro-path (.. fennel.macro-path ";" dir sep :?.fnl))
-  (set fennel.macro-path (.. fennel.macro-path ";" dir sep :? sep :init.fnl)))
+  (set fennel.macro-path (.. fennel.macro-path ";" dir sep :? sep :init.fnl))
+
+  (local {: path-join : realpath} (require :fs))
+  (tset _G (fennel.mangle :*project*) (realpath (path-join dir :..))))
 
 (match (table.remove arg 1)
   :install (require :install)
