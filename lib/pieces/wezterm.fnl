@@ -10,7 +10,7 @@
     (or linux bsd) (path-join (os.getenv :HOME) :.config :wezterm)))
 
 (fn up []
-  (create-symlink (src) (dst)))
+  (create-symlink (src) (dst) {:dir true}))
 
 (fn down []
   (remove-symlink (src) (dst)))
