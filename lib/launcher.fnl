@@ -49,21 +49,28 @@
       (error (.. "invalid action " action)))
   (table.insert routines (coroutine.create (fn [] (fennel.dofile action-path)))))
 
+(fn safe-assert [ok err]
+  (when (not ok)
+    (io.stderr:write err)
+    (io.stderr:write "\n")))
+
 (fn run-routines []
-  (var i 1)
-  (while (<= i (length routines))
+  (for [i (length routines) 1 -1]
     (let [co (. routines i)]
-      (assert (coroutine.resume co))
+      ((if (= i 1) assert safe-assert) (coroutine.resume co))
       (match (coroutine.status co)
-        :dead (table.remove routines i)
-        :suspended (set i (+ i 1))
+        :dead (if (= i 1)
+                  (tset routines i :dead)
+                  (table.remove routines i))
+        :suspended nil
         status (error (.. "unknown coroutine status " status))))))
 
 (fn step [?mode]
   (if (> (length routines) 0)
-      (let [continue? (uv.run (or ?mode :once))]
+      (do
+        (uv.run (or ?mode :once))
         (run-routines)
-        (> (length routines) 0))
+        (and (> (length routines) 0) (not= :dead (. routines 1))))
       false))
 
 (fn loop []
