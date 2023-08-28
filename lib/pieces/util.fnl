@@ -2,7 +2,7 @@
 
 (fn create-symlink [src dest ?opts]
   (fn link* []
-    (io.stdout:write (.. "ln -s " src " " dest "\n"))
+    (io.stdout:write (.. "ln -s " src " -> " dest "\n"))
     (assert (symlink src dest ?opts)))
 
   (match (lstat dest)
@@ -21,7 +21,7 @@
 
 (fn remove-symlink [src dest]
   (fn unlink* []
-    (io.stdout:write (.. "rm -f " dest "\n"))
+    (io.stdout:write (.. "rm " dest "\n"))
     (assert (unlink dest)))
 
   (match (lstat dest)
