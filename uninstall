@@ -7,6 +7,6 @@ SCRIPTPATH="$(
 
 set -eu
 
-ACTION="install"
+ACTION="uninstall"
 
 . "${SCRIPTPATH}/lib/launcher.sh"

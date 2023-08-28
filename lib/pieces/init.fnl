@@ -1,9 +1,8 @@
-(local uv (require :luv))
 (local {: path-join : stat : scandir} (require :fs))
 (local {: view} (require :fennel))
 
 (fn is-file [path]
-  (match (uv.fs_stat path)
+  (match (stat path)
     (where md (not= nil md)) (= md.type :file)
     _ false))
 
