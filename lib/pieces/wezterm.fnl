@@ -10,7 +10,7 @@
     unix (path-join (os.getenv :HOME) :.config :wezterm)))
 
 (fn up []
-  (create-symlink (src) (dst) {:dir true}))
+  (create-symlink (src) (dst) nil {:dir true}))
 
 (fn down []
   (remove-symlink (src) (dst)))
