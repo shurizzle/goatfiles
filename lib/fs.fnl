@@ -1,5 +1,3 @@
-(local {: make-promise : await : resolve : reject} (require :async))
-
 (local *dir-sep* (package.config:sub 1 1))
 
 (fn select-ex [n ...]
@@ -36,7 +34,7 @@
 (fn filename [path] (select-ex 2 (-path-split path)))
 
 (fn path-split [path]
-  (let [(dir file) (-path-split)]
+  (let [(dir file) (-path-split path)]
     (values (-?> dir -normalize-dirname)
             file)))
 
@@ -75,6 +73,9 @@
 (fn scandir* [path]
   (let [(f cb) (uv-wrapper :fs_scandir)]
     (f path cb)))
+(fn access [path mode]
+  (let [(f cb) (uv-wrapper :fs_access)]
+    (f path mode cb)))
 
 (fn scandir [path]
   (let [fs (scandir* path)
@@ -95,4 +96,5 @@
  : lstat
  : stat
  : unlink
- : scandir}
+ : scandir
+ : access}
