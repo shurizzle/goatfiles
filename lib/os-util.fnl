@@ -11,6 +11,77 @@
            (fn [] (filter #(> (length $1) 0) (split (os.getenv :PATHEXT) ";+")))
            (fn [] #nil)))
 
+(fn cmd? [name]
+  (not= nil (. (require :which) :which)))
+
+(local uv (require :luv))
+
+(fn exec [cmd ?opts]
+  (local {: make-promise : resolve : await} (require :async))
+  (local opts (or ?opts []))
+  (var out nil)
+  (var err nil)
+  (set opts.stdio nil)
+  (var code nil)
+
+  (var stdout nil)
+  (var stderr nil)
+  (var stdout-cb nil)
+  (var stderr-cb nil)
+
+  (match opts.stdout
+    :ignore (do
+              (set stdout (uv.new_pipe))
+              (set stdout-cb (fn [err data] (assert (not err) err))))
+    :capture (do
+               (set stdout (uv.new_pipe))
+               (set out "")
+               (set stdout-cb (fn [err data]
+                                (assert (not err) err)
+                                (when data
+                                  (set out (.. out data)))))))
+  (set opts.stdout nil)
+
+  (match opts.stderr
+    :ignore (do
+              (set stderr (uv.new_pipe))
+              (set stderr-cb (fn [err data] (assert (not err) err))))
+    :capture (do
+               (set stderr (uv.new_pipe))
+               (set err "")
+               (set stderr-cb (fn [e data]
+                                (assert (not e) e)
+                                (when data
+                                  (set err (.. err data)))))))
+  (set opts.stderr nil)
+
+  (set opts.stdio nil)
+  (when stdout
+    (set opts.stdio [nil stdout]))
+  (when stderr
+    (when (not stdout)
+      (set opts.stdio []))
+    (tset opts.stdio 3 stderr))
+
+  (var p (make-promise))
+  (fn on-exit [c _]
+    (set code c)
+    (resolve p))
+
+  (local (handle pid) (uv.spawn cmd opts on-exit))
+  (when stdout
+    (uv.read_start stdout stdout-cb))
+  (when stderr
+    (uv.read_start stderr stderr-cb))
+  (await p)
+  (when stdout
+    (uv.close stdout))
+  (when stderr
+    (uv.close stderr))
+  (values code out err))
+
 {: path-sep
  : path
- : path-ext}
+ : path-ext
+ : cmd?
+ : exec}

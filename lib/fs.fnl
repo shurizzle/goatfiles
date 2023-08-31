@@ -1,3 +1,5 @@
+(local {: is} (require :platform))
+
 (local *dir-sep* (package.config:sub 1 1))
 
 (fn select-ex [n ...]
@@ -50,6 +52,11 @@
 
   (-normalize-dirname (raw-join ...)))
 
+(local path-abs?
+       (if is.windows
+           (fn [] (assert false :todo))
+           (fn [path] (= :/ (path:sub 1 1)))))
+
 (local path-sep (let [{: is} (require :platform)]
                   (if is.windows ";" ":")))
 
@@ -97,4 +104,5 @@
  : stat
  : unlink
  : scandir
- : access}
+ : access
+ : path-abs?}
