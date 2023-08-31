@@ -44,7 +44,7 @@
 repos = [
   "~/.config/kitty",
   "~/Library/Application Support/Firefox/Profiles/vlrj4xuo.default-release/chrome/WhiteSurFirefoxThemeMacOS",
-  "~/.config/goatfiles",
+  "~/.local/share/goatfiles",
   #    "~/src/*/",
   #    "~/.config/something"
   #    "~/.config/nvim",
