@@ -68,16 +68,16 @@
     (set code c)
     (resolve p))
 
-  (local (handle pid) (uv.spawn cmd opts on-exit))
+  (local (_handle _pid) (uv.spawn cmd opts on-exit))
   (when stdout
     (uv.read_start stdout stdout-cb))
   (when stderr
     (uv.read_start stderr stderr-cb))
   (await p)
   (when stdout
-    (uv.close stdout))
+    (uv.shutdown stdout))
   (when stderr
-    (uv.close stderr))
+    (uv.shutdown stderr))
   (values code out err))
 
 {: path-sep
