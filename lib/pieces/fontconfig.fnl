@@ -15,7 +15,7 @@
 
 (fn down []
   (need-cmds :fc-cache)
-  (remove-symlink (src) (dst))
+  (remove-symlink src dst)
   (exec :fc-cache {:args [:-fv]}))
 
 {:cond true
