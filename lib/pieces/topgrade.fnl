@@ -1,5 +1,6 @@
 (local {: path-join} (require :fs))
 (local {: create-symlink : remove-symlink} (require :pieces.util))
+(local {: is} (require :platform))
 (import-macros {: match-platform} :platform-macros)
 
 (local paths (let [j #(path-join *project* :config (.. :topgrade.toml. $1))]
@@ -21,6 +22,6 @@
 (fn down []
   (remove-symlink (src) (dst) paths))
 
-{:cond true
+{:cond is.unix
  : up
  : down}
