@@ -49,6 +49,10 @@ else
   config = {}
 end
 config.term = "xterm-kitty"
+if (os == "windows") then
+  config.default_prog = {"powershell"}
+else
+end
 local function ssh_domains()
   local ds = wezterm.default_ssh_domains()
   for _, dom in ipairs(ds) do
@@ -56,13 +60,13 @@ local function ssh_domains()
   end
   for _, name in ipairs({"vercingetorige", "DomPerignon", "filottete"}) do
     if (name ~= hostname) then
-      local _7_
+      local _8_
       if (name == "filottete") then
-        _7_ = "None"
+        _8_ = "None"
       else
-        _7_ = "WezTerm"
+        _8_ = "WezTerm"
       end
-      table.insert(ds, {name = name, remote_address = (name .. ".local"), multiplexing = _7_, assume_shell = "Posix"})
+      table.insert(ds, {name = name, remote_address = (name .. ".local"), multiplexing = _8_, assume_shell = "Posix"})
     else
     end
   end
