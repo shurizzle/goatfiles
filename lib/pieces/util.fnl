@@ -1,4 +1,5 @@
-(local {: realpath : symlink : lstat : unlink : path-join : path-abs?} (require :fs))
+(local {: realpath : symlink : lstat : unlink : path-join : path-relative}
+       (require :fs))
 (local {: cmd? : exec} (require :os-util))
 
 (fn contains? [haystack needle]
@@ -74,7 +75,7 @@
                                   :hide true})]
     (if (= 0 code)
         (let [p (trim stdout)
-              d (path-join (if (path-abs? p) p (path-join path p)) :..)
+              d (path-join (path-relative path p) :..)
               dir (assert (realpath d))]
           (or (= path dir) (= (assert (realpath path)) dir)))
         false)))

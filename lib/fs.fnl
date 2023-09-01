@@ -54,8 +54,24 @@
 
 (local path-abs?
        (if is.windows
-           (fn [] (assert false :todo))
+           (fn [path]
+             (fn alpha? [b]
+               (or (and (>= b 65) (<= b 90))
+                   (and (>= b 97) (<= b 122))))
+
+             (and (= :: (path:sub 2 2))
+                  (-?> (path:sub 1 1) (string.byte) (alpha?))))
            (fn [path] (= :/ (path:sub 1 1)))))
+
+(local
+  path-relative
+  (if is.windows
+      (fn [root dir]
+        (if
+          (path-abs? dir) dir
+          (= (dir:sub 1 1) *dir-sep*) (.. (root:sub 1 2) dir)
+          (path-join root dir)))
+      (fn [root dir] (if (path-abs? dir) dir (path-join root dir)))))
 
 (local path-sep (let [{: is} (require :platform)]
                   (if is.windows ";" ":")))
@@ -105,4 +121,5 @@
  : unlink
  : scandir
  : access
- : path-abs?}
+ : path-abs?
+ : path-relative}
