@@ -25,7 +25,7 @@
         (table.insert exprs body)))
     (if (not= 0 (% (length forms) 2))
         (table.insert exprs (. forms (length forms)))
-        (table.insert exprs `(error "platforms unsupported")))
+        (table.insert exprs `(error "platform unsupported")))
     `(let [,platform (require :platform)]
        ,exprs)))
 

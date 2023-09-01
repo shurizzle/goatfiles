@@ -32,4 +32,73 @@
 
       {: which-all
        : which})
-    (error "unsupported platform"))
+    (do
+      (local {: path-join : stat : scandir} (require :fs))
+      (local {: filter-map} (require :iter))
+      (local {:path env-path} (require :os-util))
+
+      (fn exts []
+        (icollect [e ((. (require :os-util) :path-ext))]
+          e))
+
+      (fn file? [path]
+        (match (stat path)
+          (nil _ :ENOENT) false
+          (nil err _) (error err)
+          md (= md.type :file)))
+
+      (var some nil)
+      (lua "some = function(f, haystack)
+           for _, v in pairs(haystack) do
+             local t = f(v)
+             if t then return t end
+           end
+         end")
+
+      (fn strip-suffix [str suff]
+        (when (and (> (length str) (length suff))
+                   (= (str:sub (- (length suff))) suff))
+          (str:sub 1 (- (+ 1 (length suff))))))
+
+      (fn file-matcher [bin* exts]
+        (local bin (string.upper bin*))
+        (let [name (some (partial strip-suffix bin) exts)]
+          (if name
+              (fn [file*]
+                (let [file (string.upper file*)]
+                  (if (and (file? file) (= bin file))
+                      file*
+                      (when (-?> (some (partial strip-suffix file) exts)
+                                 ((fn [file] (and (file? file) (= name file)))))
+                        file*))))
+              (fn [file*]
+                (let [file (string.upper file*)]
+                  (when (-?> (some (partial strip-suffix file) exts)
+                             (= bin))
+                    file*))))))
+
+      (fn search-in [dir matcher]
+        (filter-map
+          (fn [file]
+            (-?>> (matcher file) (path-join dir)))
+          (scandir dir)))
+
+      (fn coiter [f]
+        (local co (coroutine.create f))
+        (fn []
+          (when (not= :dead (coroutine.status co))
+            (assert (coroutine.resume co)))))
+
+      (fn which-all [bin]
+        (let [exts (exts)
+              matcher (file-matcher bin exts)]
+          (coiter (fn []
+                    (each [dir (env-path)]
+                      (each [file (search-in dir)]
+                        (coroutine.yield file)))))))
+
+      (fn which [bin]
+        ((which-all bin)))
+
+      {: which-all
+       : which}))
