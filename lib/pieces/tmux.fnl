@@ -5,8 +5,7 @@
 
 (local src (path-join *project* :config :tmux :tmux.conf))
 
-(local dst (match-platform
-             unix (path-join (os.getenv :HOME) :.tmux.conf)))
+(local dst (path-join (os.getenv :HOME) :.tmux.conf))
 
 (fn up []
   (create-symlink src dst))

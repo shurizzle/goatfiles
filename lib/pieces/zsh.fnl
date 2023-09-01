@@ -5,9 +5,7 @@
 
 (local git-url "git@github.com:shurizzle/zshrc.git")
 
-(local dst
-  (match-platform
-    unix (path-join (os.getenv :HOME) :.config :zsh)))
+(local dst (path-join (os.getenv :HOME) :.config :zsh))
 
 (fn up []
   (clone-git-repo git-url dst)

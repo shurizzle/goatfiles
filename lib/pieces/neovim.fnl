@@ -6,7 +6,8 @@
 
 (local dst
   (match-platform
-    unix (path-join (os.getenv :HOME) :.config :nvim)))
+    unix (path-join (os.getenv :HOME) :.config :nvim)
+    windows (path-join (os.getenv :LOCALAPPDATA) :nvim)))
 
 (fn up []
   (clone-git-repo git-url dst))

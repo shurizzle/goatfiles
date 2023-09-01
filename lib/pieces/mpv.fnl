@@ -9,17 +9,17 @@
 (local os-srcs (let [j #(path-join *project* :config :mpv (.. :mpv.conf. $1))]
                  {:linux (j :linux)
                   :macos (j :macos)}))
-(local os-src (match-platform
+(fn os-src [] (match-platform
                 linux os-srcs.linux
                 macos os-srcs.macos))
 (local os-dst (path-join dst :mpv.conf))
 
 (fn up []
   (create-symlink src dst)
-  (create-symlink os-src os-dst os-srcs))
+  (create-symlink (os-src) os-dst os-srcs))
 
 (fn down []
-  (remove-symlink os-src os-dst os-srcs)
+  (remove-symlink (os-src) os-dst os-srcs)
   (remove-symlink src dst))
 
 {:cond is.unix
