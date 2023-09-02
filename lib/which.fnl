@@ -83,19 +83,26 @@
             (-?>> (matcher file) (path-join dir)))
           (scandir dir)))
 
-      (fn coiter [f]
-        (local co (coroutine.create f))
-        (fn []
-          (when (not= :dead (coroutine.status co))
-            (assert (coroutine.resume co)))))
-
       (fn which-all [bin]
         (let [exts (exts)
-              matcher (file-matcher bin exts)]
-          (coiter (fn []
-                    (each [dir (env-path)]
-                      (each [file (search-in dir)]
-                        (coroutine.yield file)))))))
+              matcher (file-matcher bin exts)
+              paths (env-path)]
+          (var searcher nil)
+          (fn []
+            (var res nil)
+            (fn step []
+              (if searcher
+                  (let [r (searcher)]
+                    (if r
+                        (do (set res r) true)
+                        (do (set searcher nil) false)))
+                  (let [dir (paths)]
+                    (if dir
+                        (do (set searcher (search-in dir matcher)) false)
+                        true))))
+
+            (while (not (step)))
+            res)))
 
       (fn which [bin]
         ((which-all bin)))
