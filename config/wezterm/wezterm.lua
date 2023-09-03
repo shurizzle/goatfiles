@@ -50,7 +50,7 @@ else
 end
 config.term = "xterm-kitty"
 if (os == "windows") then
-  config.default_prog = {"powershell"}
+  config.default_prog = {"pwsh"}
 else
 end
 local function ssh_domains()

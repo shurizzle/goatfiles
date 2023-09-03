@@ -38,7 +38,7 @@
 (set config.term "xterm-kitty")
 
 (when (= os :windows)
-  (set config.default_prog [:powershell]))
+  (set config.default_prog [:pwsh]))
 
 (fn ssh-domains []
   (let [ds (wezterm.default_ssh_domains)]
