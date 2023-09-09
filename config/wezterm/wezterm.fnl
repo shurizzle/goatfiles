@@ -1,7 +1,6 @@
 (local wezterm (require :wezterm))
 (local hostname (wezterm.hostname))
-(local (arc os) (let [hostname (wezterm.hostname)
-                      i1 (string.find wezterm.target_triple :-)
+(local (arch os) (let [i1 (string.find wezterm.target_triple :-)
                       arch (string.sub wezterm.target_triple 1 (- i1 1))
                       i2 (string.find wezterm.target_triple :- (+ i1 1))
                       i3 (string.find wezterm.target_triple :- (+ i2 1))
@@ -88,7 +87,7 @@
                                               "JetBrains Mono"
                                               "Noto Color Emoji"
                                               "Symbols Nerd Font Mono"]))
-(set config.font_size (if (= os :linux) 10 11))
+(set config.font_size (if (or (= os :linux) (= os :windows)) 10 11))
 
 (set config.default_cursor_style :SteadyBar)
 

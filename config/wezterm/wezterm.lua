@@ -1,10 +1,9 @@
 local wezterm = require("wezterm")
 local hostname = wezterm.hostname()
-local arc, os = nil, nil
+local arch, os = nil, nil
 do
-  local hostname0 = wezterm.hostname()
   local i1 = string.find(wezterm.target_triple, "-")
-  local arch = string.sub(wezterm.target_triple, 1, (i1 - 1))
+  local arch0 = string.sub(wezterm.target_triple, 1, (i1 - 1))
   local i2 = string.find(wezterm.target_triple, "-", (i1 + 1))
   local i3 = string.find(wezterm.target_triple, "-", (i2 + 1))
   local os0
@@ -13,7 +12,7 @@ do
   else
     os0 = string.sub(wezterm.target_triple, (i2 + 1))
   end
-  arc, os = arch, os0
+  arch, os = arch0, os0
 end
 wezterm.GLOBAL.bells = {}
 local _2abell_2a = "\240\159\148\148"
@@ -93,7 +92,7 @@ config.enable_wayland = true
 config.allow_square_glyphs_to_overflow_width = "Always"
 config.harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "zero", "onum"}
 config.font = wezterm.font_with_fallback({"CommitMono", "Hack Nerd Font Mono", "JetBrains Mono", "Noto Color Emoji", "Symbols Nerd Font Mono"})
-if (os == "linux") then
+if ((os == "linux") or (os == "windows")) then
   config.font_size = 10
 else
   config.font_size = 11
