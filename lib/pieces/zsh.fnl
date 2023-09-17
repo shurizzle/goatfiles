@@ -8,7 +8,7 @@
 (local dst (path-join (os.getenv :HOME) :.config :zsh))
 
 (fn up []
-  (clone-git-repo git-url dst)
+  (clone-git-repo git-url dst [:--recursive])
   (create-symlink (path-join dst :profile)
                   (path-join (os.getenv :HOME) :.profile))
   (create-symlink (path-join dst :zprofile)
