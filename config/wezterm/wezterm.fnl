@@ -91,7 +91,7 @@
 
 (set config.default_cursor_style :SteadyBar)
 
-; (set config.enable_kitty_keyboard true)
+(set config.enable_kitty_keyboard true)
 (set config.enable_csi_u_key_encoding true)
 
 (set config.colors {:background    :#282828

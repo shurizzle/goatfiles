@@ -98,6 +98,7 @@ else
   config.font_size = 11
 end
 config.default_cursor_style = "SteadyBar"
+config.enable_kitty_keyboard = true
 config.enable_csi_u_key_encoding = true
 config.colors = {background = "#282828", foreground = "#eeeeee", cursor_bg = "#ffffff", cursor_fg = "#000000", cursor_border = "#ffffff", ansi = {"#282828", "#c8213d", "#169C51", "#DAAF19", "#2F90FE", "#C14ABE", "#48C6DB", "#CBCBCB"}, brights = {"#505050", "#C7213D", "#1ef15f", "#FFE300", "#00aeff", "#FF40BE", "#48FFFF", "#ffffff"}}
 local cpmods
