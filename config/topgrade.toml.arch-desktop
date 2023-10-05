@@ -66,9 +66,9 @@ repos = [
 [commands]
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
 # "Pacman clean" = "yay -Ycc && yes | yay -Scc"
-"Pacman clean" = "paru -c && sudo sh -c 'yes y | paru -Scc'"
+"Pacman clean" = "paru -c && sudo /bin/sh -c 'yes y | paru -Scc'"
 "Cargo clean" = "cargo clean-all -i -s 10MB ~/.cargo && cargo cache -a"
-"ghcup clean" = "ghcup gc"
+"ghcup clean" = "if which ghcup >/dev/null 2>/dev/null; then ghcup gc; fi"
 
 [brew]
 #greedy_cask = true
