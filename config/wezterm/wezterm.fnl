@@ -88,6 +88,7 @@
                                               "Noto Color Emoji"
                                               "Symbols Nerd Font Mono"]))
 (set config.font_size (if (or (= os :linux) (= os :windows)) 10 11))
+(set config.warn_about_missing_glyphs false)
 
 (set config.default_cursor_style :SteadyBar)
 

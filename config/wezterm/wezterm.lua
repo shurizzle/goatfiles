@@ -97,6 +97,7 @@ if ((os == "linux") or (os == "windows")) then
 else
   config.font_size = 11
 end
+config.warn_about_missing_glyphs = false
 config.default_cursor_style = "SteadyBar"
 config.enable_kitty_keyboard = true
 config.enable_csi_u_key_encoding = true
