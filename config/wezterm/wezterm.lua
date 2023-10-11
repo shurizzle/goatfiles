@@ -101,7 +101,33 @@ config.warn_about_missing_glyphs = false
 config.default_cursor_style = "SteadyBar"
 config.enable_kitty_keyboard = true
 config.enable_csi_u_key_encoding = true
-config.colors = {background = "#282828", foreground = "#eeeeee", cursor_bg = "#ffffff", cursor_fg = "#000000", cursor_border = "#ffffff", ansi = {"#282828", "#c8213d", "#169C51", "#DAAF19", "#2F90FE", "#C14ABE", "#48C6DB", "#CBCBCB"}, brights = {"#505050", "#C7213D", "#1ef15f", "#FFE300", "#00aeff", "#FF40BE", "#48FFFF", "#ffffff"}}
+config.color_schemes = {["BlueSky Dark"] = {background = "#282828", foreground = "#eeeeee", cursor_bg = "#ffffff", cursor_fg = "#000000", cursor_border = "#ffffff", ansi = {"#282828", "#c8213d", "#169C51", "#DAAF19", "#2F90FE", "#C14ABE", "#48C6DB", "#CBCBCB"}, brights = {"#505050", "#C7213D", "#1ef15f", "#FFE300", "#00aeff", "#FF40BE", "#48FFFF", "#ffffff"}}, ["BlueSky Light"] = {background = "#eeeeee", foreground = "#282828", cursor_bg = "#000000", cursor_fg = "#ffffff", cursor_border = "#282828", ansi = {"#282828", "#c8213d", "#169C51", "#DAAF19", "#2F90FE", "#C14ABE", "#48C6DB", "#CBCBCB"}, brights = {"#505050", "#C7213D", "#1ef15f", "#FFE300", "#00aeff", "#FF40BE", "#48FFFF", "#ffffff"}}}
+local function get_appearance()
+  if wezterm.gui then
+    return wezterm.gui.get_appearance()
+  else
+    return "Dark"
+  end
+end
+local function colorscheme(appearance)
+  if ((appearance or get_appearance())):match("Light") then
+    return "BlueSky Light"
+  else
+    return "BlueSky Dark"
+  end
+end
+config.color_scheme = colorscheme()
+local function _15_(window, pane)
+  local overrides = (window:get_config_overrides() or {})
+  local scheme = colorscheme(window:get_appearance())
+  if (overrides.color_scheme ~= scheme) then
+    overrides.color_scheme = scheme
+    return window:set_config_overrides(overrides)
+  else
+    return nil
+  end
+end
+wezterm.on("window-config-reloaded", _15_)
 local cpmods
 if (os == "darwin") then
   cpmods = "CMD"

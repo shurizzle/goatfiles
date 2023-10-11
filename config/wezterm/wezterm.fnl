@@ -95,30 +95,75 @@
 (set config.enable_kitty_keyboard true)
 (set config.enable_csi_u_key_encoding true)
 
-(set config.colors {:background    :#282828
-                    :foreground    :#eeeeee
+(set config.color_schemes
+     {"BlueSky Dark"  {:background    :#282828
+                       :foreground    :#eeeeee
 
-                    :cursor_bg     :#ffffff
-                    :cursor_fg     :#000000
+                       :cursor_bg     :#ffffff
+                       :cursor_fg     :#000000
 
-                    :cursor_border :#ffffff
+                       :cursor_border :#ffffff
 
-                    :ansi          [:#282828
-                                    :#c8213d
-                                    :#169C51
-                                    :#DAAF19
-                                    :#2F90FE
-                                    :#C14ABE
-                                    :#48C6DB
-                                    :#CBCBCB]
-                    :brights       [:#505050
-                                    :#C7213D
-                                    :#1ef15f
-                                    :#FFE300
-                                    :#00aeff
-                                    :#FF40BE
-                                    :#48FFFF
-                                    :#ffffff]})
+                       :ansi          [:#282828
+                                       :#c8213d
+                                       :#169C51
+                                       :#DAAF19
+                                       :#2F90FE
+                                       :#C14ABE
+                                       :#48C6DB
+                                       :#CBCBCB]
+                       :brights       [:#505050
+                                       :#C7213D
+                                       :#1ef15f
+                                       :#FFE300
+                                       :#00aeff
+                                       :#FF40BE
+                                       :#48FFFF
+                                       :#ffffff]}
+      "BlueSky Light" {:background    :#eeeeee
+                       :foreground    :#282828
+
+                       :cursor_bg     :#000000
+                       :cursor_fg     :#ffffff
+
+                       :cursor_border :#282828
+
+                       :ansi          [:#282828
+                                       :#c8213d
+                                       :#169C51
+                                       :#DAAF19
+                                       :#2F90FE
+                                       :#C14ABE
+                                       :#48C6DB
+                                       :#CBCBCB]
+                       :brights       [:#505050
+                                       :#C7213D
+                                       :#1ef15f
+                                       :#FFE300
+                                       :#00aeff
+                                       :#FF40BE
+                                       :#48FFFF
+                                       :#ffffff]}})
+
+(fn get-appearance []
+  (if wezterm.gui
+      (wezterm.gui.get_appearance)
+      :Dark))
+
+(fn colorscheme [appearance]
+  (if (: (or appearance (get-appearance)) :match :Light)
+      "BlueSky Light"
+      "BlueSky Dark"))
+(set config.color_scheme (colorscheme))
+
+(wezterm.on
+  :window-config-reloaded
+  (fn [window pane]
+    (local overrides (or (window:get_config_overrides) []))
+    (local scheme (colorscheme (window:get_appearance)))
+    (when (not= overrides.color_scheme scheme)
+      (set overrides.color_scheme scheme)
+      (window:set_config_overrides overrides))))
 
 (local cpmods (if (= os :darwin) :CMD :CTRL|SHIFT))
 (set config.disable_default_key_bindings true)
