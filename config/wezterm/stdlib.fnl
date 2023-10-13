@@ -35,8 +35,7 @@
         base `(set ,glob ,(list (sym :fn) (unpack body)))]
     (if (= sname gname)
         base
-        [base `(tset _G ,sname ,glob)]
-        )))
+        [base `(tset _G ,sname ,glob)])))
 
 (gfn nil? [x]
   "True if the value is equal to `nil`."
@@ -194,7 +193,7 @@
             (tset res k v)))))
   res)
 
-(fn deep-merge! [& args]
+(gfn deep-merge! [& args]
   (when (if (empty? args) (not (nil? res)) true)
     (assert (table? res) (.. "Expected table, got " (type res))))
 
