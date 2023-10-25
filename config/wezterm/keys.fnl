@@ -47,6 +47,12 @@
    {:key    ::
     :mods   :SHIFT|LEADER
     :action act.ShowDebugOverlay}
+   {:key    :v
+    :mods   :LEADER
+    :action act.ActivateCopyMode}
+   {:key    :/
+    :mods   :LEADER
+    :action (act.Search {:CaseInSensitiveString ""})}
    {:key    ::
     :mods   :LEADER
     :action act.ShowDebugOverlay}
