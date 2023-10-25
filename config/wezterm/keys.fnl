@@ -1,4 +1,5 @@
 (local wezterm (require :wezterm))
+(local act wezterm.action)
 (local {: is} (require :platform))
 
 (local cpmods (if is.macos :CMD :CTRL|SHIFT))
@@ -6,69 +7,145 @@
 (fn common-keys []
   [{:key    :q
     :mods   :LEADER
-    :action (wezterm.action.CloseCurrentPane {:confirm true})}
+    :action (act.CloseCurrentPane {:confirm true})}
    {:key    :c
     :mods   :LEADER
-    :action (wezterm.action.SpawnTab :CurrentPaneDomain)}
+    :action (act.SpawnTab :CurrentPaneDomain)}
    {:key    :h
     :mods   :CTRL|LEADER
-    :action (wezterm.action.ActivateTabRelative -1)}
+    :action (act.ActivateTabRelative -1)}
     {:key    :l
      :mods   :CTRL|LEADER
-     :action (wezterm.action.ActivateTabRelative 1)}
+     :action (act.ActivateTabRelative 1)}
    {:key    :h
     :mods   :LEADER
-    :action (wezterm.action.ActivatePaneDirection :Left)}
+    :action (act.ActivatePaneDirection :Left)}
    {:key    :j
     :mods   :LEADER
-    :action (wezterm.action.ActivatePaneDirection :Down)}
+    :action (act.ActivatePaneDirection :Down)}
    {:key    :k
     :mods   :LEADER
-    :action (wezterm.action.ActivatePaneDirection :Up)}
+    :action (act.ActivatePaneDirection :Up)}
    {:key    :l
     :mods   :LEADER
-    :action (wezterm.action.ActivatePaneDirection :Right)}
+    :action (act.ActivatePaneDirection :Right)}
    {:key    :|
     :mods   :LEADER
-    :action (wezterm.action.SplitHorizontal {:domain :CurrentPaneDomain})}
+    :action (act.SplitHorizontal {:domain :CurrentPaneDomain})}
    {:key    :|
     :mods   :SHIFT|LEADER
-    :action (wezterm.action.SplitHorizontal {:domain :CurrentPaneDomain})}
+    :action (act.SplitHorizontal {:domain :CurrentPaneDomain})}
    {:key    :-
     :mods   :LEADER
-    :action (wezterm.action.SplitVertical {:domain :CurrentPaneDomain})}
+    :action (act.SplitVertical {:domain :CurrentPaneDomain})}
    {:key    " "
     :mods   :LEADER
-    :action wezterm.action.ShowLauncher}
+    :action act.ShowLauncher}
    {:key    :a
     :mods   :LEADER|CTRL
-    :action (wezterm.action.SendString "\x01")}
+    :action (act.SendString "\x01")}
    {:key    ::
     :mods   :SHIFT|LEADER
-    :action wezterm.action.ShowDebugOverlay}
+    :action act.ShowDebugOverlay}
    {:key    ::
     :mods   :LEADER
-    :action wezterm.action.ShowDebugOverlay}
+    :action act.ShowDebugOverlay}
    {:key    :v
     :mods   cpmods
-    :action (wezterm.action.PasteFrom :Clipboard)}
+    :action (act.PasteFrom :Clipboard)}
    {:key    :c
     :mods   cpmods
-    :action (wezterm.action.CopyTo :Clipboard)}])
+    :action (act.CopyTo :Clipboard)}])
 
 (fn macos-keys []
   (if is.macos
       [{:key    ","
         :mods   :CTRL
-        :action (wezterm.action.SendString "\27[44;5u")}
+        :action (act.SendString "\27[44;5u")}
        {:key    ","
         :mods   :CTRL|SHIFT
-        :action (wezterm.action.SendString "\27[44;6u")}]
+        :action (act.SendString "\27[44;6u")}]
       []))
 
+(local single-left-down {:Down {:streak 1 :button :Left}})
+(local single-left-up   {:Up   {:streak 1 :button :Left}})
+
+(local double-left-down {:Down {:streak 2 :button :Left}})
+(local double-left-up   {:Up   {:streak 2 :button :Left}})
+
+(local triple-left-down {:Down {:streak 3 :button :Left}})
+(local triple-left-up   {:Up   {:streak 3 :button :Left}})
+
+(local single-left-drag {:Drag {:streak 1 :button :Left}})
+(local double-left-drag {:Drag {:streak 2 :button :Left}})
+(local triple-left-drag {:Drag {:streak 3 :button :Left}})
+
+(fn mouse []
+  [{:event  triple-left-down
+    :mods   :NONE
+    :action (act.SelectTextAtMouseCursor :Line)}
+   {:event  double-left-down
+    :mods   :NONE
+    :action (act.SelectTextAtMouseCursor :Word)}
+   {:event  single-left-down
+    :mods   :NONE
+    :action (act.SelectTextAtMouseCursor :Cell)}
+   {:event  single-left-down
+    :mods   :SHIFT
+    :action (act.ExtendSelectionToMouseCursor :Cell)}
+   {:event  single-left-down
+    :mods   :ALT
+    :action (act.SelectTextAtMouseCursor :Block)}
+   {:event  single-left-up
+    :mods   :SHIFT
+    :action (act.CompleteSelection :ClipboardAndPrimarySelection)}
+   {:event  single-left-up
+    :mods   :NONE
+    :action (act.CompleteSelection :ClipboardAndPrimarySelection)}
+   {:event  single-left-up
+    :mods   :ALT
+    :action (act.CompleteSelection :ClipboardAndPrimarySelection)}
+   {:event  double-left-up
+    :mods   :NONE
+    :action (act.CompleteSelection :ClipboardAndPrimarySelection)}
+   {:event  triple-left-up
+    :mods   :NONE
+    :action (act.CompleteSelection :ClipboardAndPrimarySelection)}
+   {:event  single-left-drag
+    :mods   :NONE
+    :action (act.ExtendSelectionToMouseCursor :Cell)}
+   {:event  single-left-drag
+    :mods   :ALT
+    :action (act.ExtendSelectionToMouseCursor :Block)}
+   {:event  single-left-down
+    :mods   :ALT|SHIFT
+    :action (act.ExtendSelectionToMouseCursor :Block)}
+   {:event  single-left-up
+    :mods   :ALT|SHIFT
+    :action (act.CompleteSelection :ClipboardAndPrimarySelection)}
+   {:event  double-left-drag
+    :mods   :NONE
+    :action (act.ExtendSelectionToMouseCursor :Word)}
+   {:event  triple-left-drag
+    :mods   :NONE
+    :action (act.ExtendSelectionToMouseCursor :Line)}
+   {:event  {:Down {:streak 1 :button :Middle}}
+    :mods   :NONE
+    :action (act.PasteFrom :PrimarySelection)}
+   {:event  single-left-up
+    :mods   :CTRL
+    :action act.OpenLinkAtMouseCursor}
+   {:event  {:Down {:streak 1 :button {:WheelUp 1}}}
+    :mods   :NONE
+    :action act.ScrollByCurrentEventWheelDelta
+    :alt_screen false}
+   {:event  {:Down {:streak 1 :button {:WheelDown 1}}}
+    :mods   :NONE
+    :action act.ScrollByCurrentEventWheelDelta
+    :alt_screen false}])
+
 {:disable_default_key_bindings true
+ :disable_default_mouse_bindings true
  :leader {:key :a :mods :CTRL :timeout_milliseconds 1000}
  :keys   (concat! (common-keys) (macos-keys))
- :mouse_bindings [{:event {:Up {:streak 1 :button :Left}}
-                   :mods :CTRL
-                   :action wezterm.action.OpenLinkAtMouseCursor}]}
+ :mouse_bindings (mouse)}

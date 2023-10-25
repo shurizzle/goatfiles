@@ -588,6 +588,7 @@ end
 __fnl_global__merge_21(config, _105_(...))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
+  local act = wezterm.action
   local _local_107_ = require("platform")
   local is = _local_107_["is"]
   local cpmods
@@ -597,16 +598,28 @@ package.preload["keys"] = package.preload["keys"] or function(...)
     cpmods = "CTRL|SHIFT"
   end
   local function common_keys()
-    return {{key = "q", mods = "LEADER", action = wezterm.action.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = wezterm.action.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = wezterm.action.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = wezterm.action.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = wezterm.action.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = wezterm.action.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = wezterm.action.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = wezterm.action.ActivatePaneDirection("Right")}, {key = "|", mods = "LEADER", action = wezterm.action.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = wezterm.action.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = wezterm.action.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = wezterm.action.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = wezterm.action.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = wezterm.action.ShowDebugOverlay}, {key = ":", mods = "LEADER", action = wezterm.action.ShowDebugOverlay}, {key = "v", mods = cpmods, action = wezterm.action.PasteFrom("Clipboard")}, {key = "c", mods = cpmods, action = wezterm.action.CopyTo("Clipboard")}}
+    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = cpmods, action = act.PasteFrom("Clipboard")}, {key = "c", mods = cpmods, action = act.CopyTo("Clipboard")}}
   end
   local function macos_keys()
     if is.macos then
-      return {{key = ",", mods = "CTRL", action = wezterm.action.SendString("\27[44;5u")}, {key = ",", mods = "CTRL|SHIFT", action = wezterm.action.SendString("\27[44;6u")}}
+      return {{key = ",", mods = "CTRL", action = act.SendString("\27[44;5u")}, {key = ",", mods = "CTRL|SHIFT", action = act.SendString("\27[44;6u")}}
     else
       return {}
     end
   end
-  return {disable_default_key_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = {{event = {Up = {streak = 1, button = "Left"}}, mods = "CTRL", action = wezterm.action.OpenLinkAtMouseCursor}}}
+  local single_left_down = {Down = {streak = 1, button = "Left"}}
+  local single_left_up = {Up = {streak = 1, button = "Left"}}
+  local double_left_down = {Down = {streak = 2, button = "Left"}}
+  local double_left_up = {Up = {streak = 2, button = "Left"}}
+  local triple_left_down = {Down = {streak = 3, button = "Left"}}
+  local triple_left_up = {Up = {streak = 3, button = "Left"}}
+  local single_left_drag = {Drag = {streak = 1, button = "Left"}}
+  local double_left_drag = {Drag = {streak = 2, button = "Left"}}
+  local triple_left_drag = {Drag = {streak = 3, button = "Left"}}
+  local function mouse()
+    return {{event = triple_left_down, mods = "NONE", action = act.SelectTextAtMouseCursor("Line")}, {event = double_left_down, mods = "NONE", action = act.SelectTextAtMouseCursor("Word")}, {event = single_left_down, mods = "NONE", action = act.SelectTextAtMouseCursor("Cell")}, {event = single_left_down, mods = "SHIFT", action = act.ExtendSelectionToMouseCursor("Cell")}, {event = single_left_down, mods = "ALT", action = act.SelectTextAtMouseCursor("Block")}, {event = single_left_up, mods = "SHIFT", action = act.CompleteSelection("ClipboardAndPrimarySelection")}, {event = single_left_up, mods = "NONE", action = act.CompleteSelection("ClipboardAndPrimarySelection")}, {event = single_left_up, mods = "ALT", action = act.CompleteSelection("ClipboardAndPrimarySelection")}, {event = double_left_up, mods = "NONE", action = act.CompleteSelection("ClipboardAndPrimarySelection")}, {event = triple_left_up, mods = "NONE", action = act.CompleteSelection("ClipboardAndPrimarySelection")}, {event = single_left_drag, mods = "NONE", action = act.ExtendSelectionToMouseCursor("Cell")}, {event = single_left_drag, mods = "ALT", action = act.ExtendSelectionToMouseCursor("Block")}, {event = single_left_down, mods = "ALT|SHIFT", action = act.ExtendSelectionToMouseCursor("Block")}, {event = single_left_up, mods = "ALT|SHIFT", action = act.CompleteSelection("ClipboardAndPrimarySelection")}, {event = double_left_drag, mods = "NONE", action = act.ExtendSelectionToMouseCursor("Word")}, {event = triple_left_drag, mods = "NONE", action = act.ExtendSelectionToMouseCursor("Line")}, {event = {Down = {streak = 1, button = "Middle"}}, mods = "NONE", action = act.PasteFrom("PrimarySelection")}, {event = single_left_up, mods = "CTRL", action = act.OpenLinkAtMouseCursor}, {event = {Down = {streak = 1, button = {WheelUp = 1}}}, mods = "NONE", action = act.ScrollByCurrentEventWheelDelta, alt_screen = false}, {event = {Down = {streak = 1, button = {WheelDown = 1}}}, mods = "NONE", action = act.ScrollByCurrentEventWheelDelta, alt_screen = false}}
+  end
+  return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
 local function _110_(...)
   local _106_ = require("keys")
