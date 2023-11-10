@@ -1,4 +1,5 @@
 (local wezterm (require :wezterm))
+(local {: is} (require :platform))
 
 (local {:update update-bell : bell?} (require :bell))
 
@@ -15,7 +16,7 @@
     (.. " " (tab-title tab max-width) " ")))
 
 {:front_end                      :WebGpu
- :window_decorations             :RESIZE
+ :window_decorations             (if is.linux :NONE :RESIZE)
  :window_padding                 {:left 0
                                   :right 0
                                   :top 0
