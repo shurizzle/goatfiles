@@ -10,16 +10,16 @@
                :italic    true
                :font      (wezterm.font {:family "Monaspace Radon"
                                          :weight :Regular
-                                         :italic true})}
+                                         :italic false})}
               {:intensity :Half
                :italic    true
                :font      (wezterm.font {:family "Monaspace Radon"
                                          :weight :Medium
-                                         :italic true})}
+                                         :italic false})}
               {:intensity :Bold
                :italic    true
                :font      (wezterm.font {:family "Monaspace Radon"
                                          :weight :Bold
-                                         :italic true})}]
+                                         :italic false})}]
  :font_size (if (= :DomPerignon hostname) 9 10)
  :warn_about_missing_glyphs false}

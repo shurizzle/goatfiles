@@ -462,7 +462,7 @@ package.preload["font"] = package.preload["font"] or function(...)
   else
     _81_ = 10
   end
-  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font("Monaspace Argon"), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", italic = true})}, {intensity = "Half", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Medium", italic = true})}, {intensity = "Bold", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Bold", italic = true})}}, font_size = _81_, warn_about_missing_glyphs = false}
+  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font("Monaspace Argon"), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", italic = false})}, {intensity = "Half", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Medium", italic = false})}, {intensity = "Bold", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Bold", italic = false})}}, font_size = _81_, warn_about_missing_glyphs = false}
 end
 local function _83_(...)
   local _79_ = require("font")
