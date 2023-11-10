@@ -455,62 +455,48 @@ package.preload["font"] = package.preload["font"] or function(...)
   local wezterm = require("wezterm")
   local _local_80_ = require("platform")
   local is = _local_80_["is"]
-  local _81_
-  if (is.lin or is.win) then
-    _81_ = 10
-  else
-    _81_ = 11
-  end
-  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "zero", "onum"}, font = wezterm.font_with_fallback({"CommitMono", "Hack Nerd Font Mono", "JetBrains Mono", "Noto Color Emoji", "Symbols Nerd Font Mono"}), font_size = _81_, warn_about_missing_glyphs = false}
+  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font("Monaspace Argon"), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", italic = true})}, {intensity = "Half", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Medium", italic = true})}, {intensity = "Bold", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Bold", italic = true})}}, font_size = 9, warn_about_missing_glyphs = false}
 end
-local function _83_(...)
+local function _81_(...)
   local _79_ = require("font")
   return _79_
 end
-__fnl_global__merge_21(config, _83_(...))
+__fnl_global__merge_21(config, _81_(...))
 package.preload["ui"] = package.preload["ui"] or function(...)
   local wezterm = require("wezterm")
-  local _local_85_ = require("platform")
-  local is = _local_85_["is"]
-  local _local_86_ = require("bell")
-  local update_bell = _local_86_["update"]
-  local bell_3f = _local_86_["bell?"]
+  local _local_83_ = require("bell")
+  local update_bell = _local_83_["update"]
+  local bell_3f = _local_83_["bell?"]
   local function tab_title(tab, max_width)
-    local function _95_()
+    local function _92_()
       if bell_3f(tab.window_id, tab.tab_id) then
         return "\240\159\148\148"
       else
         return ""
       end
     end
-    return wezterm.truncate_right((_95_() .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
+    return wezterm.truncate_right((_92_() .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
   end
-  local function _96_(tab, _, _0, _1, _2, max_width)
+  local function _93_(tab, _, _0, _1, _2, max_width)
     update_bell(tab.window_id)
     return (" " .. tab_title(tab, max_width) .. " ")
   end
-  wezterm.on("format-tab-title", _96_)
-  local _97_
-  if is.linux then
-    _97_ = "NONE"
-  else
-    _97_ = "RESIZE"
-  end
-  return {front_end = "WebGpu", window_decorations = _97_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  wezterm.on("format-tab-title", _93_)
+  return {front_end = "WebGpu", window_decorations = "RESIZE", window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
   wezterm.GLOBAL.bells = {}
   local function update(win_id)
-    local _87_ = wezterm.GLOBAL.bells[tostring(win_id)]
-    if (nil ~= _87_) then
-      _87_[tostring(wezterm.mux.get_window(win_id):active_tab():tab_id())] = nil
+    local _84_ = wezterm.GLOBAL.bells[tostring(win_id)]
+    if (nil ~= _84_) then
+      _84_[tostring(wezterm.mux.get_window(win_id):active_tab():tab_id())] = nil
       return nil
     else
-      return _87_
+      return _84_
     end
   end
-  local function _89_(window, pane)
+  local function _86_(window, pane)
     local win_id = window:window_id()
     local tab_id = pane:tab():tab_id()
     if (window:active_tab():tab_id() ~= tab_id) then
@@ -521,30 +507,30 @@ package.preload["bell"] = package.preload["bell"] or function(...)
       return nil
     end
   end
-  wezterm.on("bell", _89_)
+  wezterm.on("bell", _86_)
   local function bell_3f(win_id, tab_id)
-    local _92_
+    local _89_
     do
-      local t_91_ = wezterm.GLOBAL.bells
-      if (nil ~= t_91_) then
-        t_91_ = (t_91_)[tostring(win_id)]
+      local t_88_ = wezterm.GLOBAL.bells
+      if (nil ~= t_88_) then
+        t_88_ = (t_88_)[tostring(win_id)]
       else
       end
-      if (nil ~= t_91_) then
-        t_91_ = (t_91_)[tostring(tab_id)]
+      if (nil ~= t_88_) then
+        t_88_ = (t_88_)[tostring(tab_id)]
       else
       end
-      _92_ = t_91_
+      _89_ = t_88_
     end
-    return (_92_ == tab_id)
+    return (_89_ == tab_id)
   end
   return {update = update, ["bell?"] = bell_3f}
 end
-local function _99_(...)
-  local _84_ = require("ui")
-  return _84_
+local function _94_(...)
+  local _82_ = require("ui")
+  return _82_
 end
-__fnl_global__merge_21(config, _99_(...))
+__fnl_global__merge_21(config, _94_(...))
 package.preload["theme"] = package.preload["theme"] or function(...)
   local wezterm = require("wezterm")
   local black = "#282828"
@@ -568,7 +554,7 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return "BlueSky Dark"
     end
   end
-  local function _103_(window, pane)
+  local function _98_(window, pane)
     local overrides = (window:get_config_overrides() or {})
     local scheme = colorscheme(window:get_appearance())
     if (overrides.color_scheme ~= scheme) then
@@ -578,19 +564,19 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return nil
     end
   end
-  wezterm.on("window-config-reloaded", _103_)
+  wezterm.on("window-config-reloaded", _98_)
   return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}}
 end
-local function _105_(...)
-  local _100_ = require("theme")
-  return _100_
+local function _100_(...)
+  local _95_ = require("theme")
+  return _95_
 end
-__fnl_global__merge_21(config, _105_(...))
+__fnl_global__merge_21(config, _100_(...))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_107_ = require("platform")
-  local is = _local_107_["is"]
+  local _local_102_ = require("platform")
+  local is = _local_102_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
@@ -621,9 +607,9 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
-local function _110_(...)
-  local _106_ = require("keys")
-  return _106_
+local function _105_(...)
+  local _101_ = require("keys")
+  return _101_
 end
-__fnl_global__merge_21(config, _110_(...))
+__fnl_global__merge_21(config, _105_(...))
 return config

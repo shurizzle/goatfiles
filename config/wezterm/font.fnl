@@ -2,11 +2,23 @@
 (local {: is} (require :platform))
 
 {:allow_square_glyphs_to_overflow_width :Always
- :harfbuzz_features [:ss01 :ss02 :ss03 :ss04 :ss05 :ss06 :zero :onum]
- :font (wezterm.font_with_fallback ["CommitMono"
-                                    "Hack Nerd Font Mono"
-                                    "JetBrains Mono"
-                                    "Noto Color Emoji"
-                                    "Symbols Nerd Font Mono"])
- :font_size (if (or is.lin is.win) 10 11)
+ :harfbuzz_features [:ss01 :ss02 :ss03 :ss04 :ss05 :ss06 :ss07 :ss08 :zero
+                     :onum :dlig :calt]
+ :font (wezterm.font "Monaspace Argon")
+ :font_rules [{:intensity :Normal
+               :italic    true
+               :font      (wezterm.font {:family "Monaspace Radon"
+                                         :weight :Regular
+                                         :italic true})}
+              {:intensity :Half
+               :italic    true
+               :font      (wezterm.font {:family "Monaspace Radon"
+                                         :weight :Medium
+                                         :italic true})}
+              {:intensity :Bold
+               :italic    true
+               :font      (wezterm.font {:family "Monaspace Radon"
+                                         :weight :Bold
+                                         :italic true})}]
+ :font_size 9
  :warn_about_missing_glyphs false}

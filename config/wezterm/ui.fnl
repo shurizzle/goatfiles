@@ -1,5 +1,4 @@
 (local wezterm (require :wezterm))
-(local {: is} (require :platform))
 
 (local {:update update-bell : bell?} (require :bell))
 
@@ -16,12 +15,13 @@
     (.. " " (tab-title tab max-width) " ")))
 
 {:front_end                      :WebGpu
- :window_decorations             (if is.linux :NONE :RESIZE)
+ :window_decorations             :RESIZE
  :window_padding                 {:left 0
                                   :right 0
                                   :top 0
                                   :bottom 0}
  :use_ime                        true
+ :ime_preedit_rendering          :System
  :enable_tab_bar                 true
  :use_fancy_tab_bar              false
  :hide_tab_bar_if_only_one_tab   true
