@@ -456,14 +456,14 @@ package.preload["font"] = package.preload["font"] or function(...)
   local _local_80_ = require("platform")
   local is = _local_80_["is"]
   local hostname = wezterm.hostname()
-  local harfbuzz_features = {"ss01", "ss02=0", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "calt", "dlig:"}
+  local harfbuzz_features = {"ss01", "ss02=0", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "calt", "dlig"}
   local _81_
   if ("DomPerignon" == hostname) then
     _81_ = 9
   else
     _81_ = 10
   end
-  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font({family = "Monaspace Argon", harfbuzz_features = harfbuzz_features}), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", harfbuzz_features = harfbuzz_features, italic = false})}, {intensity = "Half", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Medium", harfbuzz_features = harfbuzz_features, italic = false})}, {intensity = "Bold", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Bold", harfbuzz_features = harfbuzz_features, italic = false})}}, font_size = _81_, warn_about_missing_glyphs = false}
+  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font({family = "Monaspace Argon", harfbuzz_features = harfbuzz_features}), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", harfbuzz_features = harfbuzz_features, italic = false})}, {intensity = "Half", font = wezterm.font({family = "Monaspace Radon", weight = "Medium", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}, {intensity = "Bold", font = wezterm.font({family = "Monaspace Radon", weight = "Bold", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}}, font_size = _81_, warn_about_missing_glyphs = false}
 end
 local function _83_(...)
   local _79_ = require("font")
