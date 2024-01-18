@@ -1,3 +1,6 @@
 vo=gpu
 hwdec=nvdec
 volume-max=200
+no-auto-window-resize
+no-keepaspect-window
+player-operation-mode=pseudo-gui
