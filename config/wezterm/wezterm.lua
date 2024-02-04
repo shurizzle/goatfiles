@@ -37,32 +37,32 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   do local _ = {nil, nil} end
   local function _7_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_17_auto = {}
-    local i_18_auto = #tbl_17_auto
+    local tbl_18_auto = {}
+    local i_19_auto = 0
     for k, _ in pairs(t) do
-      local val_19_auto = k
-      if (nil ~= val_19_auto) then
-        i_18_auto = (i_18_auto + 1)
-        do end (tbl_17_auto)[i_18_auto] = val_19_auto
+      local val_20_auto = k
+      if (nil ~= val_20_auto) then
+        i_19_auto = (i_19_auto + 1)
+        do end (tbl_18_auto)[i_19_auto] = val_20_auto
       else
       end
     end
-    return tbl_17_auto
+    return tbl_18_auto
   end
   _G.keys = _7_
   local function _9_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_17_auto = {}
-    local i_18_auto = #tbl_17_auto
+    local tbl_18_auto = {}
+    local i_19_auto = 0
     for _, v in pairs(t) do
-      local val_19_auto = v
-      if (nil ~= val_19_auto) then
-        i_18_auto = (i_18_auto + 1)
-        do end (tbl_17_auto)[i_18_auto] = val_19_auto
+      local val_20_auto = v
+      if (nil ~= val_20_auto) then
+        i_19_auto = (i_19_auto + 1)
+        do end (tbl_18_auto)[i_19_auto] = val_20_auto
       else
       end
     end
-    return tbl_17_auto
+    return tbl_18_auto
   end
   _G.vals = _9_
   local function _11_(xs)
@@ -492,13 +492,14 @@ package.preload["ui"] = package.preload["ui"] or function(...)
     return (" " .. tab_title(tab, max_width) .. " ")
   end
   wezterm.on("format-tab-title", _96_)
+  local gh_match = {regex = "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?", format = "https://www.github.com/$1/$3"}
   local _97_
   if is.linux then
     _97_ = "NONE"
   else
     _97_ = "RESIZE"
   end
-  return {front_end = "WebGpu", window_decorations = _97_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  return {front_end = "WebGpu", window_decorations = _97_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
@@ -529,11 +530,11 @@ package.preload["bell"] = package.preload["bell"] or function(...)
     do
       local t_91_ = wezterm.GLOBAL.bells
       if (nil ~= t_91_) then
-        t_91_ = (t_91_)[tostring(win_id)]
+        t_91_ = t_91_[tostring(win_id)]
       else
       end
       if (nil ~= t_91_) then
-        t_91_ = (t_91_)[tostring(tab_id)]
+        t_91_ = t_91_[tostring(tab_id)]
       else
       end
       _92_ = t_91_

@@ -15,6 +15,9 @@
     (update-bell tab.window_id)
     (.. " " (tab-title tab max-width) " ")))
 
+(var gh-match {:regex "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?"
+               :format "https://www.github.com/$1/$3"})
+
 {:front_end                      :WebGpu
  :window_decorations             (if is.linux :NONE :RESIZE)
  :window_padding                 {:left 0
@@ -31,4 +34,6 @@
  :tab_bar_at_bottom              true
  :audible_bell                   :SystemBeep
  :enable_wayland                 true
- :default_cursor_style           :SteadyBar}
+ :default_cursor_style           :SteadyBar
+ :hyperlink_rules                (merge! (wezterm.default_hyperlink_rules)
+                                         [gh-match])}
