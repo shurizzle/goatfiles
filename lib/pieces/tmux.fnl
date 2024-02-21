@@ -9,8 +9,8 @@
 (fn up []
   (create-symlink src dst)
   (create-symlink (path-join dst :tmux.conf)
-                  (path-join (os.getenv :HOME) :.tmux.conf))
-  )
+                  (path-join (os.getenv :HOME) :.tmux.conf)
+                  [(path-join *project* :config :tmux :tmux.conf)]))
 
 (fn down []
   (remove-symlink (path-join dst :tmux.conf)
