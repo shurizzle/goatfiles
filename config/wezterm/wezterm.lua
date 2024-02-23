@@ -478,22 +478,32 @@ package.preload["ui"] = package.preload["ui"] or function(...)
   local update_bell = _local_86_["update"]
   local bell_3f = _local_86_["bell?"]
   local function tab_title(tab, max_width)
-    local function _95_()
+    local function _96_()
       if bell_3f(tab.window_id, tab.tab_id) then
         return "\240\159\148\148"
       else
         return ""
       end
     end
-    return wezterm.truncate_right((_95_() .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
+    return wezterm.truncate_right((_96_() .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
   end
-  local function _96_(tab, _, _0, _1, _2, max_width)
+  local function _97_(tab, _, _0, _1, _2, max_width)
     update_bell(tab.window_id)
     return (" " .. tab_title(tab, max_width) .. " ")
   end
-  wezterm.on("format-tab-title", _96_)
+  wezterm.on("format-tab-title", _97_)
   local gh_match = {regex = "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?", format = "https://www.github.com/$1/$3"}
-  return {front_end = "WebGpu", window_decorations = "RESIZE", window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  local _98_
+  if is.linux then
+    if os.getenv("WAYLAND_DISPLAY") then
+      _98_ = "RESIZE"
+    else
+      _98_ = "NONE"
+    end
+  else
+    _98_ = "RESIZE"
+  end
+  return {front_end = "WebGpu", window_decorations = _98_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
@@ -508,6 +518,10 @@ package.preload["bell"] = package.preload["bell"] or function(...)
     end
   end
   local function _89_(window, pane)
+    if os.getenv("WAYLAND_DISPLAY") then
+      wezterm.background_child_process({"paplay", "/usr/share/sounds/freedesktop/stereo/bell.oga"})
+    else
+    end
     local win_id = window:window_id()
     local tab_id = pane:tab():tab_id()
     if (window:active_tab():tab_id() ~= tab_id) then
@@ -520,28 +534,28 @@ package.preload["bell"] = package.preload["bell"] or function(...)
   end
   wezterm.on("bell", _89_)
   local function bell_3f(win_id, tab_id)
-    local _92_
+    local _93_
     do
-      local t_91_ = wezterm.GLOBAL.bells
-      if (nil ~= t_91_) then
-        t_91_ = t_91_[tostring(win_id)]
+      local t_92_ = wezterm.GLOBAL.bells
+      if (nil ~= t_92_) then
+        t_92_ = t_92_[tostring(win_id)]
       else
       end
-      if (nil ~= t_91_) then
-        t_91_ = t_91_[tostring(tab_id)]
+      if (nil ~= t_92_) then
+        t_92_ = t_92_[tostring(tab_id)]
       else
       end
-      _92_ = t_91_
+      _93_ = t_92_
     end
-    return (_92_ == tab_id)
+    return (_93_ == tab_id)
   end
   return {update = update, ["bell?"] = bell_3f}
 end
-local function _97_(...)
+local function _101_(...)
   local _84_ = require("ui")
   return _84_
 end
-__fnl_global__merge_21(config, _97_(...))
+__fnl_global__merge_21(config, _101_(...))
 package.preload["theme"] = package.preload["theme"] or function(...)
   local wezterm = require("wezterm")
   local black = "#282828"
@@ -565,7 +579,7 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return "BlueSky Dark"
     end
   end
-  local function _101_(window, pane)
+  local function _105_(window, pane)
     local overrides = (window:get_config_overrides() or {})
     local scheme = colorscheme(window:get_appearance())
     if (overrides.color_scheme ~= scheme) then
@@ -575,19 +589,19 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return nil
     end
   end
-  wezterm.on("window-config-reloaded", _101_)
+  wezterm.on("window-config-reloaded", _105_)
   return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}}
 end
-local function _103_(...)
-  local _98_ = require("theme")
-  return _98_
+local function _107_(...)
+  local _102_ = require("theme")
+  return _102_
 end
-__fnl_global__merge_21(config, _103_(...))
+__fnl_global__merge_21(config, _107_(...))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_105_ = require("platform")
-  local is = _local_105_["is"]
+  local _local_109_ = require("platform")
+  local is = _local_109_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
@@ -618,9 +632,9 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
-local function _108_(...)
-  local _104_ = require("keys")
-  return _104_
+local function _112_(...)
+  local _108_ = require("keys")
+  return _108_
 end
-__fnl_global__merge_21(config, _108_(...))
+__fnl_global__merge_21(config, _112_(...))
 return config

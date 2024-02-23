@@ -12,6 +12,10 @@
 (wezterm.on
   :bell
   (fn [window pane]
+    (when (os.getenv :WAYLAND_DISPLAY)
+      (wezterm.background_child_process
+        [:paplay "/usr/share/sounds/freedesktop/stereo/bell.oga"]))
+
     (let [win-id (window:window_id)
           tab-id (: (pane:tab) :tab_id)]
       (when (not= (: (window:active_tab) :tab_id) tab-id)
