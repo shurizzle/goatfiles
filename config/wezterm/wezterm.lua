@@ -493,13 +493,7 @@ package.preload["ui"] = package.preload["ui"] or function(...)
   end
   wezterm.on("format-tab-title", _96_)
   local gh_match = {regex = "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?", format = "https://www.github.com/$1/$3"}
-  local _97_
-  if is.linux then
-    _97_ = "NONE"
-  else
-    _97_ = "RESIZE"
-  end
-  return {front_end = "WebGpu", window_decorations = _97_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  return {front_end = "WebGpu", window_decorations = "RESIZE", window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
@@ -543,11 +537,11 @@ package.preload["bell"] = package.preload["bell"] or function(...)
   end
   return {update = update, ["bell?"] = bell_3f}
 end
-local function _99_(...)
+local function _97_(...)
   local _84_ = require("ui")
   return _84_
 end
-__fnl_global__merge_21(config, _99_(...))
+__fnl_global__merge_21(config, _97_(...))
 package.preload["theme"] = package.preload["theme"] or function(...)
   local wezterm = require("wezterm")
   local black = "#282828"
@@ -571,7 +565,7 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return "BlueSky Dark"
     end
   end
-  local function _103_(window, pane)
+  local function _101_(window, pane)
     local overrides = (window:get_config_overrides() or {})
     local scheme = colorscheme(window:get_appearance())
     if (overrides.color_scheme ~= scheme) then
@@ -581,19 +575,19 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return nil
     end
   end
-  wezterm.on("window-config-reloaded", _103_)
+  wezterm.on("window-config-reloaded", _101_)
   return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}}
 end
-local function _105_(...)
-  local _100_ = require("theme")
-  return _100_
+local function _103_(...)
+  local _98_ = require("theme")
+  return _98_
 end
-__fnl_global__merge_21(config, _105_(...))
+__fnl_global__merge_21(config, _103_(...))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_107_ = require("platform")
-  local is = _local_107_["is"]
+  local _local_105_ = require("platform")
+  local is = _local_105_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
@@ -601,7 +595,7 @@ package.preload["keys"] = package.preload["keys"] or function(...)
     cpmods = "CTRL|SHIFT"
   end
   local function common_keys()
-    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = cpmods, action = act.PasteFrom("Clipboard")}, {key = "c", mods = cpmods, action = act.CopyTo("Clipboard")}}
+    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = cpmods, action = act.PasteFrom("Clipboard")}, {key = "c", mods = cpmods, action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}}
   end
   local function macos_keys()
     if is.macos then
@@ -624,9 +618,9 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
-local function _110_(...)
-  local _106_ = require("keys")
-  return _106_
+local function _108_(...)
+  local _104_ = require("keys")
+  return _104_
 end
-__fnl_global__merge_21(config, _110_(...))
+__fnl_global__merge_21(config, _108_(...))
 return config

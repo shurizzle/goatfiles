@@ -61,7 +61,19 @@
     :action (act.PasteFrom :Clipboard)}
    {:key    :c
     :mods   cpmods
-    :action (act.CopyTo :Clipboard)}])
+    :action (act.CopyTo :Clipboard)}
+   {:key    :<
+    :mods   :LEADER
+    :action (act.MoveTabRelative -1)}
+   {:key    :>
+    :mods   :LEADER
+    :action (act.MoveTabRelative 1)}
+   {:key    :<
+    :mods   :LEADER|SHIFT
+    :action (act.MoveTabRelative -1)}
+   {:key    :>
+    :mods   :LEADER|SHIFT
+    :action (act.MoveTabRelative 1)}])
 
 (fn macos-keys []
   (if is.macos

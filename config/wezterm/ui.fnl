@@ -19,7 +19,7 @@
                :format "https://www.github.com/$1/$3"})
 
 {:front_end                      :WebGpu
- :window_decorations             (if is.linux :NONE :RESIZE)
+ :window_decorations             :RESIZE
  :window_padding                 {:left 0
                                   :right 0
                                   :top 0
