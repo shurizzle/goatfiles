@@ -37,32 +37,32 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   do local _ = {nil, nil} end
   local function _7_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_18_auto = {}
-    local i_19_auto = 0
+    local tbl_19_auto = {}
+    local i_20_auto = 0
     for k, _ in pairs(t) do
-      local val_20_auto = k
-      if (nil ~= val_20_auto) then
-        i_19_auto = (i_19_auto + 1)
-        do end (tbl_18_auto)[i_19_auto] = val_20_auto
+      local val_21_auto = k
+      if (nil ~= val_21_auto) then
+        i_20_auto = (i_20_auto + 1)
+        do end (tbl_19_auto)[i_20_auto] = val_21_auto
       else
       end
     end
-    return tbl_18_auto
+    return tbl_19_auto
   end
   _G.keys = _7_
   local function _9_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_18_auto = {}
-    local i_19_auto = 0
+    local tbl_19_auto = {}
+    local i_20_auto = 0
     for _, v in pairs(t) do
-      local val_20_auto = v
-      if (nil ~= val_20_auto) then
-        i_19_auto = (i_19_auto + 1)
-        do end (tbl_18_auto)[i_19_auto] = val_20_auto
+      local val_21_auto = v
+      if (nil ~= val_21_auto) then
+        i_20_auto = (i_20_auto + 1)
+        do end (tbl_19_auto)[i_20_auto] = val_21_auto
       else
       end
     end
-    return tbl_18_auto
+    return tbl_19_auto
   end
   _G.vals = _9_
   local function _11_(xs)
@@ -590,7 +590,10 @@ package.preload["theme"] = package.preload["theme"] or function(...)
     end
   end
   wezterm.on("window-config-reloaded", _105_)
-  return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}}
+  local base_background = {source = {Color = black}, width = "100%", height = "100%"}
+  local ryukomatoi_sailor = {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = 0.1}
+  local ryukomatoi_kamui = {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = 0.1}
+  return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, background = {base_background, ryukomatoi_sailor}}
 end
 local function _107_(...)
   local _102_ = require("theme")
