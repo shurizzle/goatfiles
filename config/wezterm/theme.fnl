@@ -49,37 +49,43 @@
       "BlueSky Light"
       "BlueSky Dark"))
 
+(fn ryukomatoi-sailor [light?]
+  {:source {:File (.. (os.getenv :HOME)
+                      :/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png)}
+   :width (.. (/ 1024 5) :px)
+   :height (.. (/ 1078 5) :px)
+   :repeat_x :NoRepeat
+   :repeat_y :NoRepeat
+   :vertical_align :Bottom
+   :horizontal_align :Right
+   :opacity (if light? 0.5 0.1)})
+
+(fn ryukomatoi-kamui [light?]
+  {:source {:File (.. (os.getenv :HOME)
+                      :/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png)}
+   :width (.. (/ 8000 40) :px)
+   :height (.. (/ 7646 40) :px)
+   :repeat_x :NoRepeat
+   :repeat_y :NoRepeat
+   :vertical_align :Bottom
+   :horizontal_align :Right
+   :opacity (if light? 0.5 0.1)})
+
+(fn base-background [Color] {:source {: Color} :width "100%" :height "100%"})
+
+(fn background [appearance]
+  (let [light? (: (or appearance (get-appearance)) :match :Light)]
+    [(base-background (if light? white black)) (ryukomatoi-sailor light?)]))
+
 (wezterm.on :window-config-reloaded
             (fn [window pane]
               (local overrides (or (window:get_config_overrides) []))
-              (local scheme (colorscheme (window:get_appearance)))
-              (when (not= overrides.color_scheme scheme)
-                (set overrides.color_scheme scheme)
-                (window:set_config_overrides overrides))))
-
-(local base-background {:source {:Color black} :width "100%" :height "100%"})
-
-(local ryukomatoi-sailor {:source {:File (.. (os.getenv :HOME)
-                                             :/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png)}
-                          :width (.. (/ 1024 5) :px)
-                          :height (.. (/ 1078 5) :px)
-                          :repeat_x :NoRepeat
-                          :repeat_y :NoRepeat
-                          :vertical_align :Bottom
-                          :horizontal_align :Right
-                          :opacity 0.1})
-
-(local ryukomatoi-kamui {:source {:File (.. (os.getenv :HOME)
-                                            :/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png)}
-                         :width (.. (/ 8000 40) :px)
-                         :height (.. (/ 7646 40) :px)
-                         :repeat_x :NoRepeat
-                         :repeat_y :NoRepeat
-                         :vertical_align :Bottom
-                         :horizontal_align :Right
-                         :opacity 0.1})
+              (local appearance (window:get_appearance))
+              (set overrides.color_scheme (colorscheme appearance))
+              (set overrides.background (background appearance))
+              (window:set_config_overrides overrides)))
 
 {:color_scheme (colorscheme)
  :color_schemes {"BlueSky Dark" dark "BlueSky Light" light}
- :background [base-background ryukomatoi-sailor]}
+ :background (background)}
 

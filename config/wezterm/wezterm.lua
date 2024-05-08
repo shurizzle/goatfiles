@@ -1,4 +1,5 @@
 package.preload["stdlib"] = package.preload["stdlib"] or function(...)
+  _G.unpack = (unpack or table.unpack)
   local function _1_(x)
     return (nil == x)
   end
@@ -579,32 +580,58 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return "BlueSky Dark"
     end
   end
-  local function _105_(window, pane)
-    local overrides = (window:get_config_overrides() or {})
-    local scheme = colorscheme(window:get_appearance())
-    if (overrides.color_scheme ~= scheme) then
-      overrides.color_scheme = scheme
-      return window:set_config_overrides(overrides)
+  local function ryukomatoi_sailor(light_3f)
+    local _105_
+    if light_3f then
+      _105_ = 0.5
     else
-      return nil
+      _105_ = 0.1
     end
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _105_}
   end
-  wezterm.on("window-config-reloaded", _105_)
-  local base_background = {source = {Color = black}, width = "100%", height = "100%"}
-  local ryukomatoi_sailor = {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = 0.1}
-  local ryukomatoi_kamui = {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = 0.1}
-  return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, background = {base_background, ryukomatoi_sailor}}
+  local function ryukomatoi_kamui(light_3f)
+    local _107_
+    if light_3f then
+      _107_ = 0.5
+    else
+      _107_ = 0.1
+    end
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _107_}
+  end
+  local function base_background(Color)
+    return {source = {Color = Color}, width = "100%", height = "100%"}
+  end
+  local function background(appearance)
+    local light_3f = ((appearance or get_appearance())):match("Light")
+    local function _109_()
+      if light_3f then
+        return white
+      else
+        return black
+      end
+    end
+    return {base_background(_109_()), ryukomatoi_sailor(light_3f)}
+  end
+  local function _110_(window, pane)
+    local overrides = (window:get_config_overrides() or {})
+    local appearance = window:get_appearance()
+    overrides.color_scheme = colorscheme(appearance)
+    overrides.background = background(appearance)
+    return window:set_config_overrides(overrides)
+  end
+  wezterm.on("window-config-reloaded", _110_)
+  return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, background = background()}
 end
-local function _107_(...)
+local function _111_(...)
   local _102_ = require("theme")
   return _102_
 end
-__fnl_global__merge_21(config, _107_(...))
+__fnl_global__merge_21(config, _111_(...))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_109_ = require("platform")
-  local is = _local_109_["is"]
+  local _local_113_ = require("platform")
+  local is = _local_113_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
@@ -635,9 +662,9 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
-local function _112_(...)
-  local _108_ = require("keys")
-  return _108_
+local function _116_(...)
+  local _112_ = require("keys")
+  return _112_
 end
-__fnl_global__merge_21(config, _112_(...))
+__fnl_global__merge_21(config, _116_(...))
 return config

@@ -1,3 +1,5 @@
+(set _G.unpack (or unpack table.unpack))
+
 (macro gfn [name & body]
   (local lua-keywords {:and true
                        :break true
@@ -198,3 +200,4 @@
                          (when (not called)
                            (set called true)
                            (f ...))))
+
