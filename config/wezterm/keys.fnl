@@ -13,6 +13,9 @@
    {:key :j :mods :LEADER :action (act.ActivatePaneDirection :Down)}
    {:key :k :mods :LEADER :action (act.ActivatePaneDirection :Up)}
    {:key :l :mods :LEADER :action (act.ActivatePaneDirection :Right)}
+   {:key :b
+    :mods :LEADER
+    :action (wezterm.action_callback (. (require :themefn) :rotate-background))}
    {:key "|"
     :mods :LEADER
     :action (act.SplitHorizontal {:domain :CurrentPaneDomain})}
@@ -121,3 +124,4 @@
  :leader {:key :a :mods :CTRL :timeout_milliseconds 1000}
  :keys (concat! (common-keys) (macos-keys))
  :mouse_bindings (mouse)}
+

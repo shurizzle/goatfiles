@@ -558,6 +558,14 @@ local function _101_(...)
 end
 __fnl_global__merge_21(config, _101_(...))
 package.preload["theme"] = package.preload["theme"] or function(...)
+  local _let_103_ = require("themefn")
+  local dark = _let_103_["dark"]
+  local light = _let_103_["light"]
+  local colorscheme = _let_103_["colorscheme"]
+  local render_background = _let_103_["render-background"]
+  return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
+end
+package.preload["themefn"] = package.preload["themefn"] or function(...)
   local wezterm = require("wezterm")
   local black = "#282828"
   local white = "#eeeeee"
@@ -573,65 +581,111 @@ package.preload["theme"] = package.preload["theme"] or function(...)
       return "Dark"
     end
   end
-  local function colorscheme(appearance)
-    if ((appearance or get_appearance())):match("Light") then
+  local function colorscheme(_3fappearance)
+    if ((_3fappearance or get_appearance())):match("Light") then
       return "BlueSky Light"
     else
       return "BlueSky Dark"
     end
   end
   local function ryukomatoi_sailor(light_3f)
-    local _105_
+    local _106_
     if light_3f then
-      _105_ = 0.5
+      _106_ = 0.5
     else
-      _105_ = 0.1
+      _106_ = 0.1
     end
-    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _105_}
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _106_}
   end
   local function ryukomatoi_kamui(light_3f)
-    local _107_
+    local _108_
     if light_3f then
-      _107_ = 0.5
+      _108_ = 0.5
     else
-      _107_ = 0.1
+      _108_ = 0.1
     end
-    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _107_}
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _108_}
   end
   local function base_background(Color)
     return {source = {Color = Color}, width = "100%", height = "100%"}
   end
-  local function background(appearance)
-    local light_3f = ((appearance or get_appearance())):match("Light")
-    local function _109_()
-      if light_3f then
-        return white
+  local function render_state(light_3f, state)
+    local function decorate(f)
+      local base
+      local function _110_()
+        if light_3f then
+          return white
+        else
+          return black
+        end
+      end
+      base = {base_background(_110_())}
+      if f then
+        table.insert(base, f(light_3f))
       else
-        return black
+      end
+      return base
+    end
+    if (state == "kamui") then
+      return decorate(ryukomatoi_kamui)
+    elseif (state == "sailor") then
+      return decorate(ryukomatoi_sailor)
+    else
+      local _ = state
+      return decorate()
+    end
+  end
+  local function render_background(_3fappearance, state)
+    local light_3f = ((_3fappearance or get_appearance())):match("Light")
+    return render_state(light_3f, (state or "kamui"))
+  end
+  local function rotate_background(window)
+    if not wezterm.GLOBAL.backgrounds then
+      wezterm.GLOBAL.backgrounds = {}
+    else
+    end
+    local appearance = window:get_appearance()
+    local light_3f = appearance:match("Light")
+    local id = tostring(window:window_id())
+    local state
+    do
+      local _114_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
+      if (_114_ == "kamui") then
+        state = "sailor"
+      elseif (_114_ == "sailor") then
+        state = "none"
+      elseif (_114_ == "none") then
+        state = "kamui"
+      else
+        state = nil
       end
     end
-    return {base_background(_109_()), ryukomatoi_sailor(light_3f)}
+    local overrides = (window:get_config_overrides() or {})
+    do end (wezterm.GLOBAL.backgrounds)[id] = state
+    overrides.background = render_state(light_3f, wezterm.GLOBAL.backgrounds[id])
+    window:set_config_overrides(overrides)
+    return nil
   end
-  local function _110_(window, pane)
+  local function _116_(window, _)
     local overrides = (window:get_config_overrides() or {})
     local appearance = window:get_appearance()
     overrides.color_scheme = colorscheme(appearance)
-    overrides.background = background(appearance)
+    overrides.background = render_background(appearance, (wezterm.GLOBAL.backgrounds or {})[tostring(window:window_id())])
     return window:set_config_overrides(overrides)
   end
-  wezterm.on("window-config-reloaded", _110_)
-  return {color_scheme = colorscheme(), color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, background = background()}
+  wezterm.on("window-config-reloaded", _116_)
+  return {["rotate-background"] = rotate_background, ["render-background"] = render_background, colorscheme = colorscheme, dark = dark, light = light}
 end
-local function _111_(...)
+local function _117_(...)
   local _102_ = require("theme")
   return _102_
 end
-__fnl_global__merge_21(config, _111_(...))
+__fnl_global__merge_21(config, _117_(...))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_113_ = require("platform")
-  local is = _local_113_["is"]
+  local _local_119_ = require("platform")
+  local is = _local_119_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
@@ -639,7 +693,7 @@ package.preload["keys"] = package.preload["keys"] or function(...)
     cpmods = "CTRL|SHIFT"
   end
   local function common_keys()
-    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = cpmods, action = act.PasteFrom("Clipboard")}, {key = "c", mods = cpmods, action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}}
+    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "b", mods = "LEADER", action = wezterm.action_callback(require("themefn")["rotate-background"])}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = cpmods, action = act.PasteFrom("Clipboard")}, {key = "c", mods = cpmods, action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}}
   end
   local function macos_keys()
     if is.macos then
@@ -662,9 +716,9 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
-local function _116_(...)
-  local _112_ = require("keys")
-  return _112_
+local function _122_(...)
+  local _118_ = require("keys")
+  return _118_
 end
-__fnl_global__merge_21(config, _116_(...))
+__fnl_global__merge_21(config, _122_(...))
 return config
