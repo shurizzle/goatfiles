@@ -53,6 +53,7 @@ rules = [
   { name = "*/", use = [
     "edit",
     "open",
+    "play",
     "reveal",
   ] },
 
@@ -76,7 +77,6 @@ rules = [
     "edit",
     "reveal",
   ] },
-
   { mime = "application/json", use = [
     "edit",
     "reveal",
