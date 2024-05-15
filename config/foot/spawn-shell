@@ -1,0 +1,10 @@
+#!/bin/sh
+
+SHELL="$(getent passwd "$(id -u)" | cut -d: -f7)"
+export SHELL
+
+if which ptywrap >/dev/null 2>/dev/null; then
+    exec ptywrap "$SHELL"
+else
+    exec "$SHELL"
+fi
