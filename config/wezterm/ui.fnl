@@ -17,7 +17,7 @@
 (var gh-match {:regex "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?"
                :format "https://www.github.com/$1/$3"})
 
-{:front_end :WebGpu
+{:front_end (if (= :DomPerignon (wezterm.hostname)) :OpenGL :WebGpu)
  :window_decorations (if is.linux
                          (if (os.getenv :WAYLAND_DISPLAY) :RESIZE :NONE)
                          :RESIZE)
@@ -34,3 +34,4 @@
  :enable_wayland true
  :default_cursor_style :SteadyBar
  :hyperlink_rules (merge! (wezterm.default_hyperlink_rules) [gh-match])}
+

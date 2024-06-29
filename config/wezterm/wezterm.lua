@@ -495,16 +495,22 @@ package.preload["ui"] = package.preload["ui"] or function(...)
   wezterm.on("format-tab-title", _97_)
   local gh_match = {regex = "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?", format = "https://www.github.com/$1/$3"}
   local _98_
+  if ("DomPerignon" == wezterm.hostname()) then
+    _98_ = "OpenGL"
+  else
+    _98_ = "WebGpu"
+  end
+  local _100_
   if is.linux then
     if os.getenv("WAYLAND_DISPLAY") then
-      _98_ = "RESIZE"
+      _100_ = "RESIZE"
     else
-      _98_ = "NONE"
+      _100_ = "NONE"
     end
   else
-    _98_ = "RESIZE"
+    _100_ = "RESIZE"
   end
-  return {front_end = "WebGpu", window_decorations = _98_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  return {front_end = _98_, window_decorations = _100_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
@@ -552,17 +558,17 @@ package.preload["bell"] = package.preload["bell"] or function(...)
   end
   return {update = update, ["bell?"] = bell_3f}
 end
-local function _101_(...)
+local function _103_(...)
   local _84_ = require("ui")
   return _84_
 end
-__fnl_global__merge_21(config, _101_(...))
+__fnl_global__merge_21(config, _103_(...))
 package.preload["theme"] = package.preload["theme"] or function(...)
-  local _let_103_ = require("themefn")
-  local dark = _let_103_["dark"]
-  local light = _let_103_["light"]
-  local colorscheme = _let_103_["colorscheme"]
-  local render_background = _let_103_["render-background"]
+  local _let_105_ = require("themefn")
+  local dark = _let_105_["dark"]
+  local light = _let_105_["light"]
+  local colorscheme = _let_105_["colorscheme"]
+  local render_background = _let_105_["render-background"]
   return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
 end
 package.preload["themefn"] = package.preload["themefn"] or function(...)
@@ -589,22 +595,22 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     end
   end
   local function ryukomatoi_sailor(light_3f)
-    local _106_
-    if light_3f then
-      _106_ = 0.5
-    else
-      _106_ = 0.1
-    end
-    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _106_}
-  end
-  local function ryukomatoi_kamui(light_3f)
     local _108_
     if light_3f then
       _108_ = 0.5
     else
       _108_ = 0.1
     end
-    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _108_}
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _108_}
+  end
+  local function ryukomatoi_kamui(light_3f)
+    local _110_
+    if light_3f then
+      _110_ = 0.5
+    else
+      _110_ = 0.1
+    end
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _110_}
   end
   local function base_background(Color)
     return {source = {Color = Color}, width = "100%", height = "100%"}
@@ -612,14 +618,14 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
   local function render_state(light_3f, state)
     local function decorate(f)
       local base
-      local function _110_()
+      local function _112_()
         if light_3f then
           return white
         else
           return black
         end
       end
-      base = {base_background(_110_())}
+      base = {base_background(_112_())}
       if f then
         table.insert(base, f(light_3f))
       else
@@ -649,12 +655,12 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local _114_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
-      if (_114_ == "kamui") then
+      local _116_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
+      if (_116_ == "kamui") then
         state = "sailor"
-      elseif (_114_ == "sailor") then
+      elseif (_116_ == "sailor") then
         state = "none"
-      elseif (_114_ == "none") then
+      elseif (_116_ == "none") then
         state = "kamui"
       else
         state = nil
@@ -666,26 +672,26 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     window:set_config_overrides(overrides)
     return nil
   end
-  local function _116_(window, _)
+  local function _118_(window, _)
     local overrides = (window:get_config_overrides() or {})
     local appearance = window:get_appearance()
     overrides.color_scheme = colorscheme(appearance)
     overrides.background = render_background(appearance, (wezterm.GLOBAL.backgrounds or {})[tostring(window:window_id())])
     return window:set_config_overrides(overrides)
   end
-  wezterm.on("window-config-reloaded", _116_)
+  wezterm.on("window-config-reloaded", _118_)
   return {["rotate-background"] = rotate_background, ["render-background"] = render_background, colorscheme = colorscheme, dark = dark, light = light}
 end
-local function _117_(...)
-  local _102_ = require("theme")
-  return _102_
+local function _119_(...)
+  local _104_ = require("theme")
+  return _104_
 end
-__fnl_global__merge_21(config, _117_(...))
+__fnl_global__merge_21(config, _119_(...))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_119_ = require("platform")
-  local is = _local_119_["is"]
+  local _local_121_ = require("platform")
+  local is = _local_121_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
@@ -716,9 +722,9 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
-local function _122_(...)
-  local _118_ = require("keys")
-  return _118_
+local function _124_(...)
+  local _120_ = require("keys")
+  return _120_
 end
-__fnl_global__merge_21(config, _122_(...))
+__fnl_global__merge_21(config, _124_(...))
 return config
