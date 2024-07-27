@@ -402,7 +402,7 @@ keymap = [
   { on = [
     "g",
     "V",
-  ], run = "cd ~/Videos", desc = "Go to the downloads directory" },
+  ], run = "cd ~/Videos", desc = "Go to the Videos directory" },
   { on = [
     "g",
     "d",
