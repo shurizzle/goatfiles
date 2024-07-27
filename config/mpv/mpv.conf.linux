@@ -4,3 +4,5 @@ volume-max=200
 no-auto-window-resize
 no-keepaspect-window
 player-operation-mode=pseudo-gui
+osd-bar=no
+border=no
