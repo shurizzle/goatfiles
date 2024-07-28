@@ -1,0 +1,34 @@
+[
+  {
+    "title": "manager",
+    "git": "https://github.com/po5/mpv_manager",
+    "whitelist": "%.lua$",
+    "dest": "~~/scripts"
+  },
+  {
+    "title": "chapterskip",
+    "git": "https://github.com/po5/chapterskip",
+    "whitelist": "%.lua$",
+    "dest": "~~/scripts"
+  },
+  {
+    "title": "thumbfast",
+    "git": "https://github.com/po5/thumbfast",
+    "whitelist": "%.lua$",
+    "dest": "~~/scripts"
+  },
+  {
+    "title": "uosc",
+    "git": "https://github.com/tomasklaen/uosc",
+    "branch": "main",
+    "whitelist": "src/fonts/",
+    "dest": "~~/fonts"
+  },
+  {
+    "title": "uosc",
+    "git": "https://github.com/tomasklaen/uosc",
+    "branch": "main",
+    "whitelist": "src/uosc/",
+    "dest": "~~/scripts/uosc"
+  }
+]
