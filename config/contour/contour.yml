@@ -1,0 +1,147 @@
+live_config: true
+
+profiles:
+  main:
+    show_title_bar: false
+    font:
+      size: 9
+      locator: native
+      text_shaping:
+        engine: native
+      builtin_box_drawing: true
+      render_mode: gray
+      strict_spacing: true
+      regular:
+        family: "monospace"
+        weight: regular
+        slant: normal
+        features: ['ss01', 'ss03', 'ss04', 'ss05', 'ss06', 'ss07', 'ss08', 'calt', 'dlig']
+      emoji: 'emoji'
+    cursor:
+      shape: "bar"
+      blinking: false
+      blinking_interval: 500
+    colors:
+      light: default
+      dark: default
+
+color_schemes:
+  default:
+    default:
+      background: '#282828'
+      foreground: '#eeeeee'
+    normal:
+      black: '#282828'
+      red: '#c8213d'
+      green: '#169C51'
+      yellow: '#DAAF19'
+      blue: '#2F6CFF'
+      magenta: '#C14ABE'
+      cyan: '#48C6DB'
+      white: '#CBCBCB'
+    bright:
+      black: '#505050'
+      red: '#C7213D'
+      green: '#1ef15f'
+      yellow: '#FFE300'
+      blue: '#00aeff'
+      magenta: '#FF40BE'
+      cyan: '#48FFFF'
+      white: '#FFFFFF'
+    cursor:
+      default: CellForeground
+      text: CellBackground
+    hyperlink_decoration:
+      normal: '#f0f000'
+      hover: '#ff0000'
+    vi_mode_highlight:
+      foreground: CellForeground
+      foreground_alpha: 1.0
+      background: '#ffa500'
+      background_alpha: 0.5
+    vi_mode_cursorline:
+      foreground: '#ffffff'
+      foreground_alpha: 0.2
+      background: '#808080'
+      background_alpha: 0.4
+    selection:
+      foreground: CellForeground
+      foreground_alpha: 1.0
+      background: '#4040f0'
+      background_alpha: 0.5
+    search_highlight:
+      foreground: CellBackground
+      background: CellForeground
+      foreground_alpha: 1.0
+      background_alpha: 1.0
+    search_highlight_focused:
+      foreground: CellBackground
+      background: CellForeground
+      foreground_alpha: 1.0
+      background_alpha: 1.0
+    word_highlight_current:
+      foreground: CellForeground
+      background: '#909090'
+      foreground_alpha: 1.0
+      background_alpha: 0.5
+    word_highlight_other:
+      foreground: CellForeground
+      background: '#909090'
+      foreground_alpha: 1.0
+      background_alpha: 0.5
+    indicator_statusline:
+      foreground: '#808080'
+      background: '#000000'
+    indicator_statusline_inactive:
+      foreground: '#808080'
+      background: '#000000'
+    input_method_editor:
+      foreground: '#FFFFFF'
+      background: '#FF0000'
+
+input_mapping:
+  - { mods: [Control],        mouse: Left,        action: FollowHyperlink }
+  - { mods: [],               mouse: Middle,      action: PasteSelection }
+  - { mods: [],               mouse: WheelDown,   action: ScrollDown }
+  - { mods: [],               mouse: WheelUp,     action: ScrollUp }
+  - { mods: [Alt],            key: Enter,         action: ToggleFullscreen }
+  - { mods: [Alt],            mouse: WheelDown,   action: DecreaseOpacity }
+  - { mods: [Alt],            mouse: WheelUp,     action: IncreaseOpacity }
+  - { mods: [Control, Alt],   key: S,             action: ScreenshotVT }
+  - { mods: [Control, Shift], key: Plus,          action: IncreaseFontSize }
+  - { mods: [Control],        key: '0',           action: ResetFontSize }
+  - { mods: [Control, Shift], key: Minus,         action: DecreaseFontSize }
+  - { mods: [Control, Shift], key: '_',           action: DecreaseFontSize }
+  - { mods: [Control, Shift], key: N,             action: NewTerminal }
+  - { mods: [Control, Shift], key: V,             action: PasteClipboard, strip: false }
+  - { mods: [Control, Alt],   key: V,             action: PasteClipboard, strip: true }
+  - { mods: [Control],        key: C,             action: CopySelection, mode: 'Select|Insert' }
+  - { mods: [Control],        key: C,             action: CancelSelection, mode: 'Select|Insert' }
+  - { mods: [Control],        key: V,             action: PasteClipboard, strip: false, mode: 'Select|Insert' }
+  - { mods: [Control],        key: V,             action: CancelSelection, mode: 'Select|Insert' }
+  - { mods: [],               key: Escape,        action: CancelSelection, mode: 'Select|Insert' }
+  - { mods: [Control, Shift], key: Space,         action: ViNormalMode, mode: 'Insert' }
+  - { mods: [Control, Shift], key: Comma,         action: OpenConfiguration }
+  - { mods: [Control, Shift], key: Q,             action: Quit }
+  - { mods: [Control],        mouse: WheelDown,   action: DecreaseFontSize }
+  - { mods: [Control],        mouse: WheelUp,     action: IncreaseFontSize }
+  - { mods: [Shift],          key: DownArrow,     action: ScrollOneDown }
+  - { mods: [Shift],          key: End,           action: ScrollToBottom }
+  - { mods: [Shift],          key: Home,          action: ScrollToTop }
+  - { mods: [Shift],          key: PageDown,      action: ScrollPageDown }
+  - { mods: [Shift],          key: PageUp,        action: ScrollPageUp }
+  - { mods: [Shift],          key: UpArrow,       action: ScrollOneUp }
+  - { mods: [Control, Alt],   key: K,             action: ScrollMarkUp,   mode: "~Alt"}
+  - { mods: [Control, Alt],   key: J,             action: ScrollMarkDown, mode: "~Alt"}
+  - { mods: [Shift],          mouse: WheelDown,   action: ScrollPageDown }
+  - { mods: [Shift],          mouse: WheelUp,     action: ScrollPageUp }
+  - { mods: [Control, Alt],   key: O,             action: OpenFileManager }
+  - { mods: [Control, Alt],   key: '.',           action: ToggleStatusLine }
+  - { mods: [Control, Shift], key: 'F',           action: SearchReverse }
+  - { mods: [Control, Shift], key: 'H',           action: NoSearchHighlight }
+  - { mods: [],               key: 'F3',          action: FocusNextSearchMatch }
+  - { mods: [Shift],          key: 'F3',          action: FocusPreviousSearchMatch }
+# - { mods: [Control, Meta],  key: 'E',           action: TraceEnter,             mode: "~Trace" }
+# - { mods: [Control, Meta],  key: 'E',           action: TraceLeave,             mode: "Trace" }
+# - { mods: [Control, Meta],  key: 'N',           action: TraceStep,              mode: "Trace" }
+# - { mods: [Control, Meta],  key: 'F',           action: TraceBreakAtEmptyQueue, mode: "Trace" }
