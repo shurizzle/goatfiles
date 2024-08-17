@@ -1,5 +1,5 @@
 vo=gpu
-hwdec=nvdec
+hwdec=auto
 volume-max=200
 no-auto-window-resize
 no-keepaspect-window
