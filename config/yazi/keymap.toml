@@ -2,6 +2,7 @@
 # If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
 "$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
 
+
 [manager]
 
 keymap = [
@@ -757,3 +758,8 @@ keymap = [
     "/",
   ], run = "filter", desc = "Apply a filter for the help items" },
 ]
+
+[[manager.prepend_keymap]]
+on = "<C-s>"
+run = 'shell "$SHELL" --block --confirm'
+desc = "Open shell here"
