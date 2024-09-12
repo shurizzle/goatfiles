@@ -6,3 +6,4 @@ no-keepaspect-window
 player-operation-mode=pseudo-gui
 osd-bar=no
 border=no
+osd-fractions
