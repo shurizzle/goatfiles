@@ -10,10 +10,10 @@ keymap = [
     "<Esc>",
   ], run = "escape", desc = "Exit visual mode, clear selected, or cancel search" },
   { on = [
-    "q",
+    "Q",
   ], run = "quit", desc = "Exit the process" },
   { on = [
-    "Q",
+    "q",
   ], run = "quit --no-cwd-file", desc = "Exit the process without writing cwd-file" },
   { on = [
     "<C-q>",
