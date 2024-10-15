@@ -761,5 +761,5 @@ keymap = [
 
 [[manager.prepend_keymap]]
 on = "<C-s>"
-run = 'shell "$SHELL" --block --confirm'
+run = 'shell "tmux new -syazi -c \"$(pwd)\" \"$SHELL\" || tmux attach -tyazi\; neww -c \"$(pwd)\" \"$SHELL\"" --block --confirm'
 desc = "Open shell here"
