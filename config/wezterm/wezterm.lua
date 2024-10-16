@@ -38,32 +38,32 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   do local _ = {nil, nil} end
   local function _7_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_19_auto = {}
-    local i_20_auto = 0
+    local tbl_21_auto = {}
+    local i_22_auto = 0
     for k, _ in pairs(t) do
-      local val_21_auto = k
-      if (nil ~= val_21_auto) then
-        i_20_auto = (i_20_auto + 1)
-        do end (tbl_19_auto)[i_20_auto] = val_21_auto
+      local val_23_auto = k
+      if (nil ~= val_23_auto) then
+        i_22_auto = (i_22_auto + 1)
+        tbl_21_auto[i_22_auto] = val_23_auto
       else
       end
     end
-    return tbl_19_auto
+    return tbl_21_auto
   end
   _G.keys = _7_
   local function _9_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_19_auto = {}
-    local i_20_auto = 0
+    local tbl_21_auto = {}
+    local i_22_auto = 0
     for _, v in pairs(t) do
-      local val_21_auto = v
-      if (nil ~= val_21_auto) then
-        i_20_auto = (i_20_auto + 1)
-        do end (tbl_19_auto)[i_20_auto] = val_21_auto
+      local val_23_auto = v
+      if (nil ~= val_23_auto) then
+        i_22_auto = (i_22_auto + 1)
+        tbl_21_auto[i_22_auto] = val_23_auto
       else
       end
     end
-    return tbl_19_auto
+    return tbl_21_auto
   end
   _G.vals = _9_
   local function _11_(xs)
@@ -125,61 +125,65 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   end
   _G.some = _20_
   local function _21_(x)
-    local function _22_(_241, _242)
-      return not __fnl_global__number_3f(_242)
+    local and_22_ = __fnl_global__table_3f(x)
+    if and_22_ then
+      local function _23_(_241, _242)
+        return not __fnl_global__number_3f(_242)
+      end
+      and_22_ = not some(_23_, x)
     end
-    return (__fnl_global__table_3f(x) and not some(_22_, x))
+    return and_22_
   end
   _G.__fnl_global__list_3f = _21_
   _G["list?"] = _G.__fnl_global__list_3f
   do local _ = {nil, nil} end
-  local function _23_(v)
-    local function _24_()
+  local function _24_(v)
+    local function _25_()
       return v
     end
-    return _24_
+    return _25_
   end
-  _G.const = _23_
-  local function _25_(s)
+  _G.const = _24_
+  local function _26_(s)
     return string.gsub(s, "^%s*(.-)", "%1")
   end
-  _G.triml = _25_
-  local function _26_(s)
+  _G.triml = _26_
+  local function _27_(s)
     return string.gsub(s, "(.-)%s*$", "%1")
   end
-  _G.trimr = _26_
-  local function _27_(s)
+  _G.trimr = _27_
+  local function _28_(s)
     return string.gsub(s, "^%s*(.-)%s*$", "%1")
   end
-  _G.trim = _27_
+  _G.trim = _28_
   local function copy_2a(x, cache)
-    local _28_ = type(x)
-    if (_28_ == "table") then
+    local _29_ = type(x)
+    if (_29_ == "table") then
       if cache[x] then
         return cache[x]
       else
         local copy = {}
         local mt = getmetatable(x)
-        do end (cache)[x] = copy
+        cache[x] = copy
         for k, v in pairs(x) do
           copy[copy_2a(k, cache)] = copy_2a(v, cache)
         end
         return setmetatable(copy, mt)
       end
-    elseif ((_28_ == "number") or (_28_ == "string") or (_28_ == "nil") or (_28_ == "boolean") or (_28_ == "function")) then
+    elseif ((_29_ == "number") or (_29_ == "string") or (_29_ == "nil") or (_29_ == "boolean") or (_29_ == "function")) then
       return x
-    elseif (nil ~= _28_) then
-      local other = _28_
+    elseif (nil ~= _29_) then
+      local other = _29_
       return error(("Cannot deepcopy object of type " .. other))
     else
       return nil
     end
   end
-  local function _31_(x)
+  local function _32_(x)
     return copy_2a(x, {})
   end
-  _G.copy = _31_
-  local function _32_(...)
+  _G.copy = _32_
+  local function _33_(...)
     local args = {...}
     local res = nil
     for _, v in pairs(args) do
@@ -197,10 +201,10 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
     end
     return res
   end
-  _G.__fnl_global__concat_21 = _32_
+  _G.__fnl_global__concat_21 = _33_
   _G["concat!"] = _G.__fnl_global__concat_21
   do local _ = {nil, nil} end
-  local function _35_(...)
+  local function _36_(...)
     local args = {...}
     local res = nil
     for _, v in pairs(args) do
@@ -211,16 +215,16 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
     end
     return res
   end
-  _G.concat = _35_
-  local function _37_(res, ...)
+  _G.concat = _36_
+  local function _38_(res, ...)
     local args = {...}
-    local _38_
+    local _39_
     if __fnl_global__empty_3f(args) then
-      _38_ = not __fnl_global__nil_3f(res)
+      _39_ = not __fnl_global__nil_3f(res)
     else
-      _38_ = true
+      _39_ = true
     end
-    if _38_ then
+    if _39_ then
       assert(__fnl_global__table_3f(res), ("Expected table, got " .. type(res)))
     else
     end
@@ -235,13 +239,13 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
     end
     return res
   end
-  _G.__fnl_global__merge_21 = _37_
+  _G.__fnl_global__merge_21 = _38_
   _G["merge!"] = _G.__fnl_global__merge_21
   do local _ = {nil, nil} end
   local function can_merge(v)
     return (__fnl_global__table_3f(v) and (__fnl_global__empty_3f(v) or not __fnl_global__list_3f(v)))
   end
-  local function _42_(...)
+  local function _43_(...)
     local args = {...}
     local res = nil
     for _, tbl in pairs(args) do
@@ -263,18 +267,18 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
     end
     return res
   end
-  _G.__fnl_global__deep_2dmerge = _42_
+  _G.__fnl_global__deep_2dmerge = _43_
   _G["deep-merge"] = _G.__fnl_global__deep_2dmerge
   do local _ = {nil, nil} end
-  local function _46_(...)
+  local function _47_(...)
     local args = {...}
-    local _47_
+    local _48_
     if __fnl_global__empty_3f(args) then
-      _47_ = not __fnl_global__nil_3f(res)
+      _48_ = not __fnl_global__nil_3f(res)
     else
-      _47_ = true
+      _48_ = true
     end
-    if _47_ then
+    if _48_ then
       assert(__fnl_global__table_3f(res), ("Expected table, got " .. type(res)))
     else
     end
@@ -297,52 +301,52 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
     end
     return res
   end
-  _G.__fnl_global__deep_2dmerge_21 = _46_
+  _G.__fnl_global__deep_2dmerge_21 = _47_
   _G["deep-merge!"] = _G.__fnl_global__deep_2dmerge_21
   do local _ = {nil, nil} end
-  local function _53_(s, prefix)
+  local function _54_(s, prefix)
     assert(__fnl_global__string_3f(s), ("Expected string, got " .. type(s)))
     assert(__fnl_global__string_3f(prefix), ("Expected string, got " .. type(prefix)))
     return (s:sub(1, #prefix) == prefix)
   end
-  _G.__fnl_global__starts_2dwith_3f = _53_
+  _G.__fnl_global__starts_2dwith_3f = _54_
   _G["starts-with?"] = _G.__fnl_global__starts_2dwith_3f
   do local _ = {nil, nil} end
-  local function _54_(s, prefix)
+  local function _55_(s, prefix)
     if __fnl_global__starts_2dwith_3f(s, prefix) then
       return string.sub(s, inc(#prefix))
     else
       return nil
     end
   end
-  _G.__fnl_global__strip_2dprefix = _54_
+  _G.__fnl_global__strip_2dprefix = _55_
   _G["strip-prefix"] = _G.__fnl_global__strip_2dprefix
   do local _ = {nil, nil} end
-  local function _56_(s, suffix)
+  local function _57_(s, suffix)
     assert(__fnl_global__string_3f(s), ("Expected string, got " .. type(s)))
     assert(__fnl_global__string_3f(suffix), ("Expected string, got " .. type(suffix)))
     return ((0 == #suffix) or (s:sub(( - #suffix)) == suffix))
   end
-  _G.__fnl_global__ends_2dwith_3f = _56_
+  _G.__fnl_global__ends_2dwith_3f = _57_
   _G["ends-with?"] = _G.__fnl_global__ends_2dwith_3f
   do local _ = {nil, nil} end
-  local function _57_(s, suffix)
+  local function _58_(s, suffix)
     if __fnl_global__ends_2dwith_3f(s, suffix) then
       return string.sub(s, 1, (#s - #suffix))
     else
       return nil
     end
   end
-  _G.__fnl_global__strip_2dsuffix = _57_
+  _G.__fnl_global__strip_2dsuffix = _58_
   _G["strip-suffix"] = _G.__fnl_global__strip_2dsuffix
   do local _ = {nil, nil} end
-  local function _59_(path)
-    local _60_, _61_ = io.open(path, "r")
-    if ((_60_ == nil) and true) then
-      local _msg = _61_
+  local function _60_(path)
+    local _61_, _62_ = io.open(path, "r")
+    if ((_61_ == nil) and true) then
+      local _msg = _62_
       return nil
-    elseif (nil ~= _60_) then
-      local f = _60_
+    elseif (nil ~= _61_) then
+      local f = _61_
       local content = f:read("*all")
       f:close()
       return content
@@ -350,11 +354,11 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
       return nil
     end
   end
-  _G.slurp = _59_
-  local function _63_(f)
+  _G.slurp = _60_
+  local function _64_(f)
     assert(__fnl_global__function_3f(f), ("Expected function, got " .. type(f)))
     local called = false
-    local function _64_(...)
+    local function _65_(...)
       if not called then
         called = true
         return f(...)
@@ -362,17 +366,16 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
         return nil
       end
     end
-    return _64_
+    return _65_
   end
-  _G.once = _63_
+  _G.once = _64_
   return nil
 end
 require("stdlib")
 local wezterm = require("wezterm")
 package.preload["platform"] = package.preload["platform"] or function(...)
   local wezterm = require("wezterm")
-  local _local_67_ = os
-  local getenv = _local_67_["getenv"]
+  local getenv = os["getenv"]
   local arch, os = nil, nil
   do
     local i1 = string.find(wezterm.target_triple, "-")
@@ -399,18 +402,18 @@ package.preload["platform"] = package.preload["platform"] or function(...)
   end
   _is["bsd"] = (_is.mac or _is.fbsd or _is.dfbsd or _is.nbsd or _is.obsd)
   local function ro(t)
-    local function _70_(_241, _242)
+    local function _69_(_241, _242)
       return t[_242]
     end
-    local function _71_()
+    local function _70_()
       return nil
     end
-    return setmetatable({}, {__index = _70_, __newindex = _71_})
+    return setmetatable({}, {__index = _69_, __newindex = _70_})
   end
   return ro({os = os0, is = ro(_is), arch = arch})
 end
-local _local_66_ = require("platform")
-local is = _local_66_["is"]
+local _local_71_ = require("platform")
+local is = _local_71_["is"]
 local config
 if wezterm.config_builder then
   config = wezterm.config_builder()
@@ -433,13 +436,13 @@ package.preload["domains"] = package.preload["domains"] or function(...)
     end
     for _, name in ipairs({"vercingetorige", "DomPerignon", "filottete"}) do
       if (name ~= wezterm.hostname()) then
-        local _75_
+        local _74_
         if (name == "filottete") then
-          _75_ = "None"
+          _74_ = "None"
         else
-          _75_ = "WezTerm"
+          _74_ = "WezTerm"
         end
-        table.insert(ds, {name = name, remote_address = (name .. ".local"), multiplexing = _75_, assume_shell = "Posix"})
+        table.insert(ds, {name = name, remote_address = (name .. ".local"), multiplexing = _74_, assume_shell = "Posix"})
       else
       end
     end
@@ -447,84 +450,75 @@ package.preload["domains"] = package.preload["domains"] or function(...)
   end
   return {ssh_domains = ssh_domains()}
 end
-local function _78_(...)
-  local _74_ = require("domains")
-  return _74_
-end
-__fnl_global__merge_21(config, _78_(...))
+__fnl_global__merge_21(config, (require("domains")))
 package.preload["font"] = package.preload["font"] or function(...)
+  local wezterm = require("wezterm")
+  local _local_77_ = require("platform")
+  local is = _local_77_["is"]
+  local hostname = wezterm.hostname()
+  local harfbuzz_features = {"ss01", "ss02=0", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "calt", "dlig"}
+  local _78_
+  if ("DomPerignon" == hostname) then
+    _78_ = 9
+  else
+    _78_ = 10
+  end
+  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font({family = "Monaspace Argon", harfbuzz_features = harfbuzz_features}), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", harfbuzz_features = harfbuzz_features, italic = false})}, {intensity = "Half", font = wezterm.font({family = "Monaspace Radon", weight = "Medium", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}, {intensity = "Bold", font = wezterm.font({family = "Monaspace Radon", weight = "Bold", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}}, font_size = _78_, warn_about_missing_glyphs = false}
+end
+__fnl_global__merge_21(config, (require("font")))
+package.preload["ui"] = package.preload["ui"] or function(...)
   local wezterm = require("wezterm")
   local _local_80_ = require("platform")
   local is = _local_80_["is"]
-  local hostname = wezterm.hostname()
-  local harfbuzz_features = {"ss01", "ss02=0", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "calt", "dlig"}
-  local _81_
-  if ("DomPerignon" == hostname) then
-    _81_ = 9
-  else
-    _81_ = 10
-  end
-  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font({family = "Monaspace Argon", harfbuzz_features = harfbuzz_features}), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", harfbuzz_features = harfbuzz_features, italic = false})}, {intensity = "Half", font = wezterm.font({family = "Monaspace Radon", weight = "Medium", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}, {intensity = "Bold", font = wezterm.font({family = "Monaspace Radon", weight = "Bold", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}}, font_size = _81_, warn_about_missing_glyphs = false}
-end
-local function _83_(...)
-  local _79_ = require("font")
-  return _79_
-end
-__fnl_global__merge_21(config, _83_(...))
-package.preload["ui"] = package.preload["ui"] or function(...)
-  local wezterm = require("wezterm")
-  local _local_85_ = require("platform")
-  local is = _local_85_["is"]
-  local _local_86_ = require("bell")
-  local update_bell = _local_86_["update"]
-  local bell_3f = _local_86_["bell?"]
+  local _local_89_ = require("bell")
+  local update_bell = _local_89_["update"]
+  local bell_3f = _local_89_["bell?"]
   local function tab_title(tab, max_width)
-    local function _96_()
-      if bell_3f(tab.window_id, tab.tab_id) then
-        return "\240\159\148\148"
-      else
-        return ""
-      end
+    local _90_
+    if bell_3f(tab.window_id, tab.tab_id) then
+      _90_ = "\240\159\148\148"
+    else
+      _90_ = ""
     end
-    return wezterm.truncate_right((_96_() .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
+    return wezterm.truncate_right((_90_ .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
   end
-  local function _97_(tab, _, _0, _1, _2, max_width)
+  local function _92_(tab, _, _0, _1, _2, max_width)
     update_bell(tab.window_id)
     return (" " .. tab_title(tab, max_width) .. " ")
   end
-  wezterm.on("format-tab-title", _97_)
+  wezterm.on("format-tab-title", _92_)
   local gh_match = {regex = "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?", format = "https://www.github.com/$1/$3"}
-  local _98_
+  local _93_
   if ("DomPerignon" == wezterm.hostname()) then
-    _98_ = "OpenGL"
+    _93_ = "OpenGL"
   else
-    _98_ = "WebGpu"
+    _93_ = "WebGpu"
   end
-  local _100_
+  local _95_
   if is.linux then
     if os.getenv("WAYLAND_DISPLAY") then
-      _100_ = "RESIZE"
+      _95_ = "RESIZE"
     else
-      _100_ = "NONE"
+      _95_ = "NONE"
     end
   else
-    _100_ = "RESIZE"
+    _95_ = "RESIZE"
   end
-  return {front_end = _98_, window_decorations = _100_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  return {front_end = _93_, window_decorations = _95_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
   wezterm.GLOBAL.bells = {}
   local function update(win_id)
-    local _87_ = wezterm.GLOBAL.bells[tostring(win_id)]
-    if (nil ~= _87_) then
-      _87_[tostring(wezterm.mux.get_window(win_id):active_tab():tab_id())] = nil
+    local tmp_3_auto = wezterm.GLOBAL.bells[tostring(win_id)]
+    if (nil ~= tmp_3_auto) then
+      tmp_3_auto[tostring(wezterm.mux.get_window(win_id):active_tab():tab_id())] = nil
       return nil
     else
-      return _87_
+      return nil
     end
   end
-  local function _89_(window, pane)
+  local function _82_(window, pane)
     if os.getenv("WAYLAND_DISPLAY") then
       wezterm.background_child_process({"paplay", "/usr/share/sounds/freedesktop/stereo/bell.oga"})
     else
@@ -533,42 +527,38 @@ package.preload["bell"] = package.preload["bell"] or function(...)
     local tab_id = pane:tab():tab_id()
     if (window:active_tab():tab_id() ~= tab_id) then
       wezterm.GLOBAL.bells[tostring(win_id)] = (wezterm.GLOBAL.bells[tostring(win_id)] or {})
-      do end (wezterm.GLOBAL.bells[tostring(win_id)])[tostring(tab_id)] = tab_id
+      wezterm.GLOBAL.bells[tostring(win_id)][tostring(tab_id)] = tab_id
       return nil
     else
       return nil
     end
   end
-  wezterm.on("bell", _89_)
+  wezterm.on("bell", _82_)
   local function bell_3f(win_id, tab_id)
-    local _93_
+    local _86_
     do
-      local t_92_ = wezterm.GLOBAL.bells
-      if (nil ~= t_92_) then
-        t_92_ = t_92_[tostring(win_id)]
+      local t_85_ = wezterm.GLOBAL.bells
+      if (nil ~= t_85_) then
+        t_85_ = t_85_[tostring(win_id)]
       else
       end
-      if (nil ~= t_92_) then
-        t_92_ = t_92_[tostring(tab_id)]
+      if (nil ~= t_85_) then
+        t_85_ = t_85_[tostring(tab_id)]
       else
       end
-      _93_ = t_92_
+      _86_ = t_85_
     end
-    return (_93_ == tab_id)
+    return (_86_ == tab_id)
   end
   return {update = update, ["bell?"] = bell_3f}
 end
-local function _103_(...)
-  local _84_ = require("ui")
-  return _84_
-end
-__fnl_global__merge_21(config, _103_(...))
+__fnl_global__merge_21(config, (require("ui")))
 package.preload["theme"] = package.preload["theme"] or function(...)
-  local _let_105_ = require("themefn")
-  local dark = _let_105_["dark"]
-  local light = _let_105_["light"]
-  local colorscheme = _let_105_["colorscheme"]
-  local render_background = _let_105_["render-background"]
+  local _let_111_ = require("themefn")
+  local dark = _let_111_["dark"]
+  local light = _let_111_["light"]
+  local colorscheme = _let_111_["colorscheme"]
+  local render_background = _let_111_["render-background"]
   return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
 end
 package.preload["themefn"] = package.preload["themefn"] or function(...)
@@ -588,29 +578,29 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     end
   end
   local function colorscheme(_3fappearance)
-    if ((_3fappearance or get_appearance())):match("Light") then
+    if (_3fappearance or get_appearance()):match("Light") then
       return "BlueSky Light"
     else
       return "BlueSky Dark"
     end
   end
   local function ryukomatoi_sailor(light_3f)
-    local _108_
+    local _100_
     if light_3f then
-      _108_ = 0.5
+      _100_ = 0.5
     else
-      _108_ = 0.1
+      _100_ = 0.1
     end
-    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _108_}
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _100_}
   end
   local function ryukomatoi_kamui(light_3f)
-    local _110_
+    local _102_
     if light_3f then
-      _110_ = 0.5
+      _102_ = 0.5
     else
-      _110_ = 0.1
+      _102_ = 0.1
     end
-    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _110_}
+    return {source = {File = (os.getenv("HOME") .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _102_}
   end
   local function base_background(Color)
     return {source = {Color = Color}, width = "100%", height = "100%"}
@@ -618,14 +608,14 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
   local function render_state(light_3f, state)
     local function decorate(f)
       local base
-      local function _112_()
+      local function _104_()
         if light_3f then
           return white
         else
           return black
         end
       end
-      base = {base_background(_112_())}
+      base = {base_background(_104_())}
       if f then
         table.insert(base, f(light_3f))
       else
@@ -642,7 +632,7 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     end
   end
   local function render_background(_3fappearance, state)
-    local light_3f = ((_3fappearance or get_appearance())):match("Light")
+    local light_3f = (_3fappearance or get_appearance()):match("Light")
     return render_state(light_3f, (state or "kamui"))
   end
   local function rotate_background(window)
@@ -655,43 +645,39 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local _116_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
-      if (_116_ == "kamui") then
+      local _108_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
+      if (_108_ == "kamui") then
         state = "sailor"
-      elseif (_116_ == "sailor") then
+      elseif (_108_ == "sailor") then
         state = "none"
-      elseif (_116_ == "none") then
+      elseif (_108_ == "none") then
         state = "kamui"
       else
         state = nil
       end
     end
     local overrides = (window:get_config_overrides() or {})
-    do end (wezterm.GLOBAL.backgrounds)[id] = state
+    wezterm.GLOBAL.backgrounds[id] = state
     overrides.background = render_state(light_3f, wezterm.GLOBAL.backgrounds[id])
     window:set_config_overrides(overrides)
     return nil
   end
-  local function _118_(window, _)
+  local function _110_(window, _)
     local overrides = (window:get_config_overrides() or {})
     local appearance = window:get_appearance()
     overrides.color_scheme = colorscheme(appearance)
     overrides.background = render_background(appearance, (wezterm.GLOBAL.backgrounds or {})[tostring(window:window_id())])
     return window:set_config_overrides(overrides)
   end
-  wezterm.on("window-config-reloaded", _118_)
+  wezterm.on("window-config-reloaded", _110_)
   return {["rotate-background"] = rotate_background, ["render-background"] = render_background, colorscheme = colorscheme, dark = dark, light = light}
 end
-local function _119_(...)
-  local _104_ = require("theme")
-  return _104_
-end
-__fnl_global__merge_21(config, _119_(...))
+__fnl_global__merge_21(config, (require("theme")))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_121_ = require("platform")
-  local is = _local_121_["is"]
+  local _local_112_ = require("platform")
+  local is = _local_112_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
@@ -722,9 +708,5 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
-local function _124_(...)
-  local _120_ = require("keys")
-  return _120_
-end
-__fnl_global__merge_21(config, _124_(...))
+__fnl_global__merge_21(config, (require("keys")))
 return config
