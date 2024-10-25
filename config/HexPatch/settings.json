@@ -1,0 +1,112 @@
+{
+  "key": {
+    "up": {
+      "code": {
+        "Char": "k"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "down": {
+      "code": {
+        "Char": "j"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "left": {
+      "code": {
+        "Char": "h"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "right": {
+      "code": {
+        "Char": "l"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "next": {
+      "code": "Tab",
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "previous": {
+      "code": "BackTab",
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "page_up": {
+      "code": {
+        "Char": "u"
+      },
+      "modifiers": "CONTROL",
+      "kind": "Press",
+      "state": ""
+    },
+    "page_down": {
+      "code": {
+        "Char": "f"
+      },
+      "modifiers": "CONTROL",
+      "kind": "Press",
+      "state": ""
+    },
+    "goto_start": {
+      "code": {
+        "Char": "g"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "goto_end": {
+      "code": {
+        "Char": "g"
+      },
+      "modifiers": "SHIFT",
+      "kind": "Press",
+      "state": ""
+    },
+    "help": {
+      "code": {
+        "Char": "?"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "jump": {
+      "code": {
+        "Char": ":"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "undo": {
+      "code": {
+        "Char": "u"
+      },
+      "modifiers": "",
+      "kind": "Press",
+      "state": ""
+    },
+    "redo": {
+      "code": {
+        "Char": "r"
+      },
+      "modifiers": "CONTROL",
+      "kind": "Press",
+      "state": ""
+    }
+  }
+}
