@@ -14,8 +14,8 @@
     (values (fn [...]
               ((. (require :luv) fn-name) ...)
               (await p))
-            (fn cb [...]
+            (fn [...]
               (resolve p (uv-callback ...))))))
 
-{: uv-callback
- : uv-wrapper}
+{: uv-callback : uv-wrapper}
+

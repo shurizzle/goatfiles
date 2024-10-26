@@ -10,6 +10,5 @@
   (remove-symlink (path-join *project* :config :luakit)
                   (path-join (os.getenv :HOME) :.config :luakit)))
 
-{:cond is.linux
- : up
- : down}
+{:cond is.linux : up : down}
+

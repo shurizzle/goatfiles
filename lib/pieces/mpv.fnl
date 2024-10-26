@@ -7,11 +7,14 @@
 (local dst (path-join (os.getenv :HOME) :.config :mpv))
 
 (local os-srcs (let [j #(path-join *project* :config :mpv (.. :mpv.conf. $1))]
-                 {:linux (j :linux)
-                  :macos (j :macos)}))
-(fn os-src [] (match-platform
-                linux os-srcs.linux
-                macos os-srcs.macos))
+                 {:linux (j :linux) :macos (j :macos)}))
+
+;; fnlfmt: skip
+(fn os-src []
+  (match-platform
+    linux os-srcs.linux
+    macos os-srcs.macos))
+
 (local os-dst (path-join dst :mpv.conf))
 
 (fn up []
@@ -22,6 +25,5 @@
   (remove-symlink (os-src) os-dst os-srcs)
   (remove-symlink src dst))
 
-{:cond is.unix
- : up
- : down}
+{:cond is.unix : up : down}
+

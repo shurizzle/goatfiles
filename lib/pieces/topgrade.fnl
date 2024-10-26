@@ -4,14 +4,15 @@
 (import-macros {: match-platform} :platform-macros)
 
 (local paths (let [j #(path-join *project* :config (.. :topgrade.toml. $1))]
-               {:macos (j :macos)
-                :linux (j :arch-desktop)}))
+               {:macos (j :macos) :linux (j :arch-desktop)}))
 
+;; fnlfmt: skip
 (fn src []
   (match-platform
     linux paths.linux
     macos paths.macos))
 
+;; fnlfmt: skip
 (fn dst []
   (match-platform
     unix (path-join (os.getenv :HOME) :.config :topgrade.toml)))
@@ -22,6 +23,5 @@
 (fn down []
   (remove-symlink (src) (dst) paths))
 
-{:cond is.unix
- : up
- : down}
+{:cond is.unix : up : down}
+

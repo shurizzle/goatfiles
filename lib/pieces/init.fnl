@@ -10,14 +10,15 @@
 
 (fn retrieve [pieces]
   (fn add-piece [name]
-    (when (and (not= name :init)
-               (not= name :util))
+    (when (and (not= name :init) (not= name :util))
       (let [piece (require (.. :pieces. name))]
-        (if
-          (= :function (type piece.cond)) (set piece.cond (piece.cond))
-          (= :boolean (type piece.cond)) nil
-          (= nil piece.cond) (set piece.cond true)
-          (error (.. "inval condition " (view piece.cond) " for piece " name)))
+        (if (= :function (type piece.cond))
+            (set piece.cond (piece.cond))
+            (= :boolean (type piece.cond))
+            nil
+            (= nil piece.cond)
+            (set piece.cond true)
+            (error (.. "inval condition " (view piece.cond) " for piece " name)))
         (tset pieces name piece))))
 
   (let [base (path-join *project* :lib :pieces)
@@ -36,3 +37,4 @@
                   (retrieve p)
                   p)))
   pieces)
+

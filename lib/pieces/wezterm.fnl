@@ -5,6 +5,7 @@
 (fn src []
   (path-join *project* :config :wezterm))
 
+;; fnlfmt: skip
 (fn dst []
   (match-platform
     unix (path-join (os.getenv :HOME) :.config :wezterm)
@@ -16,6 +17,5 @@
 (fn down []
   (remove-symlink (src) (dst)))
 
-{:cond true
- : up
- : down}
+{:cond true : up : down}
+

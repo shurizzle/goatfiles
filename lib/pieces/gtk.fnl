@@ -12,6 +12,5 @@
     (remove-symlink (path-join *project* :config (.. :gtk- v))
                     (path-join (os.getenv :HOME) :.config (.. :gtk- v)))))
 
-{:cond is.unix
- : up
- : down}
+{:cond is.unix : up : down}
+

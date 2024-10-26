@@ -1,20 +1,19 @@
 (local {: is} (require :platform))
 
-(if
-  is.unix
+(if is.unix
     (do
       (local {: path} (require :os-util))
       (local {: access : path-join : lstat} (require :fs))
       (local {: filter-map} (require :iter))
 
       (fn file-or-link? [path]
-        (match (lstat path)
+        (case (lstat path)
           (nil _ :ENOENT) false
           (nil err _) (error err)
           md (or (= md.type :link) (= md.type :file))))
 
       (fn executable? [path]
-        (match (access path :X)
+        (case (access path :X)
           (nil _ :ENOENT) false
           (nil err _) (error err)
           res res))
@@ -30,8 +29,7 @@
       (fn which [bin]
         ((which-all bin)))
 
-      {: which-all
-       : which})
+      {: which-all : which})
     (do
       (local {: path-join : stat : scandir} (require :fs))
       (local {: filter-map} (require :iter))
@@ -42,7 +40,7 @@
           e))
 
       (fn file? [path]
-        (match (stat path)
+        (case (stat path)
           (nil _ :ENOENT) false
           (nil err _) (error err)
           md (= md.type :file)))
@@ -78,10 +76,9 @@
                     file*))))))
 
       (fn search-in [dir matcher]
-        (filter-map
-          (fn [file]
-            (-?>> (matcher file) (path-join dir)))
-          (scandir dir)))
+        (filter-map (fn [file]
+                      (-?>> (matcher file) (path-join dir)))
+                    (scandir dir)))
 
       (fn which-all [bin]
         (let [exts (exts)
@@ -90,15 +87,20 @@
           (var searcher nil)
           (fn []
             (var res nil)
+
             (fn step []
               (if searcher
                   (let [r (searcher)]
                     (if r
-                        (do (set res r) true)
-                        (do (set searcher nil) false)))
+                        (do
+                          (set res r) true)
+                        (do
+                          (set searcher nil) false)))
                   (let [dir (paths)]
                     (if dir
-                        (do (set searcher (search-in dir matcher)) false)
+                        (do
+                          (set searcher (search-in dir matcher))
+                          false)
                         true))))
 
             (while (not (step)))
@@ -107,5 +109,5 @@
       (fn which [bin]
         ((which-all bin)))
 
-      {: which-all
-       : which}))
+      {: which-all : which}))
+

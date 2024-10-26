@@ -5,6 +5,7 @@
 (fn src []
   (path-join *project* :config :foot))
 
+;; fnlfmt: skip
 (fn dst []
   (match-platform
     unix (path-join (os.getenv :HOME) :.config :foot)))
@@ -15,6 +16,5 @@
 (fn down []
   (remove-symlink (src) (dst)))
 
-{:cond true
- : up
- : down}
+{:cond true : up : down}
+

@@ -1,5 +1,6 @@
 (local {: realpath : symlink : lstat : unlink : path-join : path-relative}
        (require :fs))
+
 (local {: cmd? : exec} (require :os-util))
 
 (fn contains? [haystack needle]
@@ -10,18 +11,15 @@
   false)
 
 (fn validate [src dest ?valid-dests]
-  (match (lstat dest)
+  (case (lstat dest)
     (nil _ :ENOENT) :not-found
     (nil err _) (error err)
     md (if (= md.type :link)
-           (match (realpath dest)
+           (case (realpath dest)
              (nil _ :ENOENT) :not-found
              (nil err _) (error err)
-             path (if (= path src)
-                      :same
-                      (if (contains? ?valid-dests path)
-                          :owned
-                          :unowned)))
+             path (if (= path src) :same
+                      (if (contains? ?valid-dests path) :owned :unowned)))
            :unowned)))
 
 (fn create-symlink [src dest ?valid-dests ?opts]
@@ -29,7 +27,7 @@
     (io.stdout:write (.. "ln -s " src " -> " dest "\n"))
     (assert (symlink src dest ?opts)))
 
-  (match (validate src dest ?valid-dests)
+  (case (validate src dest ?valid-dests)
     :not-found (link*)
     :owned (do
              (assert (unlink dest))
@@ -43,7 +41,7 @@
     (io.stdout:write (.. "rm " dest "\n"))
     (assert (unlink dest)))
 
-  (match (validate src dest ?valid-dests)
+  (case (validate src dest ?valid-dests)
     (where (or :same :owned)) (unlink*)
     :not-found nil
     :unowned (error (.. dest " is unmanaged, remove it manually to continue"))))
@@ -57,12 +55,10 @@
   nil)
 
 (fn is-dir [path]
-  (match (lstat path)
+  (case (lstat path)
     (nil _ :ENOENT) nil
     (nil err _) (error err)
-    md (if (= :directory md.type)
-           true
-           false)))
+    md (if (= :directory md.type) true false)))
 
 (fn trim [s]
   (string.gsub s "^%s*(.-)%s*$" "%1"))
@@ -75,7 +71,7 @@
                                   :hide true})]
     (if (= 0 code)
         (let [p (trim stdout)
-              d (path-join (path-relative path p) :..)
+              d (path-join (path-relative path p) "..")
               dir (assert (realpath d))]
           (or (= path dir) (= (assert (realpath path)) dir)))
         false)))
@@ -92,7 +88,7 @@
           url)))))
 
 (fn git-clone [remote path ?args]
-  (var args [:clone])
+  (local args [:clone])
   (when ?args
     (each [_ v (pairs ?args)]
       (table.insert args v)))
@@ -104,7 +100,7 @@
 
 (fn clone-git-repo [remote path ?args]
   (need-cmds :git)
-  (match (is-dir path)
+  (case (is-dir path)
     nil (git-clone remote path ?args)
     true (if (is-git-repo path)
              (when (not= remote (git-remote path :origin))
@@ -112,7 +108,5 @@
              (error (.. path " is unmanaged, remove manually to continue")))
     false (error (.. path " is unmanaged, remove manually to continue"))))
 
-{: create-symlink
- : remove-symlink
- : need-cmds
- : clone-git-repo}
+{: create-symlink : remove-symlink : need-cmds : clone-git-repo}
+

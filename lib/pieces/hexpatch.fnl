@@ -5,11 +5,12 @@
 (fn src []
   (path-join *project* :config :HexPatch))
 
+;; fnlfmt: skip
 (fn dst []
-  (match-platform windows (path-join (os.getenv :APPDATA) :HexPatch) macos
-                  (path-join (os.getenv :HOME)
-                             "Library/Application Support/HexPatch")
-                  unix (path-join (os.getenv :HOME) :.config :HexPatch)))
+  (match-platform
+    windows (path-join (os.getenv :APPDATA) :HexPatch)
+    macos (path-join (os.getenv :HOME) "Library/Application Support/HexPatch")
+    unix (path-join (os.getenv :HOME) :.config :HexPatch)))
 
 (fn up []
   (create-symlink (src) (dst) nil {:dir true}))

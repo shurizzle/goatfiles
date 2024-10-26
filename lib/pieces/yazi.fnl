@@ -14,5 +14,5 @@
 (fn down []
   (remove-symlink src dst))
 
-{: up
- : down}
+{: up : down}
+

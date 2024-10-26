@@ -19,16 +19,13 @@
       (if o.err
           (error o.err)
           (coroutine.yield)))
-    (values (unpack o.res)))
+    (unpack o.res))
 
   (if ?f
       (do
         (?f (partial resolve nil) (partial reject nil))
         (await))
-      (setmetatable {} {:__index {: resolved?
-                                  : resolve
-                                  : reject
-                                  : await}})))
+      (setmetatable {} {:__index {: resolved? : resolve : reject : await}})))
 
 (fn resolved? [promise]
   (promise:resolved?))
@@ -42,8 +39,5 @@
 (fn await [promise]
   (promise:await))
 
-{: make-promise
- : resolved?
- : resolve
- : reject
- : await}
+{: make-promise : resolved? : resolve : reject : await}
+

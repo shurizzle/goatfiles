@@ -10,6 +10,5 @@
   (remove-symlink (path-join *project* :config :mpd)
                   (path-join (os.getenv :HOME) :.config :mpd)))
 
-{:cond is.linux
- : up
- : down}
+{:cond is.linux : up : down}
+

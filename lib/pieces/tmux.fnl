@@ -17,6 +17,5 @@
                   (path-join (os.getenv :HOME) :.tmux.conf))
   (remove-symlink src dst))
 
-{:cond is.unix
- : up
- : down}
+{:cond is.unix : up : down}
+

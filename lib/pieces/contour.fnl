@@ -5,8 +5,10 @@
 (fn src []
   (path-join *project* :config :contour))
 
+;; fnlfmt: skip
 (fn dst []
-  (match-platform unix (path-join (os.getenv :HOME) :.config :contour)))
+  (match-platform
+    unix (path-join (os.getenv :HOME) :.config :contour)))
 
 (fn up []
   (create-symlink (src) (dst) nil {:dir true}))
