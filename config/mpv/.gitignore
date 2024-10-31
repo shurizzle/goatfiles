@@ -1,4 +1,3 @@
 /mpv.conf
 /fonts
-/scripts/*
-!/scripts/au.lua
+/scripts
