@@ -158,10 +158,6 @@ previewers = [
   { name = "*", run = "file" },
 ]
 
-prepend_previewers = [{ mime = "video/*", run = "video-ffmpeg" }]
-
-prepend_preloaders = [{ mime = "video/*", run = "video-ffmpeg" }]
-
 [input]
 cursor_blink = false
 

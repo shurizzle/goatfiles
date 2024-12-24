@@ -1,5 +1,5 @@
 [plugin]
-deps = [{ use = "Tyarel8/video-ffmpeg", rev = "fe26a18" }]
+deps = []
 
 [flavor]
 deps = []
