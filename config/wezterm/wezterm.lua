@@ -554,11 +554,11 @@ package.preload["bell"] = package.preload["bell"] or function(...)
 end
 __fnl_global__merge_21(config, (require("ui")))
 package.preload["theme"] = package.preload["theme"] or function(...)
-  local _let_111_ = require("themefn")
-  local dark = _let_111_["dark"]
-  local light = _let_111_["light"]
-  local colorscheme = _let_111_["colorscheme"]
-  local render_background = _let_111_["render-background"]
+  local _let_114_ = require("themefn")
+  local dark = _let_114_["dark"]
+  local light = _let_114_["light"]
+  local colorscheme = _let_114_["colorscheme"]
+  local render_background = _let_114_["render-background"]
   return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
 end
 package.preload["themefn"] = package.preload["themefn"] or function(...)
@@ -605,31 +605,40 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
   local function base_background(Color)
     return {source = {Color = Color}, width = "100%", height = "100%"}
   end
-  local function render_state(light_3f, state)
-    local function decorate(f)
-      local base
-      local function _104_()
-        if light_3f then
-          return white
-        else
-          return black
+  local render_state
+  if ("DomPerignon" == wezterm.hostname()) then
+    local function _104_()
+      return nil
+    end
+    render_state = _104_
+  else
+    local function _105_(light_3f, state)
+      local function decorate(f)
+        local base
+        local function _106_()
+          if light_3f then
+            return white
+          else
+            return black
+          end
         end
+        base = {base_background(_106_())}
+        if f then
+          table.insert(base, f(light_3f))
+        else
+        end
+        return base
       end
-      base = {base_background(_104_())}
-      if f then
-        table.insert(base, f(light_3f))
+      if (state == "kamui") then
+        return decorate(ryukomatoi_kamui)
+      elseif (state == "sailor") then
+        return decorate(ryukomatoi_sailor)
       else
+        local _ = state
+        return decorate()
       end
-      return base
     end
-    if (state == "kamui") then
-      return decorate(ryukomatoi_kamui)
-    elseif (state == "sailor") then
-      return decorate(ryukomatoi_sailor)
-    else
-      local _ = state
-      return decorate()
-    end
+    render_state = _105_
   end
   local function render_background(_3fappearance, state)
     local light_3f = (_3fappearance or get_appearance()):match("Light")
@@ -645,12 +654,12 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local _108_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
-      if (_108_ == "kamui") then
+      local _111_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
+      if (_111_ == "kamui") then
         state = "sailor"
-      elseif (_108_ == "sailor") then
+      elseif (_111_ == "sailor") then
         state = "none"
-      elseif (_108_ == "none") then
+      elseif (_111_ == "none") then
         state = "kamui"
       else
         state = nil
@@ -662,22 +671,22 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     window:set_config_overrides(overrides)
     return nil
   end
-  local function _110_(window, _)
+  local function _113_(window, _)
     local overrides = (window:get_config_overrides() or {})
     local appearance = window:get_appearance()
     overrides.color_scheme = colorscheme(appearance)
     overrides.background = render_background(appearance, (wezterm.GLOBAL.backgrounds or {})[tostring(window:window_id())])
     return window:set_config_overrides(overrides)
   end
-  wezterm.on("window-config-reloaded", _110_)
+  wezterm.on("window-config-reloaded", _113_)
   return {["rotate-background"] = rotate_background, ["render-background"] = render_background, colorscheme = colorscheme, dark = dark, light = light}
 end
 __fnl_global__merge_21(config, (require("theme")))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_112_ = require("platform")
-  local is = _local_112_["is"]
+  local _local_115_ = require("platform")
+  local is = _local_115_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"

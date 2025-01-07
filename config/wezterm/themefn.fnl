@@ -73,17 +73,19 @@
 
 (fn base-background [Color] {:source {: Color} :width "100%" :height "100%"})
 
-(fn render-state [light? state]
-  (fn decorate [f]
-    (let [base [(base-background (if light? white black))]]
-      (when f
-        (table.insert base (f light?)))
-      base))
+(local render-state (if (= :DomPerignon (wezterm.hostname))
+                        (fn [] nil)
+                        (fn [light? state]
+                          (fn decorate [f]
+                            (let [base [(base-background (if light? white black))]]
+                              (when f
+                                (table.insert base (f light?)))
+                              base))
 
-  (match state
-    (where :kamui) (decorate ryukomatoi-kamui)
-    (where :sailor) (decorate ryukomatoi-sailor)
-    _ (decorate)))
+                          (case state
+                            (where :kamui) (decorate ryukomatoi-kamui)
+                            (where :sailor) (decorate ryukomatoi-sailor)
+                            _ (decorate)))))
 
 (fn render-background [?appearance state]
   (let [light? (: (or ?appearance (get-appearance)) :match :Light)]
