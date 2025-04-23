@@ -13,7 +13,7 @@
                     (fn [] #nil)))
 
 (fn cmd? [name]
-  (not= nil (. (require :which) name)))
+  (not= nil ((. (require :which) :which) name)))
 
 (local uv (require :luv))
 

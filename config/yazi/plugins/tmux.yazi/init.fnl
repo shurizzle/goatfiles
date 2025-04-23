@@ -82,9 +82,13 @@
   (when (= :windows (ya.target_family))
     (ne "Unsupported OS")
     (lua :return))
-  (local bin (-> (Command :which) (: :arg :tmux) (get-output)))
-  (when (= 666 bin)
-    (lua :return))
+  (local bin (if (= :function (type Command.which))
+                 (Command.which :tmux)
+                 (do
+                   (local bin (-> (Command :which) (: :arg :tmux) (get-output)))
+                   (when (= 666 bin)
+                     (lua :return))
+                   bin)))
   (when (not bin)
     (ne "Please install tmux first")
     (lua :return))
@@ -128,6 +132,9 @@
                          (ne (.. "Invalid shell type " (type opts.shell)
                                  ", using the system one"))
                          nil) opts.shell)))
+
+;; ffprobe -i <file> -hide_banner -show_entries format=duration -v quiet -of csv="p=0" -sexagesimal
+;; mediainfo --Output="General;%Duration%" <file>
 
 {: entry : setup}
 

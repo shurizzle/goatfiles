@@ -1,40 +1,45 @@
+-- SPDX-License-Identifier: MIT
+-- SPDX-FileCopyrightText: Calvin Rose and contributors
 package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
-  local utils = require("fennel.utils")
+  local _710_ = require("fennel.utils")
+  local utils = _710_
+  local copy = _710_["copy"]
   local parser = require("fennel.parser")
   local compiler = require("fennel.compiler")
   local specials = require("fennel.specials")
   local view = require("fennel.view")
-  local unpack = (table.unpack or _G.unpack)
-  local function default_read_chunk(parser_state)
-    local function _604_()
-      if (0 < parser_state["stack-size"]) then
-        return ".."
-      else
-        return ">> "
-      end
+  local depth = 0
+  local function prompt_for(top_3f)
+    if top_3f then
+      return (string.rep(">", (depth + 1)) .. " ")
+    else
+      return (string.rep(".", (depth + 1)) .. " ")
     end
-    io.write(_604_())
+  end
+  local function default_read_chunk(parser_state)
+    io.write(prompt_for((0 == parser_state["stack-size"])))
     io.flush()
-    local input = io.read()
-    return (input and (input .. "\n"))
+    local _712_0 = io.read()
+    if (nil ~= _712_0) then
+      local input = _712_0
+      return (input .. "\n")
+    end
   end
   local function default_on_values(xs)
     io.write(table.concat(xs, "\9"))
     return io.write("\n")
   end
-  local function default_on_error(errtype, err, lua_source)
-    local function _606_()
-      local _605_0 = errtype
-      if (_605_0 == "Lua Compile") then
-        return ("Bad code generated - likely a bug with the compiler:\n" .. "--- Generated Lua Start ---\n" .. lua_source .. "--- Generated Lua End ---\n")
-      elseif (_605_0 == "Runtime") then
+  local function default_on_error(errtype, err)
+    local function _715_()
+      local _714_0 = errtype
+      if (_714_0 == "Runtime") then
         return (compiler.traceback(tostring(err), 4) .. "\n")
       else
-        local _ = _605_0
+        local _ = _714_0
         return ("%s error: %s\n"):format(errtype, tostring(err))
       end
     end
-    return io.write(_606_())
+    return io.write(_715_())
   end
   local function splice_save_locals(env, lua_source, scope)
     local saves = nil
@@ -42,7 +47,7 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
       local tbl_17_ = {}
       local i_18_ = #tbl_17_
       for name in pairs(env.___replLocals___) do
-        local val_19_ = ("local %s = ___replLocals___['%s']"):format((scope.manglings[name] or name), name)
+        local val_19_ = ("local %s = ___replLocals___[%q]"):format((scope.manglings[name] or name), name)
         if (nil ~= val_19_) then
           i_18_ = (i_18_ + 1)
           tbl_17_[i_18_] = val_19_
@@ -57,7 +62,7 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
       for raw, name in pairs(scope.manglings) do
         local val_19_ = nil
         if not scope.gensyms[name] then
-          val_19_ = ("___replLocals___['%s'] = %s"):format(raw, name)
+          val_19_ = ("___replLocals___[%q] = %s"):format(raw, name)
         else
         val_19_ = nil
         end
@@ -74,27 +79,28 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
     else
       gap = " "
     end
-    local function _612_()
+    local function _721_()
       if next(saves) then
         return (table.concat(saves, " ") .. gap)
       else
         return ""
       end
     end
-    local function _615_()
-      local _613_0, _614_0 = lua_source:match("^(.*)[\n ](return .*)$")
-      if ((nil ~= _613_0) and (nil ~= _614_0)) then
-        local body = _613_0
-        local _return = _614_0
+    local function _724_()
+      local _722_0, _723_0 = lua_source:match("^(.*)[\n ](return .*)$")
+      if ((nil ~= _722_0) and (nil ~= _723_0)) then
+        local body = _722_0
+        local _return = _723_0
         return (body .. gap .. table.concat(binds, " ") .. gap .. _return)
       else
-        local _ = _613_0
+        local _ = _722_0
         return lua_source
       end
     end
-    return (_612_() .. _615_())
+    return (_721_() .. _724_())
   end
-  local function completer(env, scope, text)
+  local commands = {}
+  local function completer(env, scope, text, _3ffulltext, _from, _to)
     local max_items = 2000
     local seen = {}
     local matches = {}
@@ -104,14 +110,14 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
       local scope_first_3f = ((tbl == env) or (tbl == env.___replLocals___))
       local tbl_17_ = matches
       local i_18_ = #tbl_17_
-      local function _617_()
+      local function _726_()
         if scope_first_3f then
           return scope.manglings
         else
           return tbl
         end
       end
-      for k, is_mangled in utils.allpairs(_617_()) do
+      for k, is_mangled in utils.allpairs(_726_()) do
         if (max_items <= #matches) then break end
         local val_19_ = nil
         do
@@ -168,66 +174,81 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
         return descend(input, tbl, prefix0, add_matches, false)
       end
     end
-    for _, source in ipairs({scope.specials, scope.macros, (env.___replLocals___ or {}), env, env._G}) do
-      if stop_looking_3f then break end
-      add_matches(input_fragment, source)
+    do
+      local _735_0 = tostring((_3ffulltext or text)):match("^%s*,([^%s()[%]]*)$")
+      if (nil ~= _735_0) then
+        local cmd_fragment = _735_0
+        add_partials(cmd_fragment, commands, ",")
+      else
+        local _ = _735_0
+        for _0, source in ipairs({scope.specials, scope.macros, (env.___replLocals___ or {}), env, env._G}) do
+          if stop_looking_3f then break end
+          add_matches(input_fragment, source)
+        end
+      end
     end
     return matches
   end
-  local commands = {}
   local function command_3f(input)
     return input:match("^%s*,")
   end
   local function command_docs()
-    local _626_
+    local _737_
     do
       local tbl_17_ = {}
       local i_18_ = #tbl_17_
-      for name, f in pairs(commands) do
+      for name, f in utils.stablepairs(commands) do
         local val_19_ = ("  ,%s - %s"):format(name, ((compiler.metadata):get(f, "fnl/docstring") or "undocumented"))
         if (nil ~= val_19_) then
           i_18_ = (i_18_ + 1)
           tbl_17_[i_18_] = val_19_
         end
       end
-      _626_ = tbl_17_
+      _737_ = tbl_17_
     end
-    return table.concat(_626_, "\n")
+    return table.concat(_737_, "\n")
   end
   commands.help = function(_, _0, on_values)
-    return on_values({("Welcome to Fennel.\nThis is the REPL where you can enter code to be evaluated.\nYou can also run these repl commands:\n\n" .. command_docs() .. "\n  ,exit - Leave the repl.\n\nUse ,doc something to see descriptions for individual macros and special forms.\n\nFor more information about the language, see https://fennel-lang.org/reference")})
+    return on_values({("Welcome to Fennel.\nThis is the REPL where you can enter code to be evaluated.\nYou can also run these repl commands:\n\n" .. command_docs() .. "\n  ,return FORM - Evaluate FORM and return its value to the REPL's caller.\n  ,exit - Leave the repl.\n\nUse ,doc something to see descriptions for individual macros and special forms.\nValues from previous inputs are kept in *1, *2, and *3.\n\nFor more information about the language, see https://fennel-lang.org/reference")})
   end
   do end (compiler.metadata):set(commands.help, "fnl/docstring", "Show this message.")
   local function reload(module_name, env, on_values, on_error)
-    local _628_0, _629_0 = pcall(specials["load-code"]("return require(...)", env), module_name)
-    if ((_628_0 == true) and (nil ~= _629_0)) then
-      local old = _629_0
+    local _739_0, _740_0 = pcall(specials["load-code"]("return require(...)", env), module_name)
+    if ((_739_0 == true) and (nil ~= _740_0)) then
+      local old = _740_0
       local _ = nil
       package.loaded[module_name] = nil
       _ = nil
-      local ok, new = pcall(require, module_name)
-      local new0 = nil
-      if not ok then
-        on_values({new})
-        new0 = old
-      else
-        new0 = new
+      local new = nil
+      do
+        local _741_0, _742_0 = pcall(require, module_name)
+        if ((_741_0 == true) and (nil ~= _742_0)) then
+          local new0 = _742_0
+          new = new0
+        elseif (true and (nil ~= _742_0)) then
+          local _0 = _741_0
+          local msg = _742_0
+          on_error("Repl", msg)
+          new = old
+        else
+        new = nil
+        end
       end
       specials["macro-loaded"][module_name] = nil
-      if ((type(old) == "table") and (type(new0) == "table")) then
-        for k, v in pairs(new0) do
+      if ((type(old) == "table") and (type(new) == "table")) then
+        for k, v in pairs(new) do
           old[k] = v
         end
         for k in pairs(old) do
-          if (nil == new0[k]) then
+          if (nil == new[k]) then
             old[k] = nil
           end
         end
         package.loaded[module_name] = old
       end
       return on_values({"ok"})
-    elseif ((_628_0 == false) and (nil ~= _629_0)) then
-      local msg = _629_0
+    elseif ((_739_0 == false) and (nil ~= _740_0)) then
+      local msg = _740_0
       if msg:match("loop or previous error loading module") then
         package.loaded[module_name] = nil
         return reload(module_name, env, on_values, on_error)
@@ -235,32 +256,32 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
         specials["macro-loaded"][module_name] = nil
         return nil
       else
-        local function _634_()
-          local _633_0 = msg:gsub("\n.*", "")
-          return _633_0
+        local function _747_()
+          local _746_0 = msg:gsub("\n.*", "")
+          return _746_0
         end
-        return on_error("Runtime", _634_())
+        return on_error("Runtime", _747_())
       end
     end
   end
   local function run_command(read, on_error, f)
-    local _637_0, _638_0, _639_0 = pcall(read)
-    if ((_637_0 == true) and (_638_0 == true) and (nil ~= _639_0)) then
-      local val = _639_0
-      local _640_0, _641_0 = pcall(f, val)
-      if ((_640_0 == false) and (nil ~= _641_0)) then
-        local msg = _641_0
+    local _750_0, _751_0, _752_0 = pcall(read)
+    if ((_750_0 == true) and (_751_0 == true) and (nil ~= _752_0)) then
+      local val = _752_0
+      local _753_0, _754_0 = pcall(f, val)
+      if ((_753_0 == false) and (nil ~= _754_0)) then
+        local msg = _754_0
         return on_error("Runtime", msg)
       end
-    elseif (_637_0 == false) then
+    elseif (_750_0 == false) then
       return on_error("Parse", "Couldn't parse input.")
     end
   end
   commands.reload = function(env, read, on_values, on_error)
-    local function _644_(_241)
+    local function _757_(_241)
       return reload(tostring(_241), env, on_values, on_error)
     end
-    return run_command(read, on_error, _644_)
+    return run_command(read, on_error, _757_)
   end
   do end (compiler.metadata):set(commands.reload, "fnl/docstring", "Reload the specified module.")
   commands.reset = function(env, _, on_values)
@@ -269,28 +290,28 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
   end
   do end (compiler.metadata):set(commands.reset, "fnl/docstring", "Erase all repl-local scope.")
   commands.complete = function(env, read, on_values, on_error, scope, chars)
-    local function _645_()
-      return on_values(completer(env, scope, table.concat(chars):gsub(",complete +", ""):sub(1, -2)))
+    local function _758_()
+      return on_values(completer(env, scope, table.concat(chars):gsub("^%s*,complete%s+", ""):sub(1, -2)))
     end
-    return run_command(read, on_error, _645_)
+    return run_command(read, on_error, _758_)
   end
   do end (compiler.metadata):set(commands.complete, "fnl/docstring", "Print all possible completions for a given input symbol.")
   local function apropos_2a(pattern, tbl, prefix, seen, names)
     for name, subtbl in pairs(tbl) do
       if (("string" == type(name)) and (package ~= subtbl)) then
-        local _646_0 = type(subtbl)
-        if (_646_0 == "function") then
+        local _759_0 = type(subtbl)
+        if (_759_0 == "function") then
           if ((prefix .. name)):match(pattern) then
             table.insert(names, (prefix .. name))
           end
-        elseif (_646_0 == "table") then
+        elseif (_759_0 == "table") then
           if not seen[subtbl] then
-            local _648_
+            local _761_
             do
               seen[subtbl] = true
-              _648_ = seen
+              _761_ = seen
             end
-            apropos_2a(pattern, subtbl, (prefix .. name:gsub("%.", "/") .. "."), _648_, names)
+            apropos_2a(pattern, subtbl, (prefix .. name:gsub("%.", "/") .. "."), _761_, names)
           end
         end
       end
@@ -298,23 +319,13 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
     return names
   end
   local function apropos(pattern)
-    local names = apropos_2a(pattern, package.loaded, "", {}, {})
-    local tbl_17_ = {}
-    local i_18_ = #tbl_17_
-    for _, name in ipairs(names) do
-      local val_19_ = name:gsub("^_G%.", "")
-      if (nil ~= val_19_) then
-        i_18_ = (i_18_ + 1)
-        tbl_17_[i_18_] = val_19_
-      end
-    end
-    return tbl_17_
+    return apropos_2a(pattern:gsub("^_G%.", ""), package.loaded, "", {}, {})
   end
   commands.apropos = function(_env, read, on_values, on_error, _scope)
-    local function _653_(_241)
+    local function _765_(_241)
       return on_values(apropos(tostring(_241)))
     end
-    return run_command(read, on_error, _653_)
+    return run_command(read, on_error, _765_)
   end
   do end (compiler.metadata):set(commands.apropos, "fnl/docstring", "Print all functions matching a pattern in all loaded modules.")
   local function apropos_follow_path(path)
@@ -334,12 +345,12 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
     local tgt = package.loaded
     for _, path0 in ipairs(paths) do
       if (nil == tgt) then break end
-      local _656_
+      local _768_
       do
-        local _655_0 = path0:gsub("%/", ".")
-        _656_ = _655_0
+        local _767_0 = path0:gsub("%/", ".")
+        _768_ = _767_0
       end
-      tgt = tgt[_656_]
+      tgt = tgt[_768_]
     end
     return tgt
   end
@@ -351,9 +362,9 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
       do
         local tgt = apropos_follow_path(path)
         if ("function" == type(tgt)) then
-          local _657_0 = (compiler.metadata):get(tgt, "fnl/docstring")
-          if (nil ~= _657_0) then
-            local docstr = _657_0
+          local _769_0 = (compiler.metadata):get(tgt, "fnl/docstring")
+          if (nil ~= _769_0) then
+            local docstr = _769_0
             val_19_ = (docstr:match(pattern) and path)
           else
           val_19_ = nil
@@ -370,164 +381,166 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
     return tbl_17_
   end
   commands["apropos-doc"] = function(_env, read, on_values, on_error, _scope)
-    local function _661_(_241)
+    local function _773_(_241)
       return on_values(apropos_doc(tostring(_241)))
     end
-    return run_command(read, on_error, _661_)
+    return run_command(read, on_error, _773_)
   end
   do end (compiler.metadata):set(commands["apropos-doc"], "fnl/docstring", "Print all functions that match the pattern in their docs")
   local function apropos_show_docs(on_values, pattern)
     for _, path in ipairs(apropos(pattern)) do
       local tgt = apropos_follow_path(path)
       if (("function" == type(tgt)) and (compiler.metadata):get(tgt, "fnl/docstring")) then
-        on_values(specials.doc(tgt, path))
-        on_values()
+        on_values({specials.doc(tgt, path)})
+        on_values({})
       end
     end
     return nil
   end
   commands["apropos-show-docs"] = function(_env, read, on_values, on_error)
-    local function _663_(_241)
+    local function _775_(_241)
       return apropos_show_docs(on_values, tostring(_241))
     end
-    return run_command(read, on_error, _663_)
+    return run_command(read, on_error, _775_)
   end
   do end (compiler.metadata):set(commands["apropos-show-docs"], "fnl/docstring", "Print all documentations matching a pattern in function name")
-  local function resolve(identifier, _664_0, scope)
-    local _665_ = _664_0
-    local env = _665_
-    local ___replLocals___ = _665_["___replLocals___"]
+  local function resolve(identifier, _776_0, scope)
+    local _777_ = _776_0
+    local env = _777_
+    local ___replLocals___ = _777_["___replLocals___"]
     local e = nil
-    local function _666_(_241, _242)
+    local function _778_(_241, _242)
       return (___replLocals___[scope.unmanglings[_242]] or env[_242])
     end
-    e = setmetatable({}, {__index = _666_})
-    local function _667_(...)
-      local _668_0, _669_0 = ...
-      if ((_668_0 == true) and (nil ~= _669_0)) then
-        local code = _669_0
-        local function _670_(...)
-          local _671_0, _672_0 = ...
-          if ((_671_0 == true) and (nil ~= _672_0)) then
-            local val = _672_0
+    e = setmetatable({}, {__index = _778_})
+    local function _779_(...)
+      local _780_0, _781_0 = ...
+      if ((_780_0 == true) and (nil ~= _781_0)) then
+        local code = _781_0
+        local function _782_(...)
+          local _783_0, _784_0 = ...
+          if ((_783_0 == true) and (nil ~= _784_0)) then
+            local val = _784_0
             return val
           else
-            local _ = _671_0
+            local _ = _783_0
             return nil
           end
         end
-        return _670_(pcall(specials["load-code"](code, e)))
+        return _782_(pcall(specials["load-code"](code, e)))
       else
-        local _ = _668_0
+        local _ = _780_0
         return nil
       end
     end
-    return _667_(pcall(compiler["compile-string"], tostring(identifier), {scope = scope}))
+    return _779_(pcall(compiler["compile-string"], tostring(identifier), {scope = scope}))
   end
   commands.find = function(env, read, on_values, on_error, scope)
-    local function _675_(_241)
-      local _676_0 = nil
+    local function _787_(_241)
+      local _788_0 = nil
       do
-        local _677_0 = utils["sym?"](_241)
-        if (nil ~= _677_0) then
-          local _678_0 = resolve(_677_0, env, scope)
-          if (nil ~= _678_0) then
-            _676_0 = debug.getinfo(_678_0)
+        local _789_0 = utils["sym?"](_241)
+        if (nil ~= _789_0) then
+          local _790_0 = resolve(_789_0, env, scope)
+          if (nil ~= _790_0) then
+            _788_0 = debug.getinfo(_790_0)
           else
-            _676_0 = _678_0
+            _788_0 = _790_0
           end
         else
-          _676_0 = _677_0
+          _788_0 = _789_0
         end
       end
-      if ((_G.type(_676_0) == "table") and (nil ~= _676_0.linedefined) and (nil ~= _676_0.short_src) and (nil ~= _676_0.source) and (_676_0.what == "Lua")) then
-        local line = _676_0.linedefined
-        local src = _676_0.short_src
-        local source = _676_0.source
+      if ((_G.type(_788_0) == "table") and (nil ~= _788_0.linedefined) and (nil ~= _788_0.short_src) and (nil ~= _788_0.source) and (_788_0.what == "Lua")) then
+        local line = _788_0.linedefined
+        local src = _788_0.short_src
+        local source = _788_0.source
         local fnlsrc = nil
         do
-          local _681_0 = compiler.sourcemap
-          if (nil ~= _681_0) then
-            _681_0 = _681_0[source]
+          local _793_0 = compiler.sourcemap
+          if (nil ~= _793_0) then
+            _793_0 = _793_0[source]
           end
-          if (nil ~= _681_0) then
-            _681_0 = _681_0[line]
+          if (nil ~= _793_0) then
+            _793_0 = _793_0[line]
           end
-          if (nil ~= _681_0) then
-            _681_0 = _681_0[2]
+          if (nil ~= _793_0) then
+            _793_0 = _793_0[2]
           end
-          fnlsrc = _681_0
+          fnlsrc = _793_0
         end
         return on_values({string.format("%s:%s", src, (fnlsrc or line))})
-      elseif (_676_0 == nil) then
+      elseif (_788_0 == nil) then
         return on_error("Repl", "Unknown value")
       else
-        local _ = _676_0
+        local _ = _788_0
         return on_error("Repl", "No source info")
       end
     end
-    return run_command(read, on_error, _675_)
+    return run_command(read, on_error, _787_)
   end
   do end (compiler.metadata):set(commands.find, "fnl/docstring", "Print the filename and line number for a given function")
   commands.doc = function(env, read, on_values, on_error, scope)
-    local function _686_(_241)
+    local function _798_(_241)
       local name = tostring(_241)
       local path = (utils["multi-sym?"](name) or {name})
       local ok_3f, target = nil, nil
-      local function _687_()
-        return (utils["get-in"](scope.specials, path) or utils["get-in"](scope.macros, path) or resolve(name, env, scope))
+      local function _799_()
+        return (scope.specials[name] or utils["get-in"](scope.macros, path) or resolve(name, env, scope))
       end
-      ok_3f, target = pcall(_687_)
+      ok_3f, target = pcall(_799_)
       if ok_3f then
         return on_values({specials.doc(target, name)})
       else
         return on_error("Repl", ("Could not find " .. name .. " for docs."))
       end
     end
-    return run_command(read, on_error, _686_)
+    return run_command(read, on_error, _798_)
   end
   do end (compiler.metadata):set(commands.doc, "fnl/docstring", "Print the docstring and arglist for a function, macro, or special form.")
-  commands.compile = function(env, read, on_values, on_error, scope)
-    local function _689_(_241)
-      local allowedGlobals = specials["current-global-names"](env)
-      local ok_3f, result = pcall(compiler.compile, _241, {allowedGlobals = allowedGlobals, env = env, scope = scope})
-      if ok_3f then
+  commands.compile = function(_, read, on_values, on_error, _0, _1, opts)
+    local function _801_(_241)
+      local _802_0, _803_0 = pcall(compiler.compile, _241, opts)
+      if ((_802_0 == true) and (nil ~= _803_0)) then
+        local result = _803_0
         return on_values({result})
-      else
-        return on_error("Repl", ("Error compiling expression: " .. result))
+      elseif (true and (nil ~= _803_0)) then
+        local _2 = _802_0
+        local msg = _803_0
+        return on_error("Repl", ("Error compiling expression: " .. msg))
       end
     end
-    return run_command(read, on_error, _689_)
+    return run_command(read, on_error, _801_)
   end
   do end (compiler.metadata):set(commands.compile, "fnl/docstring", "compiles the expression into lua and prints the result.")
   local function load_plugin_commands(plugins)
-    for _, plugin in ipairs((plugins or {})) do
-      for name, f in pairs(plugin) do
-        local _691_0 = name:match("^repl%-command%-(.*)")
-        if (nil ~= _691_0) then
-          local cmd_name = _691_0
-          commands[cmd_name] = (commands[cmd_name] or f)
+    for i = #(plugins or {}), 1, -1 do
+      for name, f in pairs(plugins[i]) do
+        local _805_0 = name:match("^repl%-command%-(.*)")
+        if (nil ~= _805_0) then
+          local cmd_name = _805_0
+          commands[cmd_name] = f
         end
       end
     end
     return nil
   end
-  local function run_command_loop(input, read, loop, env, on_values, on_error, scope, chars)
+  local function run_command_loop(input, read, loop, env, on_values, on_error, scope, chars, opts)
     local command_name = input:match(",([^%s/]+)")
     do
-      local _693_0 = commands[command_name]
-      if (nil ~= _693_0) then
-        local command = _693_0
-        command(env, read, on_values, on_error, scope, chars)
+      local _807_0 = commands[command_name]
+      if (nil ~= _807_0) then
+        local command = _807_0
+        command(env, read, on_values, on_error, scope, chars, opts)
       else
-        local _ = _693_0
-        if ("exit" ~= command_name) then
+        local _ = _807_0
+        if ((command_name ~= "exit") and (command_name ~= "return")) then
           on_values({"Unknown command", command_name})
         end
       end
     end
     if ("exit" ~= command_name) then
-      return loop()
+      return loop((command_name == "return"))
     end
   end
   local function try_readline_21(opts, ok, readline)
@@ -537,15 +550,10 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
       end
       readline.set_options({histfile = "", keeplines = 1000})
       opts.readChunk = function(parser_state)
-        local prompt = nil
-        if (0 < parser_state["stack-size"]) then
-          prompt = ".. "
-        else
-          prompt = ">> "
-        end
-        local str = readline.readline(prompt)
-        if str then
-          return (str .. "\n")
+        local _812_0 = readline.readline(prompt_for((0 == parser_state["stack-size"])))
+        if (nil ~= _812_0) then
+          local input = _812_0
+          return (input .. "\n")
         end
       end
       local completer0 = nil
@@ -556,7 +564,7 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
       local function repl_completer(text, from, to)
         if completer0 then
           readline.set_completion_append_character("")
-          return completer0(text:sub(from, to))
+          return completer0(text:sub(from, to), text, from, to)
         else
           return {}
         end
@@ -570,9 +578,9 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
   end
   local function repl(_3foptions)
     local old_root_options = utils.root.options
-    local _702_ = utils.copy(_3foptions)
-    local opts = _702_
-    local _3ffennelrc = _702_["fennelrc"]
+    local _816_ = copy(_3foptions)
+    local opts = _816_
+    local _3ffennelrc = _816_["fennelrc"]
     local _ = nil
     opts.fennelrc = nil
     _ = nil
@@ -584,38 +592,45 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
     _0 = nil
     end
     local env = specials["wrap-env"]((opts.env or rawget(_G, "_ENV") or _G))
-    local callbacks = {env = env, onError = (opts.onError or default_on_error), onValues = (opts.onValues or default_on_values), pp = (opts.pp or view), readChunk = (opts.readChunk or default_read_chunk)}
+    local callbacks = {["view-opts"] = (opts["view-opts"] or {depth = 4}), env = env, onError = (opts.onError or default_on_error), onValues = (opts.onValues or default_on_values), pp = (opts.pp or view), readChunk = (opts.readChunk or default_read_chunk)}
     local save_locals_3f = (opts.saveLocals ~= false)
     local byte_stream, clear_stream = nil, nil
-    local function _704_(_241)
+    local function _818_(_241)
       return callbacks.readChunk(_241)
     end
-    byte_stream, clear_stream = parser.granulate(_704_)
+    byte_stream, clear_stream = parser.granulate(_818_)
     local chars = {}
     local read, reset = nil, nil
-    local function _705_(parser_state)
+    local function _819_(parser_state)
       local b = byte_stream(parser_state)
       if b then
         table.insert(chars, string.char(b))
       end
       return b
     end
-    read, reset = parser.parser(_705_)
+    read, reset = parser.parser(_819_)
+    depth = (depth + 1)
+    if opts.message then
+      callbacks.onValues({opts.message})
+    end
     env.___repl___ = callbacks
     opts.env, opts.scope = env, compiler["make-scope"]()
     opts.useMetadata = (opts.useMetadata ~= false)
     if (opts.allowedGlobals == nil) then
       opts.allowedGlobals = specials["current-global-names"](env)
     end
+    if opts.init then
+      opts.init(opts, depth)
+    end
     if opts.registerCompleter then
-      local function _709_()
-        local _708_0 = opts.scope
-        local function _710_(...)
-          return completer(env, _708_0, ...)
+      local function _825_()
+        local _824_0 = opts.scope
+        local function _826_(...)
+          return completer(env, _824_0, ...)
         end
-        return _710_
+        return _826_
       end
-      opts.registerCompleter(_709_())
+      opts.registerCompleter(_825_())
     end
     load_plugin_commands(opts.plugins)
     if save_locals_3f then
@@ -632,16 +647,25 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
       local pp = callbacks.pp
       env._, env.__ = vals[1], vals
       for i = 1, select("#", ...) do
-        table.insert(out, pp(vals[i]))
+        table.insert(out, pp(vals[i], callbacks["view-opts"]))
       end
       return callbacks.onValues(out)
     end
-    local function loop()
+    local function save_value(...)
+      env.___replLocals___["*3"] = env.___replLocals___["*2"]
+      env.___replLocals___["*2"] = env.___replLocals___["*1"]
+      env.___replLocals___["*1"] = ...
+      return ...
+    end
+    opts.scope.manglings["*1"], opts.scope.unmanglings._1 = "_1", "*1"
+    opts.scope.manglings["*2"], opts.scope.unmanglings._2 = "_2", "*2"
+    opts.scope.manglings["*3"], opts.scope.unmanglings._3 = "_3", "*3"
+    local function loop(exit_next_3f)
       for k in pairs(chars) do
         chars[k] = nil
       end
       reset()
-      local ok, parser_not_eof_3f, x = pcall(read)
+      local ok, parser_not_eof_3f, form = pcall(read)
       local src_string = table.concat(chars)
       local readline_not_eof_3f = (not readline or (src_string ~= "(null)"))
       local not_eof_3f = (readline_not_eof_3f and parser_not_eof_3f)
@@ -650,74 +674,110 @@ package.preload["fennel.repl"] = package.preload["fennel.repl"] or function(...)
         clear_stream()
         return loop()
       elseif command_3f(src_string) then
-        return run_command_loop(src_string, read, loop, env, callbacks.onValues, callbacks.onError, opts.scope, chars)
+        return run_command_loop(src_string, read, loop, env, callbacks.onValues, callbacks.onError, opts.scope, chars, opts)
       else
         if not_eof_3f then
-          do
-            local _714_0, _715_0 = nil, nil
-            local function _716_()
-              opts["source"] = src_string
-              return opts
-            end
-            _714_0, _715_0 = pcall(compiler.compile, x, _716_())
-            if ((_714_0 == false) and (nil ~= _715_0)) then
-              local msg = _715_0
+          local function _830_(...)
+            local _831_0, _832_0 = ...
+            if ((_831_0 == true) and (nil ~= _832_0)) then
+              local src = _832_0
+              local function _833_(...)
+                local _834_0, _835_0 = ...
+                if ((_834_0 == true) and (nil ~= _835_0)) then
+                  local chunk = _835_0
+                  local function _836_()
+                    return print_values(save_value(chunk()))
+                  end
+                  local function _837_(...)
+                    return callbacks.onError("Runtime", ...)
+                  end
+                  return xpcall(_836_, _837_)
+                elseif ((_834_0 == false) and (nil ~= _835_0)) then
+                  local msg = _835_0
+                  clear_stream()
+                  return callbacks.onError("Compile", msg)
+                end
+              end
+              local function _840_(...)
+                local src0 = nil
+                if save_locals_3f then
+                  src0 = splice_save_locals(env, src, opts.scope)
+                else
+                  src0 = src
+                end
+                return pcall(specials["load-code"], src0, env)
+              end
+              return _833_(_840_(...))
+            elseif ((_831_0 == false) and (nil ~= _832_0)) then
+              local msg = _832_0
               clear_stream()
-              callbacks.onError("Compile", msg)
-            elseif ((_714_0 == true) and (nil ~= _715_0)) then
-              local src = _715_0
-              local src0 = nil
-              if save_locals_3f then
-                src0 = splice_save_locals(env, src, opts.scope)
-              else
-                src0 = src
-              end
-              local _718_0, _719_0 = pcall(specials["load-code"], src0, env)
-              if ((_718_0 == false) and (nil ~= _719_0)) then
-                local msg = _719_0
-                clear_stream()
-                callbacks.onError("Lua Compile", msg, src0)
-              elseif (true and (nil ~= _719_0)) then
-                local _1 = _718_0
-                local chunk = _719_0
-                local function _720_()
-                  return print_values(chunk())
-                end
-                local function _721_(...)
-                  return callbacks.onError("Runtime", ...)
-                end
-                xpcall(_720_, _721_)
-              end
+              return callbacks.onError("Compile", msg)
             end
           end
+          local function _842_()
+            opts["source"] = src_string
+            return opts
+          end
+          _830_(pcall(compiler.compile, form, _842_()))
           utils.root.options = old_root_options
-          return loop()
+          if exit_next_3f then
+            return env.___replLocals___["*1"]
+          else
+            return loop()
+          end
         end
       end
     end
-    loop()
+    local value = loop()
+    depth = (depth - 1)
     if readline then
-      return readline.save_history()
+      readline.save_history()
     end
+    if opts.exit then
+      opts.exit(opts, depth)
+    end
+    return value
   end
-  return repl
+  local repl_mt = {__index = {repl = repl}}
+  repl_mt.__call = function(_848_0, _3fopts)
+    local _849_ = _848_0
+    local overrides = _849_
+    local view_opts = _849_["view-opts"]
+    local opts = copy(_3fopts, copy(overrides))
+    local _851_
+    do
+      local _850_0 = _3fopts
+      if (nil ~= _850_0) then
+        _850_0 = _850_0["view-opts"]
+      end
+      _851_ = _850_0
+    end
+    opts["view-opts"] = copy(_851_, copy(view_opts))
+    return repl(opts)
+  end
+  return setmetatable({["view-opts"] = {}}, repl_mt)
 end
 package.preload["fennel.specials"] = package.preload["fennel.specials"] or function(...)
-  local utils = require("fennel.utils")
+  local _484_ = require("fennel.utils")
+  local utils = _484_
+  local pack = _484_["pack"]
+  local unpack = _484_["unpack"]
   local view = require("fennel.view")
   local parser = require("fennel.parser")
   local compiler = require("fennel.compiler")
-  local unpack = (table.unpack or _G.unpack)
   local SPECIALS = compiler.scopes.global.specials
+  local function str1(x)
+    return tostring(x[1])
+  end
   local function wrap_env(env)
-    local function _415_(_, key)
+    local function _485_(_, key)
       if utils["string?"](key) then
         return env[compiler["global-unmangling"](key)]
       else
         return env[key]
       end
     end
-    local function _417_(_, key, value)
+    local function _487_(_, key, value)
       if utils["string?"](key) then
         env[compiler["global-unmangling"](key)] = value
         return nil
@@ -726,26 +786,38 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
         return nil
       end
     end
-    local function _419_()
-      local function putenv(k, v)
-        local _420_
-        if utils["string?"](k) then
-          _420_ = compiler["global-unmangling"](k)
-        else
-          _420_ = k
+    local function _489_()
+      local _490_
+      do
+        local tbl_14_ = {}
+        for k, v in utils.stablepairs(env) do
+          local k_15_, v_16_ = nil, nil
+          local _491_
+          if utils["string?"](k) then
+            _491_ = compiler["global-unmangling"](k)
+          else
+            _491_ = k
+          end
+          k_15_, v_16_ = _491_, v
+          if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+            tbl_14_[k_15_] = v_16_
+          end
         end
-        return _420_, v
+        _490_ = tbl_14_
       end
-      return next, utils.kvmap(env, putenv), nil
+      return next, _490_, nil
     end
-    return setmetatable({}, {__index = _415_, __newindex = _417_, __pairs = _419_})
+    return setmetatable({}, {__index = _485_, __newindex = _487_, __pairs = _489_})
+  end
+  local function fennel_module_name()
+    return (utils.root.options.moduleName or "fennel")
   end
   local function current_global_names(_3fenv)
     local mt = nil
     do
-      local _422_0 = getmetatable(_3fenv)
-      if ((_G.type(_422_0) == "table") and (nil ~= _422_0.__pairs)) then
-        local mtpairs = _422_0.__pairs
+      local _494_0 = getmetatable(_3fenv)
+      if ((_G.type(_494_0) == "table") and (nil ~= _494_0.__pairs)) then
+        local mtpairs = _494_0.__pairs
         local tbl_14_ = {}
         for k, v in mtpairs(_3fenv) do
           local k_15_, v_16_ = k, v
@@ -754,45 +826,60 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
           end
         end
         mt = tbl_14_
-      elseif (_422_0 == nil) then
+      elseif (_494_0 == nil) then
         mt = (_3fenv or _G)
       else
       mt = nil
       end
     end
-    return (mt and utils.kvmap(mt, compiler["global-unmangling"]))
+    local function _497_()
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for k in utils.stablepairs(mt) do
+        local val_19_ = compiler["global-unmangling"](k)
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      return tbl_17_
+    end
+    return (mt and _497_())
   end
   local function load_code(code, _3fenv, _3ffilename)
     local env = (_3fenv or rawget(_G, "_ENV") or _G)
-    local _425_0, _426_0 = rawget(_G, "setfenv"), rawget(_G, "loadstring")
-    if ((nil ~= _425_0) and (nil ~= _426_0)) then
-      local setfenv = _425_0
-      local loadstring = _426_0
+    local _499_0, _500_0 = rawget(_G, "setfenv"), rawget(_G, "loadstring")
+    if ((nil ~= _499_0) and (nil ~= _500_0)) then
+      local setfenv = _499_0
+      local loadstring = _500_0
       local f = assert(loadstring(code, _3ffilename))
       setfenv(f, env)
       return f
     else
-      local _ = _425_0
+      local _ = _499_0
       return assert(load(code, _3ffilename, "t", env))
     end
   end
+  local function v__3edocstring(tgt)
+    return (((compiler.metadata):get(tgt, "fnl/docstring") or "#<undocumented>")):gsub("\n$", ""):gsub("\n", "\n  ")
+  end
   local function doc_2a(tgt, name)
+    assert(("string" == type(name)), "name must be a string")
     if not tgt then
       return (name .. " not found")
     else
-      local docstring = (((compiler.metadata):get(tgt, "fnl/docstring") or "#<undocumented>")):gsub("\n$", ""):gsub("\n", "\n  ")
-      local mt = getmetatable(tgt)
-      if ((type(tgt) == "function") or ((type(mt) == "table") and (type(mt.__call) == "function"))) then
-        local arglist = table.concat(((compiler.metadata):get(tgt, "fnl/arglist") or {"#<unknown-arguments>"}), " ")
-        local _428_
-        if (0 < #arglist) then
-          _428_ = " "
-        else
-          _428_ = ""
+      local function _503_()
+        local _502_0 = getmetatable(tgt)
+        if ((_G.type(_502_0) == "table") and true) then
+          local __call = _502_0.__call
+          return ("function" == type(__call))
         end
-        return string.format("(%s%s%s)\n  %s", name, _428_, arglist, docstring)
+      end
+      if ((type(tgt) == "function") or _503_()) then
+        local elts = {name, unpack(((compiler.metadata):get(tgt, "fnl/arglist") or {"#<unknown-arguments>"}))}
+        return string.format("(%s)\n  %s", table.concat(elts, " "), v__3edocstring(tgt))
       else
-        return string.format("%s\n  %s", name, docstring)
+        return string.format("%s\n  %s", name, v__3edocstring(tgt))
       end
     end
   end
@@ -815,17 +902,14 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     local chunk = (_3fchunk or {})
     local len = #ast
     local retexprs = {returned = true}
+    utils.hook("pre-do", ast, sub_scope)
     local function compile_body(outer_target, outer_tail, outer_retexprs)
-      if (len < start) then
-        compiler.compile1(nil, sub_scope, chunk, {tail = outer_tail, target = outer_target})
-      else
-        for i = start, len do
-          local subopts = {nval = (((i ~= len) and 0) or opts.nval), tail = (((i == len) and outer_tail) or nil), target = (((i == len) and outer_target) or nil)}
-          local _ = utils["propagate-options"](opts, subopts)
-          local subexprs = compiler.compile1(ast[i], sub_scope, chunk, subopts)
-          if (i ~= len) then
-            compiler["keep-side-effects"](subexprs, parent, nil, ast[i])
-          end
+      for i = start, len do
+        local subopts = {nval = (((i ~= len) and 0) or opts.nval), tail = (((i == len) and outer_tail) or nil), target = (((i == len) and outer_target) or nil)}
+        local _ = utils["propagate-options"](opts, subopts)
+        local subexprs = compiler.compile1(ast[i], sub_scope, chunk, subopts)
+        if (i ~= len) then
+          compiler["keep-side-effects"](subexprs, parent, nil, ast[i])
         end
       end
       compiler.emit(parent, chunk, ast)
@@ -860,13 +944,25 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     end
   end
   doc_special("do", {"..."}, "Evaluate multiple forms; return last value.", true)
+  local function iter_args(ast)
+    local ast0, len, i = ast, #ast, 1
+    local function _509_()
+      i = (1 + i)
+      while ((i == len) and utils["call-of?"](ast0[i], "values")) do
+        ast0 = ast0[i]
+        len = #ast0
+        i = 2
+      end
+      return ast0[i], (nil == ast0[(i + 1)])
+    end
+    return _509_
+  end
   SPECIALS.values = function(ast, scope, parent)
-    local len = #ast
     local exprs = {}
-    for i = 2, len do
-      local subexprs = compiler.compile1(ast[i], scope, parent, {nval = ((i ~= len) and 1)})
+    for subast, last_3f in iter_args(ast) do
+      local subexprs = compiler.compile1(subast, scope, parent, {nval = (not last_3f and 1)})
       table.insert(exprs, subexprs[1])
-      if (i == len) then
+      if last_3f then
         for j = 2, #subexprs do
           table.insert(exprs, subexprs[j])
         end
@@ -903,9 +999,9 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     local opts = {nval = 1, tail = false}
     local scope = compiler["make-scope"]()
     local chunk = {}
-    local _439_ = compiler.compile1(v, scope, chunk, opts)
-    local _440_ = _439_[1]
-    local v0 = _440_[1]
+    local _513_ = compiler.compile1(v, scope, chunk, opts)
+    local _514_ = _513_[1]
+    local v0 = _514_[1]
     return v0
   end
   local function insert_meta(meta, k, v)
@@ -913,23 +1009,33 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     compiler.assert((type(k) == "string"), ("expected string keys in metadata table, got: %s"):format(view(k, view_opts)))
     compiler.assert(literal_3f(v), ("expected literal value in metadata table, got: %s %s"):format(view(k, view_opts), view(v, view_opts)))
     table.insert(meta, view(k))
-    local function _441_()
+    local function _515_()
       if ("string" == type(v)) then
         return view(v, view_opts)
       else
         return compile_value(v)
       end
     end
-    table.insert(meta, _441_())
+    table.insert(meta, _515_())
     return meta
   end
   local function insert_arglist(meta, arg_list)
-    local view_opts = {["escape-newlines?"] = true, ["line-length"] = math.huge, ["one-line?"] = true}
-    table.insert(meta, "\"fnl/arglist\"")
-    local function _442_(_241)
-      return view(view(_241, view_opts))
+    local opts = {["escape-newlines?"] = true, ["line-length"] = math.huge, ["one-line?"] = true}
+    local view_args = nil
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for _, arg in ipairs(arg_list) do
+        local val_19_ = view(view(arg, opts))
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      view_args = tbl_17_
     end
-    table.insert(meta, ("{" .. table.concat(utils.map(arg_list, _442_), ", ") .. "}"))
+    table.insert(meta, "\"fnl/arglist\"")
+    table.insert(meta, ("{" .. table.concat(view_args, ", ") .. "}"))
     return meta
   end
   local function set_fn_metadata(f_metadata, parent, fn_name)
@@ -942,38 +1048,43 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
           insert_meta(meta_fields, k, v)
         end
       end
-      local meta_str = ("require(\"%s\").metadata"):format((utils.root.options.moduleName or "fennel"))
-      return compiler.emit(parent, ("pcall(function() %s:setall(%s, %s) end)"):format(meta_str, fn_name, table.concat(meta_fields, ", ")))
+      if (type(utils.root.options.useMetadata) == "string") then
+        return compiler.emit(parent, ("%s:setall(%s, %s)"):format(utils.root.options.useMetadata, fn_name, table.concat(meta_fields, ", ")))
+      else
+        local meta_str = ("require(\"%s\").metadata"):format(fennel_module_name())
+        return compiler.emit(parent, ("pcall(function() %s:setall(%s, %s) end)"):format(meta_str, fn_name, table.concat(meta_fields, ", ")))
+      end
     end
   end
   local function get_fn_name(ast, scope, fn_name, multi)
     if (fn_name and (fn_name[1] ~= "nil")) then
-      local _445_
+      local _520_
       if not multi then
-        _445_ = compiler["declare-local"](fn_name, {}, scope, ast)
+        _520_ = compiler["declare-local"](fn_name, scope, ast)
       else
-        _445_ = compiler["symbol-to-expression"](fn_name, scope)[1]
+        _520_ = compiler["symbol-to-expression"](fn_name, scope)[1]
       end
-      return _445_, not multi, 3
+      return _520_, not multi, 3
     else
       return nil, true, 2
     end
   end
   local function compile_named_fn(ast, f_scope, f_chunk, parent, index, fn_name, local_3f, arg_name_list, f_metadata)
+    utils.hook("pre-fn", ast, f_scope, parent)
     for i = (index + 1), #ast do
       compiler.compile1(ast[i], f_scope, f_chunk, {nval = (((i ~= #ast) and 0) or nil), tail = (i == #ast)})
     end
-    local _448_
+    local _523_
     if local_3f then
-      _448_ = "local function %s(%s)"
+      _523_ = "local function %s(%s)"
     else
-      _448_ = "%s = function(%s)"
+      _523_ = "%s = function(%s)"
     end
-    compiler.emit(parent, string.format(_448_, fn_name, table.concat(arg_name_list, ", ")), ast)
+    compiler.emit(parent, string.format(_523_, fn_name, table.concat(arg_name_list, ", ")), ast)
     compiler.emit(parent, f_chunk, ast)
     compiler.emit(parent, "end", ast)
     set_fn_metadata(f_metadata, parent, fn_name)
-    utils.hook("fn", ast, f_scope)
+    utils.hook("fn", ast, f_scope, parent)
     return utils.expr(fn_name, "sym")
   end
   local function compile_anonymous_fn(ast, f_scope, f_chunk, parent, index, arg_name_list, f_metadata, scope)
@@ -991,7 +1102,7 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     end
   end
   local function get_function_metadata(ast, arg_list, index)
-    local function _451_(_241, _242)
+    local function _526_(_241, _242)
       local tbl_14_ = _241
       for k, v in pairs(_242) do
         local k_15_, v_16_ = k, v
@@ -1001,28 +1112,31 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
       end
       return tbl_14_
     end
-    local function _453_(_241, _242)
+    local function _528_(_241, _242)
       _241["fnl/docstring"] = _242
       return _241
     end
-    return maybe_metadata(ast, utils["kv-table?"], _451_, maybe_metadata(ast, utils["string?"], _453_, {["fnl/arglist"] = arg_list}, index))
+    return maybe_metadata(ast, utils["kv-table?"], _526_, maybe_metadata(ast, utils["string?"], _528_, {["fnl/arglist"] = arg_list}, index))
   end
-  SPECIALS.fn = function(ast, scope, parent)
+  SPECIALS.fn = function(ast, scope, parent, opts)
     local f_scope = nil
     do
-      local _454_0 = compiler["make-scope"](scope)
-      _454_0["vararg"] = false
-      f_scope = _454_0
+      local _529_0 = compiler["make-scope"](scope)
+      _529_0["vararg"] = false
+      f_scope = _529_0
     end
     local f_chunk = {}
     local fn_sym = utils["sym?"](ast[2])
     local multi = (fn_sym and utils["multi-sym?"](fn_sym[1]))
-    local fn_name, local_3f, index = get_fn_name(ast, scope, fn_sym, multi)
+    local fn_name, local_3f, index = get_fn_name(ast, scope, fn_sym, multi, opts)
     local arg_list = compiler.assert(utils["table?"](ast[index]), "expected parameters table", ast)
     compiler.assert((not multi or not multi["multi-sym-method-call"]), ("unexpected multi symbol " .. tostring(fn_name)), fn_sym)
+    if (multi and not scope.symmeta[multi[1]] and not compiler["global-allowed?"](multi[1])) then
+      compiler.assert(nil, ("expected local table " .. multi[1]), ast[2])
+    end
     local function destructure_arg(arg)
       local raw = utils.sym(compiler.gensym(scope))
-      local declared = compiler["declare-local"](raw, {}, f_scope, ast)
+      local declared = compiler["declare-local"](raw, f_scope, ast)
       compiler.destructure(arg, raw, ast, f_scope, f_chunk, {declaration = true, nomulti = true, symtype = "arg"})
       return declared
     end
@@ -1042,7 +1156,7 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
       elseif utils["sym?"](arg, "&") then
         return destructure_amp(i)
       elseif (utils["sym?"](arg) and (tostring(arg) ~= "nil") and not utils["multi-sym?"](tostring(arg))) then
-        return compiler["declare-local"](arg, {}, f_scope, ast)
+        return compiler["declare-local"](arg, f_scope, ast)
       elseif utils["table?"](arg) then
         return destructure_arg(arg)
       else
@@ -1072,36 +1186,37 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   doc_special("fn", {"name?", "args", "docstring?", "..."}, "Function syntax. May optionally include a name and docstring or a metadata table.\nIf a name is provided, the function will be bound in the current scope.\nWhen called with the wrong number of args, excess args will be discarded\nand lacking args will be nil, use lambda for arity-checked functions.", true)
   SPECIALS.lua = function(ast, _, parent)
     compiler.assert(((#ast == 2) or (#ast == 3)), "expected 1 or 2 arguments", ast)
-    local _459_
+    local _535_
     do
-      local _458_0 = utils["sym?"](ast[2])
-      if (nil ~= _458_0) then
-        _459_ = tostring(_458_0)
+      local _534_0 = utils["sym?"](ast[2])
+      if (nil ~= _534_0) then
+        _535_ = tostring(_534_0)
       else
-        _459_ = _458_0
+        _535_ = _534_0
       end
     end
-    if ("nil" ~= _459_) then
+    if ("nil" ~= _535_) then
       table.insert(parent, {ast = ast, leaf = tostring(ast[2])})
     end
-    local _463_
+    local _539_
     do
-      local _462_0 = utils["sym?"](ast[3])
-      if (nil ~= _462_0) then
-        _463_ = tostring(_462_0)
+      local _538_0 = utils["sym?"](ast[3])
+      if (nil ~= _538_0) then
+        _539_ = tostring(_538_0)
       else
-        _463_ = _462_0
+        _539_ = _538_0
       end
     end
-    if ("nil" ~= _463_) then
+    if ("nil" ~= _539_) then
       return tostring(ast[3])
     end
   end
   local function dot(ast, scope, parent)
     compiler.assert((1 < #ast), "expected table argument", ast)
     local len = #ast
-    local _466_ = compiler.compile1(ast[2], scope, parent, {nval = 1})
-    local lhs = _466_[1]
+    local lhs_node = compiler.macroexpand(ast[2], scope)
+    local _542_ = compiler.compile1(lhs_node, scope, parent, {nval = 1})
+    local lhs = _542_[1]
     if (len == 2) then
       return tostring(lhs)
     else
@@ -1111,12 +1226,12 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
         if (utils["string?"](index) and utils["valid-lua-identifier?"](index)) then
           table.insert(indices, ("." .. index))
         else
-          local _467_ = compiler.compile1(index, scope, parent, {nval = 1})
-          local index0 = _467_[1]
+          local _543_ = compiler.compile1(index, scope, parent, {nval = 1})
+          local index0 = _543_[1]
           table.insert(indices, ("[" .. tostring(index0) .. "]"))
         end
       end
-      if (tostring(lhs):find("[{\"0-9]") or ("nil" == tostring(lhs))) then
+      if (not (utils["sym?"](lhs_node) or utils["list?"](lhs_node)) or ("nil" == tostring(lhs_node))) then
         return ("(" .. tostring(lhs) .. ")" .. table.concat(indices))
       else
         return (tostring(lhs) .. table.concat(indices))
@@ -1130,7 +1245,7 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     compiler.destructure(ast[2], ast[3], ast, scope, parent, {forceglobal = true, nomulti = true, symtype = "global"})
     return nil
   end
-  doc_special("global", {"name", "val"}, "Set name as a global with val.")
+  doc_special("global", {"name", "val"}, "Set name as a global with val. Deprecated.")
   SPECIALS.set = function(ast, scope, parent)
     compiler.assert((#ast == 3), "expected name and value", ast)
     compiler.destructure(ast[2], ast[3], ast, scope, parent, {noundef = true, symtype = "set"})
@@ -1143,21 +1258,23 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     return nil
   end
   SPECIALS["set-forcibly!"] = set_forcibly_21_2a
-  local function local_2a(ast, scope, parent)
+  local function local_2a(ast, scope, parent, opts)
+    compiler.assert(((0 == opts.nval) or opts.tail), "can't introduce local here", ast)
     compiler.assert((#ast == 3), "expected name and value", ast)
     compiler.destructure(ast[2], ast[3], ast, scope, parent, {declaration = true, nomulti = true, symtype = "local"})
     return nil
   end
   SPECIALS["local"] = local_2a
   doc_special("local", {"name", "val"}, "Introduce new top-level immutable local.")
-  SPECIALS.var = function(ast, scope, parent)
+  SPECIALS.var = function(ast, scope, parent, opts)
+    compiler.assert(((0 == opts.nval) or opts.tail), "can't introduce var here", ast)
     compiler.assert((#ast == 3), "expected name and value", ast)
     compiler.destructure(ast[2], ast[3], ast, scope, parent, {declaration = true, isvar = true, nomulti = true, symtype = "var"})
     return nil
   end
   doc_special("var", {"name", "val"}, "Introduce new mutable local.")
   local function kv_3f(t)
-    local _471_
+    local _547_
     do
       local tbl_17_ = {}
       local i_18_ = #tbl_17_
@@ -1173,18 +1290,30 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
           tbl_17_[i_18_] = val_19_
         end
       end
-      _471_ = tbl_17_
+      _547_ = tbl_17_
     end
-    return _471_[1]
+    return _547_[1]
   end
-  SPECIALS.let = function(ast, scope, parent, opts)
-    local bindings = ast[2]
-    local pre_syms = {}
-    compiler.assert((utils["table?"](bindings) and not kv_3f(bindings)), "expected binding sequence", bindings)
-    compiler.assert(((#bindings % 2) == 0), "expected even number of name/value bindings", ast[2])
+  SPECIALS.let = function(_550_0, scope, parent, opts)
+    local _551_ = _550_0
+    local _ = _551_[1]
+    local bindings = _551_[2]
+    local ast = _551_
+    compiler.assert((utils["table?"](bindings) and not kv_3f(bindings)), "expected binding sequence", (bindings or ast[1]))
+    compiler.assert(((#bindings % 2) == 0), "expected even number of name/value bindings", bindings)
     compiler.assert((3 <= #ast), "expected body expression", ast[1])
-    for _ = 1, (opts.nval or 0) do
-      table.insert(pre_syms, compiler.gensym(scope))
+    local pre_syms = nil
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for _0 = 1, (opts.nval or 0) do
+        local val_19_ = compiler.gensym(scope)
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      pre_syms = tbl_17_
     end
     local sub_scope = compiler["make-scope"](scope)
     local sub_chunk = {}
@@ -1201,37 +1330,43 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
       return (parent or "")
     end
   end
-  local function disambiguate_3f(rootstr, parent)
-    local function _476_()
-      local _475_0 = get_prev_line(parent)
-      if (nil ~= _475_0) then
-        local prev_line = _475_0
-        return prev_line:match("%)$")
-      end
-    end
-    return (rootstr:match("^{") or rootstr:match("^%(") or _476_())
+  local function needs_separator_3f(root, prev_line)
+    return (root:match("^%(") and prev_line and not prev_line:find(" end$"))
   end
   SPECIALS.tset = function(ast, scope, parent)
     compiler.assert((3 < #ast), "expected table, key, and value arguments", ast)
-    local root = compiler.compile1(ast[2], scope, parent, {nval = 1})[1]
-    local keys = {}
-    for i = 3, (#ast - 1) do
-      local _478_ = compiler.compile1(ast[i], scope, parent, {nval = 1})
-      local key = _478_[1]
-      table.insert(keys, tostring(key))
+    compiler.assert(((type(ast[2]) ~= "boolean") and (type(ast[2]) ~= "number")), "cannot set field of literal value", ast)
+    local root = str1(compiler.compile1(ast[2], scope, parent, {nval = 1}))
+    local root0 = nil
+    if root:match("^[.{\"]") then
+      root0 = string.format("(%s)", root)
+    else
+      root0 = root
     end
-    local value = compiler.compile1(ast[#ast], scope, parent, {nval = 1})[1]
-    local rootstr = tostring(root)
+    local keys = nil
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for i = 3, (#ast - 1) do
+        local val_19_ = str1(compiler.compile1(ast[i], scope, parent, {nval = 1}))
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      keys = tbl_17_
+    end
+    local value = str1(compiler.compile1(ast[#ast], scope, parent, {nval = 1}))
     local fmtstr = nil
-    if disambiguate_3f(rootstr, parent) then
-      fmtstr = "do end (%s)[%s] = %s"
+    if needs_separator_3f(root0, get_prev_line(parent)) then
+      fmtstr = "do end %s[%s] = %s"
     else
       fmtstr = "%s[%s] = %s"
     end
-    return compiler.emit(parent, fmtstr:format(rootstr, table.concat(keys, "]["), tostring(value)), ast)
+    return compiler.emit(parent, fmtstr:format(root0, table.concat(keys, "]["), value), ast)
   end
-  doc_special("tset", {"tbl", "key1", "...", "keyN", "val"}, "Set the value of a table field. Can take additional keys to set\nnested values, but all parents must contain an existing table.")
-  local function calculate_target(scope, opts)
+  doc_special("tset", {"tbl", "key1", "...", "keyN", "val"}, "Set the value of a table field. Deprecated in favor of set.")
+  local function calculate_if_target(scope, opts)
     if not (opts.tail or opts.target or opts.nval) then
       return "iife", true, nil
     elseif (opts.nval and (opts.nval ~= 0) and not opts.target) then
@@ -1249,129 +1384,185 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   end
   local function if_2a(ast, scope, parent, opts)
     compiler.assert((2 < #ast), "expected condition and body", ast)
-    local do_scope = compiler["make-scope"](scope)
-    local branches = {}
-    local wrapper, inner_tail, inner_target, target_exprs = calculate_target(scope, opts)
-    local body_opts = {nval = opts.nval, tail = inner_tail, target = inner_target}
-    local function compile_body(i)
-      local chunk = {}
-      local cscope = compiler["make-scope"](do_scope)
-      compiler["keep-side-effects"](compiler.compile1(ast[i], cscope, chunk, body_opts), chunk, nil, ast[i])
-      return {chunk = chunk, scope = cscope}
+    if ((1 == (#ast % 2)) and (ast[(#ast - 1)] == true)) then
+      table.remove(ast, (#ast - 1))
     end
     if (1 == (#ast % 2)) then
       table.insert(ast, utils.sym("nil"))
     end
-    for i = 2, (#ast - 1), 2 do
-      local condchunk = {}
-      local res = compiler.compile1(ast[i], do_scope, condchunk, {nval = 1})
-      local cond = res[1]
-      local branch = compile_body((i + 1))
-      branch.cond = cond
-      branch.condchunk = condchunk
-      branch.nested = ((i ~= 2) and (next(condchunk, nil) == nil))
-      table.insert(branches, branch)
-    end
-    local else_branch = compile_body(#ast)
-    local s = compiler.gensym(scope)
-    local buffer = {}
-    local last_buffer = buffer
-    for i = 1, #branches do
-      local branch = branches[i]
-      local fstr = nil
-      if not branch.nested then
-        fstr = "if %s then"
-      else
-        fstr = "elseif %s then"
+    if (#ast == 2) then
+      return SPECIALS["do"](utils.list(utils.sym("do"), ast[2]), scope, parent, opts)
+    else
+      local do_scope = compiler["make-scope"](scope)
+      local branches = {}
+      local wrapper, inner_tail, inner_target, target_exprs = calculate_if_target(scope, opts)
+      local body_opts = {nval = opts.nval, tail = inner_tail, target = inner_target}
+      local function compile_body(i)
+        local chunk = {}
+        local cscope = compiler["make-scope"](do_scope)
+        compiler["keep-side-effects"](compiler.compile1(ast[i], cscope, chunk, body_opts), chunk, nil, ast[i])
+        return {chunk = chunk, scope = cscope}
       end
-      local cond = tostring(branch.cond)
-      local cond_line = fstr:format(cond)
-      if branch.nested then
-        compiler.emit(last_buffer, branch.condchunk, ast)
-      else
-        for _, v in ipairs(branch.condchunk) do
-          compiler.emit(last_buffer, v, ast)
+      for i = 2, (#ast - 1), 2 do
+        local condchunk = {}
+        local _560_ = compiler.compile1(ast[i], do_scope, condchunk, {nval = 1})
+        local cond = _560_[1]
+        local branch = compile_body((i + 1))
+        branch.cond = cond
+        branch.condchunk = condchunk
+        branch.nested = ((i ~= 2) and (next(condchunk, nil) == nil))
+        table.insert(branches, branch)
+      end
+      local else_branch = compile_body(#ast)
+      local s = compiler.gensym(scope)
+      local buffer = {}
+      local last_buffer = buffer
+      for i = 1, #branches do
+        local branch = branches[i]
+        local fstr = nil
+        if not branch.nested then
+          fstr = "if %s then"
+        else
+          fstr = "elseif %s then"
+        end
+        local cond = tostring(branch.cond)
+        local cond_line = fstr:format(cond)
+        if branch.nested then
+          compiler.emit(last_buffer, branch.condchunk, ast)
+        else
+          for _, v in ipairs(branch.condchunk) do
+            compiler.emit(last_buffer, v, ast)
+          end
+        end
+        compiler.emit(last_buffer, cond_line, ast)
+        compiler.emit(last_buffer, branch.chunk, ast)
+        if (i == #branches) then
+          compiler.emit(last_buffer, "else", ast)
+          compiler.emit(last_buffer, else_branch.chunk, ast)
+          compiler.emit(last_buffer, "end", ast)
+        elseif not branches[(i + 1)].nested then
+          local next_buffer = {}
+          compiler.emit(last_buffer, "else", ast)
+          compiler.emit(last_buffer, next_buffer, ast)
+          compiler.emit(last_buffer, "end", ast)
+          last_buffer = next_buffer
         end
       end
-      compiler.emit(last_buffer, cond_line, ast)
-      compiler.emit(last_buffer, branch.chunk, ast)
-      if (i == #branches) then
-        compiler.emit(last_buffer, "else", ast)
-        compiler.emit(last_buffer, else_branch.chunk, ast)
-        compiler.emit(last_buffer, "end", ast)
-      elseif not branches[(i + 1)].nested then
-        local next_buffer = {}
-        compiler.emit(last_buffer, "else", ast)
-        compiler.emit(last_buffer, next_buffer, ast)
-        compiler.emit(last_buffer, "end", ast)
-        last_buffer = next_buffer
+      if (wrapper == "iife") then
+        local iifeargs = ((scope.vararg and "...") or "")
+        compiler.emit(parent, ("local function %s(%s)"):format(tostring(s), iifeargs), ast)
+        compiler.emit(parent, buffer, ast)
+        compiler.emit(parent, "end", ast)
+        return utils.expr(("%s(%s)"):format(tostring(s), iifeargs), "statement")
+      elseif (wrapper == "none") then
+        for i = 1, #buffer do
+          compiler.emit(parent, buffer[i], ast)
+        end
+        return {returned = true}
+      else
+        compiler.emit(parent, ("local %s"):format(inner_target), ast)
+        for i = 1, #buffer do
+          compiler.emit(parent, buffer[i], ast)
+        end
+        return target_exprs
       end
-    end
-    if (wrapper == "iife") then
-      local iifeargs = ((scope.vararg and "...") or "")
-      compiler.emit(parent, ("local function %s(%s)"):format(tostring(s), iifeargs), ast)
-      compiler.emit(parent, buffer, ast)
-      compiler.emit(parent, "end", ast)
-      return utils.expr(("%s(%s)"):format(tostring(s), iifeargs), "statement")
-    elseif (wrapper == "none") then
-      for i = 1, #buffer do
-        compiler.emit(parent, buffer[i], ast)
-      end
-      return {returned = true}
-    else
-      compiler.emit(parent, ("local %s"):format(inner_target), ast)
-      for i = 1, #buffer do
-        compiler.emit(parent, buffer[i], ast)
-      end
-      return target_exprs
     end
   end
   SPECIALS["if"] = if_2a
   doc_special("if", {"cond1", "body1", "...", "condN", "bodyN"}, "Conditional form.\nTakes any number of condition/body pairs and evaluates the first body where\nthe condition evaluates to truthy. Similar to cond in other lisps.")
-  local function remove_until_condition(bindings)
-    local last_item = bindings[(#bindings - 1)]
-    if ((utils["sym?"](last_item) and (tostring(last_item) == "&until")) or ("until" == last_item)) then
-      table.remove(bindings, (#bindings - 1))
-      return table.remove(bindings)
+  local function clause_3f(v)
+    return (utils["string?"](v) or (utils["sym?"](v) and not utils["multi-sym?"](v) and tostring(v):match("^&(.+)")))
+  end
+  local function remove_until_condition(bindings, ast)
+    local _until = nil
+    for i = (#bindings - 1), 3, -1 do
+      local _566_0 = clause_3f(bindings[i])
+      if ((_566_0 == false) or (_566_0 == nil)) then
+      elseif (nil ~= _566_0) then
+        local clause = _566_0
+        compiler.assert(((clause == "until") and not _until), ("unexpected iterator clause: " .. clause), ast)
+        table.remove(bindings, i)
+        _until = table.remove(bindings, i)
+      end
+    end
+    return _until
+  end
+  local function compile_until(_3fcondition, scope, chunk)
+    if _3fcondition then
+      local _568_ = compiler.compile1(_3fcondition, scope, chunk, {nval = 1})
+      local condition_lua = _568_[1]
+      return compiler.emit(chunk, ("if %s then break end"):format(tostring(condition_lua)), utils.expr(_3fcondition, "expression"))
     end
   end
-  local function compile_until(condition, scope, chunk)
-    if condition then
-      local _487_ = compiler.compile1(condition, scope, chunk, {nval = 1})
-      local condition_lua = _487_[1]
-      return compiler.emit(chunk, ("if %s then break end"):format(tostring(condition_lua)), utils.expr(condition, "expression"))
+  local function iterator_bindings(ast)
+    local bindings = utils.copy(ast)
+    local _3funtil = remove_until_condition(bindings, ast)
+    local iter = table.remove(bindings)
+    local bindings0 = nil
+    if (1 == #bindings) then
+      bindings0 = (utils["list?"](bindings[1]) or bindings)
+    else
+      for _, b in ipairs(bindings) do
+        if utils["list?"](b) then
+          utils.warn("unexpected parens in iterator", b)
+        end
+      end
+      bindings0 = bindings
     end
+    return bindings0, iter, _3funtil
   end
   SPECIALS.each = function(ast, scope, parent)
     compiler.assert((3 <= #ast), "expected body expression", ast[1])
     compiler.assert(utils["table?"](ast[2]), "expected binding table", ast)
-    compiler.assert((2 <= #ast[2]), "expected binding and iterator", ast)
-    local binding = setmetatable(utils.copy(ast[2]), getmetatable(ast[2]))
-    local until_condition = remove_until_condition(binding)
-    local iter = table.remove(binding, #binding)
-    local destructures = {}
-    local new_manglings = {}
     local sub_scope = compiler["make-scope"](scope)
+    local binding, iter, _3funtil_condition = iterator_bindings(ast[2])
+    local destructures = {}
+    local deferred_scope_changes = {manglings = {}, symmeta = {}}
+    utils.hook("pre-each", ast, sub_scope, binding, iter, _3funtil_condition)
     local function destructure_binding(v)
-      compiler.assert(not utils["string?"](v), ("unexpected iterator clause " .. tostring(v)), binding)
       if utils["sym?"](v) then
-        return compiler["declare-local"](v, {}, sub_scope, ast, new_manglings)
+        return compiler["declare-local"](v, sub_scope, ast, nil, deferred_scope_changes)
       else
         local raw = utils.sym(compiler.gensym(sub_scope))
         destructures[raw] = v
-        return compiler["declare-local"](raw, {}, sub_scope, ast)
+        return compiler["declare-local"](raw, sub_scope, ast)
       end
     end
-    local bind_vars = utils.map(binding, destructure_binding)
+    local bind_vars = nil
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for _, b in ipairs(binding) do
+        local val_19_ = destructure_binding(b)
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      bind_vars = tbl_17_
+    end
     local vals = compiler.compile1(iter, scope, parent)
-    local val_names = utils.map(vals, tostring)
+    local val_names = nil
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for _, v in ipairs(vals) do
+        local val_19_ = tostring(v)
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      val_names = tbl_17_
+    end
     local chunk = {}
+    compiler.assert(bind_vars[1], "expected binding and iterator", ast)
     compiler.emit(parent, ("for %s in %s do"):format(table.concat(bind_vars, ", "), table.concat(val_names, ", ")), ast)
     for raw, args in utils.stablepairs(destructures) do
       compiler.destructure(args, raw, ast, sub_scope, chunk, {declaration = true, nomulti = true, symtype = "each"})
     end
-    compiler["apply-manglings"](sub_scope, new_manglings, ast)
-    compile_until(until_condition, sub_scope, chunk)
+    compiler["apply-deferred-scope-changes"](sub_scope, deferred_scope_changes, ast)
+    compile_until(_3funtil_condition, sub_scope, chunk)
     compile_do(ast, sub_scope, chunk, 3)
     compiler.emit(parent, chunk, ast)
     return compiler.emit(parent, "end", ast)
@@ -1401,7 +1592,7 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   local function for_2a(ast, scope, parent)
     compiler.assert(utils["table?"](ast[2]), "expected binding table", ast)
     local ranges = setmetatable(utils.copy(ast[2]), getmetatable(ast[2]))
-    local until_condition = remove_until_condition(ranges)
+    local until_condition = remove_until_condition(ranges, ast)
     local binding_sym = table.remove(ranges, 1)
     local sub_scope = compiler["make-scope"](scope)
     local range_args = {}
@@ -1410,10 +1601,11 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     compiler.assert((3 <= #ast), "expected body expression", ast[1])
     compiler.assert((#ranges <= 3), "unexpected arguments", ranges)
     compiler.assert((1 < #ranges), "expected range to include start and stop", ranges)
+    utils.hook("pre-for", ast, sub_scope, binding_sym)
     for i = 1, math.min(#ranges, 3) do
-      range_args[i] = tostring(compiler.compile1(ranges[i], scope, parent, {nval = 1})[1])
+      range_args[i] = str1(compiler.compile1(ranges[i], scope, parent, {nval = 1}))
     end
-    compiler.emit(parent, ("for %s = %s do"):format(compiler["declare-local"](binding_sym, {}, sub_scope, ast), table.concat(range_args, ", ")), ast)
+    compiler.emit(parent, ("for %s = %s do"):format(compiler["declare-local"](binding_sym, sub_scope, ast), table.concat(range_args, ", ")), ast)
     compile_until(until_condition, sub_scope, chunk)
     compile_do(ast, sub_scope, chunk, 3)
     compiler.emit(parent, chunk, ast)
@@ -1421,13 +1613,22 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   end
   SPECIALS["for"] = for_2a
   doc_special("for", {"[index start stop step?]", "..."}, "Numeric loop construct.\nEvaluates body once for each value between start and stop (inclusive).", true)
+  local function method_special_type(ast)
+    if (utils["string?"](ast[3]) and utils["valid-lua-identifier?"](ast[3])) then
+      return "native"
+    elseif utils["sym?"](ast[2]) then
+      return "nonnative"
+    else
+      return "binding"
+    end
+  end
   local function native_method_call(ast, _scope, _parent, target, args)
-    local _491_ = ast
-    local _ = _491_[1]
-    local _0 = _491_[2]
-    local method_string = _491_[3]
+    local _577_ = ast
+    local _ = _577_[1]
+    local _0 = _577_[2]
+    local method_string = _577_[3]
     local call_string = nil
-    if ((target.type == "literal") or (target.type == "varg") or (target.type == "expression")) then
+    if ((target.type == "literal") or (target.type == "varg") or ((target.type == "expression") and not (target[1]):match("[%)%]]$") and not (target[1]):match("%.[%a_][%w_]*$"))) then
       call_string = "(%s):%s(%s)"
     else
       call_string = "%s:%s(%s)"
@@ -1435,52 +1636,62 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     return utils.expr(string.format(call_string, tostring(target), method_string, table.concat(args, ", ")), "statement")
   end
   local function nonnative_method_call(ast, scope, parent, target, args)
-    local method_string = tostring(compiler.compile1(ast[3], scope, parent, {nval = 1})[1])
+    local method_string = str1(compiler.compile1(ast[3], scope, parent, {nval = 1}))
     local args0 = {tostring(target), unpack(args)}
     return utils.expr(string.format("%s[%s](%s)", tostring(target), method_string, table.concat(args0, ", ")), "statement")
   end
-  local function double_eval_protected_method_call(ast, scope, parent, target, args)
-    local method_string = tostring(compiler.compile1(ast[3], scope, parent, {nval = 1})[1])
-    local call = "(function(tgt, m, ...) return tgt[m](tgt, ...) end)(%s, %s)"
-    table.insert(args, 1, method_string)
-    return utils.expr(string.format(call, tostring(target), table.concat(args, ", ")), "statement")
+  local function binding_method_call(ast, scope, parent, target, args)
+    local method_string = str1(compiler.compile1(ast[3], scope, parent, {nval = 1}))
+    local target_local = compiler.gensym(scope, "tgt")
+    local args0 = {target_local, unpack(args)}
+    compiler.emit(parent, string.format("local %s = %s", target_local, tostring(target)))
+    return utils.expr(string.format("(%s)[%s](%s)", target_local, method_string, table.concat(args0, ", ")), "statement")
   end
   local function method_call(ast, scope, parent)
     compiler.assert((2 < #ast), "expected at least 2 arguments", ast)
-    local _493_ = compiler.compile1(ast[2], scope, parent, {nval = 1})
-    local target = _493_[1]
+    local _579_ = compiler.compile1(ast[2], scope, parent, {nval = 1})
+    local target = _579_[1]
     local args = {}
     for i = 4, #ast do
       local subexprs = nil
-      local _494_
+      local _580_
       if (i ~= #ast) then
-        _494_ = 1
+        _580_ = 1
       else
-      _494_ = nil
+      _580_ = nil
       end
-      subexprs = compiler.compile1(ast[i], scope, parent, {nval = _494_})
-      utils.map(subexprs, tostring, args)
+      subexprs = compiler.compile1(ast[i], scope, parent, {nval = _580_})
+      local tbl_17_ = args
+      local i_18_ = #tbl_17_
+      for _, subexpr in ipairs(subexprs) do
+        local val_19_ = tostring(subexpr)
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
     end
-    if (utils["string?"](ast[3]) and utils["valid-lua-identifier?"](ast[3])) then
+    local _583_0 = method_special_type(ast)
+    if (_583_0 == "native") then
       return native_method_call(ast, scope, parent, target, args)
-    elseif (target.type == "sym") then
+    elseif (_583_0 == "nonnative") then
       return nonnative_method_call(ast, scope, parent, target, args)
-    else
-      return double_eval_protected_method_call(ast, scope, parent, target, args)
+    elseif (_583_0 == "binding") then
+      return binding_method_call(ast, scope, parent, target, args)
     end
   end
   SPECIALS[":"] = method_call
   doc_special(":", {"tbl", "method-name", "..."}, "Call the named method on tbl with the provided args.\nMethod name doesn't have to be known at compile-time; if it is, use\n(tbl:method-name ...) instead.")
   SPECIALS.comment = function(ast, _, parent)
     local c = nil
-    local _497_
+    local _585_
     do
       local tbl_17_ = {}
       local i_18_ = #tbl_17_
       for i, elt in ipairs(ast) do
         local val_19_ = nil
         if (i ~= 1) then
-          val_19_ = view(ast[i], {["one-line?"] = true})
+          val_19_ = view(elt, {["one-line?"] = true})
         else
         val_19_ = nil
         end
@@ -1489,9 +1700,9 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
           tbl_17_[i_18_] = val_19_
         end
       end
-      _497_ = tbl_17_
+      _585_ = tbl_17_
     end
-    c = table.concat(_497_, " "):gsub("%]%]", "]\\]")
+    c = table.concat(_585_, " "):gsub("%]%]", "]\\]")
     return compiler.emit(parent, ("--[[ " .. c .. " ]]"), ast)
   end
   doc_special("comment", {"..."}, "Comment which will be emitted in Lua output.", true)
@@ -1512,18 +1723,18 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     compiler.assert((#ast == 2), "expected one argument", ast)
     local f_scope = nil
     do
-      local _502_0 = compiler["make-scope"](scope)
-      _502_0["vararg"] = false
-      _502_0["hashfn"] = true
-      f_scope = _502_0
+      local _590_0 = compiler["make-scope"](scope)
+      _590_0["vararg"] = false
+      _590_0["hashfn"] = true
+      f_scope = _590_0
     end
     local f_chunk = {}
     local name = compiler.gensym(scope)
     local symbol = utils.sym(name)
     local args = {}
-    compiler["declare-local"](symbol, {}, scope, ast)
+    compiler["declare-local"](symbol, scope, ast)
     for i = 1, 9 do
-      args[i] = compiler["declare-local"](utils.sym(("$" .. i)), {}, f_scope, ast)
+      args[i] = compiler["declare-local"](utils.sym(("$" .. i)), f_scope, ast)
     end
     local function walker(idx, node, _3fparent_node)
       if utils["sym?"](node, "$...") then
@@ -1556,75 +1767,164 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     return utils.expr(name, "sym")
   end
   doc_special("hashfn", {"..."}, "Function literal shorthand; args are either $... OR $1, $2, etc.")
-  local function maybe_short_circuit_protect(ast, i, name, _507_0)
-    local _508_ = _507_0
-    local mac = _508_["macros"]
-    local call = (utils["list?"](ast) and tostring(ast[1]))
-    if ((("or" == name) or ("and" == name)) and (1 < i) and (mac[call] or ("set" == call) or ("tset" == call) or ("global" == call))) then
-      return utils.list(utils.sym("do"), ast)
+  local function comparator_special_type(ast)
+    if (3 == #ast) then
+      return "native"
+    elseif utils["every?"]({unpack(ast, 3, (#ast - 1))}, utils["idempotent-expr?"]) then
+      return "idempotent"
     else
-      return ast
+      return "binding"
     end
   end
-  local function arithmetic_special(name, zero_arity, unary_prefix, ast, scope, parent)
-    local len = #ast
-    local operands = {}
-    local padded_op = (" " .. name .. " ")
-    for i = 2, len do
-      local subast = maybe_short_circuit_protect(ast[i], i, name, scope)
-      local subexprs = compiler.compile1(subast, scope, parent)
-      if (i == len) then
-        utils.map(subexprs, tostring, operands)
+  local function short_circuit_safe_3f(x, scope)
+    if (("table" ~= type(x)) or utils["sym?"](x) or utils["varg?"](x)) then
+      return true
+    elseif utils["table?"](x) then
+      local ok = true
+      for k, v in pairs(x) do
+        if not ok then break end
+        ok = (short_circuit_safe_3f(v, scope) and short_circuit_safe_3f(k, scope))
+      end
+      return ok
+    elseif utils["list?"](x) then
+      if utils["sym?"](x[1]) then
+        local _596_0 = str1(x)
+        if ((_596_0 == "fn") or (_596_0 == "hashfn") or (_596_0 == "let") or (_596_0 == "local") or (_596_0 == "var") or (_596_0 == "set") or (_596_0 == "tset") or (_596_0 == "if") or (_596_0 == "each") or (_596_0 == "for") or (_596_0 == "while") or (_596_0 == "do") or (_596_0 == "lua") or (_596_0 == "global")) then
+          return false
+        elseif (((_596_0 == "<") or (_596_0 == ">") or (_596_0 == "<=") or (_596_0 == ">=") or (_596_0 == "=") or (_596_0 == "not=") or (_596_0 == "~=")) and (comparator_special_type(x) == "binding")) then
+          return false
+        else
+          local function _597_()
+            return (1 ~= x[2])
+          end
+          if ((_596_0 == "pick-values") and _597_()) then
+            return false
+          else
+            local function _598_()
+              local call = _596_0
+              return scope.macros[call]
+            end
+            if ((nil ~= _596_0) and _598_()) then
+              local call = _596_0
+              return false
+            else
+              local function _599_()
+                return (method_special_type(x) == "binding")
+              end
+              if ((_596_0 == ":") and _599_()) then
+                return false
+              else
+                local _ = _596_0
+                local ok = true
+                for i = 2, #x do
+                  if not ok then break end
+                  ok = short_circuit_safe_3f(x[i], scope)
+                end
+                return ok
+              end
+            end
+          end
+        end
       else
-        table.insert(operands, tostring(subexprs[1]))
+        local ok = true
+        for _, v in ipairs(x) do
+          if not ok then break end
+          ok = short_circuit_safe_3f(v, scope)
+        end
+        return ok
       end
     end
-    local _511_0 = #operands
-    if (_511_0 == 0) then
-      local _512_
-      do
-        compiler.assert(zero_arity, "Expected more than 0 arguments", ast)
-        _512_ = zero_arity
+  end
+  local function operator_special_result(ast, zero_arity, unary_prefix, padded_op, operands)
+    local _603_0 = #operands
+    if (_603_0 == 0) then
+      if zero_arity then
+        return utils.expr(zero_arity, "literal")
+      else
+        return compiler.assert(false, "Expected more than 0 arguments", ast)
       end
-      return utils.expr(_512_, "literal")
-    elseif (_511_0 == 1) then
-      if utils["varg?"](ast[2]) then
-        return compiler.assert(false, "tried to use vararg with operator", ast)
-      elseif unary_prefix then
+    elseif (_603_0 == 1) then
+      if unary_prefix then
         return ("(" .. unary_prefix .. padded_op .. operands[1] .. ")")
       else
         return operands[1]
       end
     else
-      local _ = _511_0
+      local _ = _603_0
       return ("(" .. table.concat(operands, padded_op) .. ")")
     end
   end
-  local function define_arithmetic_special(name, zero_arity, unary_prefix, _3flua_name)
-    local _516_
-    do
-      local _515_0 = (_3flua_name or name)
-      local function _517_(...)
-        return arithmetic_special(_515_0, zero_arity, unary_prefix, ...)
-      end
-      _516_ = _517_
+  local function emit_short_circuit_if(ast, scope, parent, name, subast, accumulator, expr_string, setter)
+    if (accumulator ~= expr_string) then
+      compiler.emit(parent, string.format(setter, accumulator, expr_string), ast)
     end
-    SPECIALS[name] = _516_
+    local function _608_()
+      if (name == "and") then
+        return accumulator
+      else
+        return ("not " .. accumulator)
+      end
+    end
+    compiler.emit(parent, ("if %s then"):format(_608_()), subast)
+    do
+      local chunk = {}
+      compiler.compile1(subast, scope, chunk, {nval = 1, target = accumulator})
+      compiler.emit(parent, chunk)
+    end
+    return compiler.emit(parent, "end")
+  end
+  local function operator_special(name, zero_arity, unary_prefix, ast, scope, parent)
+    compiler.assert(not ((#ast == 2) and utils["varg?"](ast[2])), "tried to use vararg with operator", ast)
+    local padded_op = (" " .. name .. " ")
+    local operands, accumulator = {}
+    if utils["call-of?"](ast[#ast], "values") then
+      utils.warn("multiple values in operators are deprecated", ast)
+    end
+    for subast in iter_args(ast) do
+      if ((nil ~= next(operands)) and ((name == "or") or (name == "and")) and not short_circuit_safe_3f(subast, scope)) then
+        local expr_string = table.concat(operands, padded_op)
+        local setter = nil
+        if accumulator then
+          setter = "%s = %s"
+        else
+          setter = "local %s = %s"
+        end
+        if not accumulator then
+          accumulator = compiler.gensym(scope, name)
+        end
+        emit_short_circuit_if(ast, scope, parent, name, subast, accumulator, expr_string, setter)
+        operands = {accumulator}
+      else
+        table.insert(operands, str1(compiler.compile1(subast, scope, parent, {nval = 1})))
+      end
+    end
+    return operator_special_result(ast, zero_arity, unary_prefix, padded_op, operands)
+  end
+  local function define_arithmetic_special(name, zero_arity, unary_prefix, _3flua_name)
+    local _614_
+    do
+      local _613_0 = (_3flua_name or name)
+      local function _615_(...)
+        return operator_special(_613_0, zero_arity, unary_prefix, ...)
+      end
+      _614_ = _615_
+    end
+    SPECIALS[name] = _614_
     return doc_special(name, {"a", "b", "..."}, "Arithmetic operator; works the same as Lua but accepts more arguments.")
   end
-  define_arithmetic_special("+", "0")
+  define_arithmetic_special("+", "0", "0")
   define_arithmetic_special("..", "''")
   define_arithmetic_special("^")
   define_arithmetic_special("-", nil, "")
-  define_arithmetic_special("*", "1")
+  define_arithmetic_special("*", "1", "1")
   define_arithmetic_special("%")
   define_arithmetic_special("/", nil, "1")
   define_arithmetic_special("//", nil, "1")
   SPECIALS["or"] = function(ast, scope, parent)
-    return arithmetic_special("or", "false", nil, ast, scope, parent)
+    return operator_special("or", "false", nil, ast, scope, parent)
   end
   SPECIALS["and"] = function(ast, scope, parent)
-    return arithmetic_special("and", "true", nil, ast, scope, parent)
+    return operator_special("and", "true", nil, ast, scope, parent)
   end
   doc_special("and", {"a", "b", "..."}, "Boolean operator; works the same as Lua but accepts more arguments.")
   doc_special("or", {"a", "b", "..."}, "Boolean operator; works the same as Lua but accepts more arguments.")
@@ -1638,14 +1938,22 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
       local prefixed_lib_name = ("bit." .. lib_name)
       for i = 2, len do
         local subexprs = nil
-        local _518_
+        local _616_
         if (i ~= len) then
-          _518_ = 1
+          _616_ = 1
         else
-        _518_ = nil
+        _616_ = nil
         end
-        subexprs = compiler.compile1(ast[i], scope, parent, {nval = _518_})
-        utils.map(subexprs, tostring, operands)
+        subexprs = compiler.compile1(ast[i], scope, parent, {nval = _616_})
+        local tbl_17_ = operands
+        local i_18_ = #tbl_17_
+        for _, s in ipairs(subexprs) do
+          local val_19_ = tostring(s)
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
       end
       if (#operands == 1) then
         if utils.root.options.useBitLib then
@@ -1663,15 +1971,15 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     end
   end
   local function define_bitop_special(name, zero_arity, unary_prefix, native)
-    local function _524_(...)
+    local function _623_(...)
       return bitop_special(native, name, zero_arity, unary_prefix, ...)
     end
-    SPECIALS[name] = _524_
+    SPECIALS[name] = _623_
     return nil
   end
   define_bitop_special("lshift", nil, "1", "<<")
   define_bitop_special("rshift", nil, "1", ">>")
-  define_bitop_special("band", "0", "0", "&")
+  define_bitop_special("band", "-1", "-1", "&")
   define_bitop_special("bor", "0", "0", "|")
   define_bitop_special("bxor", "0", "0", "~")
   doc_special("lshift", {"x", "n"}, "Bitwise logical left shift of x by n bits.\nOnly works in Lua 5.3+ or LuaJIT with the --use-bit-lib flag.")
@@ -1681,8 +1989,8 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   doc_special("bxor", {"x1", "x2", "..."}, "Bitwise XOR of any number of arguments.\nOnly works in Lua 5.3+ or LuaJIT with the --use-bit-lib flag.")
   SPECIALS.bnot = function(ast, scope, parent)
     compiler.assert((#ast == 2), "expected one argument", ast)
-    local _525_ = compiler.compile1(ast[2], scope, parent, {nval = 1})
-    local value = _525_[1]
+    local _624_ = compiler.compile1(ast[2], scope, parent, {nval = 1})
+    local value = _624_[1]
     if utils.root.options.useBitLib then
       return ("bit.bnot(" .. tostring(value) .. ")")
     else
@@ -1691,15 +1999,15 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   end
   doc_special("bnot", {"x"}, "Bitwise negation; only works in Lua 5.3+ or LuaJIT with the --use-bit-lib flag.")
   doc_special("..", {"a", "b", "..."}, "String concatenation operator; works the same as Lua but accepts more arguments.")
-  local function native_comparator(op, _527_0, scope, parent)
-    local _528_ = _527_0
-    local _ = _528_[1]
-    local lhs_ast = _528_[2]
-    local rhs_ast = _528_[3]
-    local _529_ = compiler.compile1(lhs_ast, scope, parent, {nval = 1})
-    local lhs = _529_[1]
-    local _530_ = compiler.compile1(rhs_ast, scope, parent, {nval = 1})
-    local rhs = _530_[1]
+  local function native_comparator(op, _626_0, scope, parent)
+    local _627_ = _626_0
+    local _ = _627_[1]
+    local lhs_ast = _627_[2]
+    local rhs_ast = _627_[3]
+    local _628_ = compiler.compile1(lhs_ast, scope, parent, {nval = 1})
+    local lhs = _628_[1]
+    local _629_ = compiler.compile1(rhs_ast, scope, parent, {nval = 1})
+    local rhs = _629_[1]
     return string.format("(%s %s %s)", tostring(lhs), op, tostring(rhs))
   end
   local function idempotent_comparator(op, chain_op, ast, scope, parent)
@@ -1708,7 +2016,7 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
       local tbl_17_ = {}
       local i_18_ = #tbl_17_
       for i = 2, #ast do
-        local val_19_ = tostring(compiler.compile1(ast[i], scope, parent, {nval = 1})[1])
+        local val_19_ = str1(compiler.compile1(ast[i], scope, parent, {nval = 1}))
         if (nil ~= val_19_) then
           i_18_ = (i_18_ + 1)
           tbl_17_[i_18_] = val_19_
@@ -1732,39 +2040,53 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     local chain = string.format(" %s ", (chain_op or "and"))
     return ("(" .. table.concat(comparisons, chain) .. ")")
   end
-  local function double_eval_protected_comparator(op, chain_op, ast, scope, parent)
-    local arglist = {}
-    local comparisons = {}
+  local function binding_comparator(op, chain_op, ast, scope, parent)
+    local binding_left = {}
+    local binding_right = {}
     local vals = {}
     local chain = string.format(" %s ", (chain_op or "and"))
     for i = 2, #ast do
-      table.insert(arglist, tostring(compiler.gensym(scope)))
-      table.insert(vals, tostring(compiler.compile1(ast[i], scope, parent, {nval = 1})[1]))
+      local compiled = str1(compiler.compile1(ast[i], scope, parent, {nval = 1}))
+      if (utils["idempotent-expr?"](ast[i]) or (i == 2) or (i == #ast)) then
+        table.insert(vals, compiled)
+      else
+        local my_sym = compiler.gensym(scope)
+        table.insert(binding_left, my_sym)
+        table.insert(binding_right, compiled)
+        table.insert(vals, my_sym)
+      end
     end
+    compiler.emit(parent, string.format("local %s = %s", table.concat(binding_left, ", "), table.concat(binding_right, ", "), ast))
+    local _633_
     do
-      local tbl_17_ = comparisons
+      local tbl_17_ = {}
       local i_18_ = #tbl_17_
-      for i = 1, (#arglist - 1) do
-        local val_19_ = string.format("(%s %s %s)", arglist[i], op, arglist[(i + 1)])
+      for i = 1, (#vals - 1) do
+        local val_19_ = string.format("(%s %s %s)", vals[i], op, vals[(i + 1)])
         if (nil ~= val_19_) then
           i_18_ = (i_18_ + 1)
           tbl_17_[i_18_] = val_19_
         end
       end
+      _633_ = tbl_17_
     end
-    return string.format("(function(%s) return %s end)(%s)", table.concat(arglist, ","), table.concat(comparisons, chain), table.concat(vals, ","))
+    return ("(" .. table.concat(_633_, chain) .. ")")
   end
   local function define_comparator_special(name, _3flua_op, _3fchain_op)
     do
       local op = (_3flua_op or name)
       local function opfn(ast, scope, parent)
         compiler.assert((2 < #ast), "expected at least two arguments", ast)
-        if (3 == #ast) then
+        local _635_0 = comparator_special_type(ast)
+        if (_635_0 == "native") then
           return native_comparator(op, ast, scope, parent)
-        elseif utils["every?"]({unpack(ast, 2)}, utils["idempotent-expr?"]) then
+        elseif (_635_0 == "idempotent") then
           return idempotent_comparator(op, _3fchain_op, ast, scope, parent)
+        elseif (_635_0 == "binding") then
+          return binding_comparator(op, _3fchain_op, ast, scope, parent)
         else
-          return double_eval_protected_comparator(op, _3fchain_op, ast, scope, parent)
+          local _ = _635_0
+          return error("internal compiler error. please report this to the fennel devs.")
         end
       end
       SPECIALS[name] = opfn
@@ -1781,7 +2103,7 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     local function opfn(ast, scope, parent)
       compiler.assert((#ast == 2), "expected one argument", ast)
       local tail = compiler.compile1(ast[2], scope, parent, {nval = 1})
-      return ((_3frealop or op) .. tostring(tail[1]))
+      return ((_3frealop or op) .. str1(tail))
     end
     SPECIALS[op] = opfn
     return nil
@@ -1792,16 +2114,12 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   doc_special("length", {"x"}, "Returns the length of a table or string.")
   SPECIALS["~="] = SPECIALS["not="]
   SPECIALS["#"] = SPECIALS.length
+  local function compile_time_3f(scope)
+    return ((scope == compiler.scopes.compiler) or (scope.parent and compile_time_3f(scope.parent)))
+  end
   SPECIALS.quote = function(ast, scope, parent)
     compiler.assert((#ast == 2), "expected one argument", ast)
-    local runtime, this_scope = true, scope
-    while this_scope do
-      this_scope = this_scope.parent
-      if (this_scope == compiler.scopes.compiler) then
-        runtime = false
-      end
-    end
-    return compiler["do-quote"](ast[2], scope, parent, runtime)
+    return compiler["do-quote"](ast[2], scope, parent, not compile_time_3f(scope))
   end
   doc_special("quote", {"x"}, "Quasiquote the following form. Only works in macro/compiler scope.")
   local macro_loaded = {}
@@ -1812,21 +2130,21 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   end
   local safe_require = nil
   local function safe_compiler_env()
-    local _537_
+    local _638_
     do
-      local _536_0 = rawget(_G, "utf8")
-      if (nil ~= _536_0) then
-        _537_ = utils.copy(_536_0)
+      local _637_0 = rawget(_G, "utf8")
+      if (nil ~= _637_0) then
+        _638_ = utils.copy(_637_0)
       else
-        _537_ = _536_0
+        _638_ = _637_0
       end
     end
-    return {_VERSION = _VERSION, assert = assert, bit = rawget(_G, "bit"), error = error, getmetatable = safe_getmetatable, ipairs = ipairs, math = utils.copy(math), next = next, pairs = utils.stablepairs, pcall = pcall, print = print, rawequal = rawequal, rawget = rawget, rawlen = rawget(_G, "rawlen"), rawset = rawset, require = safe_require, select = select, setmetatable = setmetatable, string = utils.copy(string), table = utils.copy(table), tonumber = tonumber, tostring = tostring, type = type, utf8 = _537_, xpcall = xpcall}
+    return {_VERSION = _VERSION, assert = assert, bit = rawget(_G, "bit"), error = error, getmetatable = safe_getmetatable, ipairs = ipairs, math = utils.copy(math), next = next, pairs = utils.stablepairs, pcall = pcall, print = print, rawequal = rawequal, rawget = rawget, rawlen = rawget(_G, "rawlen"), rawset = rawset, require = safe_require, select = select, setmetatable = setmetatable, string = utils.copy(string), table = utils.copy(table), tonumber = tonumber, tostring = tostring, type = type, utf8 = _638_, xpcall = xpcall}
   end
   local function combined_mt_pairs(env)
     local combined = {}
-    local _539_ = getmetatable(env)
-    local __index = _539_["__index"]
+    local _640_ = getmetatable(env)
+    local __index = _640_["__index"]
     if ("table" == type(__index)) then
       for k, v in pairs(__index) do
         combined[k] = v
@@ -1840,40 +2158,40 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   local function make_compiler_env(ast, scope, parent, _3fopts)
     local provided = nil
     do
-      local _541_0 = (_3fopts or utils.root.options)
-      if ((_G.type(_541_0) == "table") and (_541_0["compiler-env"] == "strict")) then
+      local _642_0 = (_3fopts or utils.root.options)
+      if ((_G.type(_642_0) == "table") and (_642_0["compiler-env"] == "strict")) then
         provided = safe_compiler_env()
-      elseif ((_G.type(_541_0) == "table") and (nil ~= _541_0.compilerEnv)) then
-        local compilerEnv = _541_0.compilerEnv
+      elseif ((_G.type(_642_0) == "table") and (nil ~= _642_0.compilerEnv)) then
+        local compilerEnv = _642_0.compilerEnv
         provided = compilerEnv
-      elseif ((_G.type(_541_0) == "table") and (nil ~= _541_0["compiler-env"])) then
-        local compiler_env = _541_0["compiler-env"]
+      elseif ((_G.type(_642_0) == "table") and (nil ~= _642_0["compiler-env"])) then
+        local compiler_env = _642_0["compiler-env"]
         provided = compiler_env
       else
-        local _ = _541_0
-        provided = safe_compiler_env(false)
+        local _ = _642_0
+        provided = safe_compiler_env()
       end
     end
     local env = nil
-    local function _543_()
+    local function _644_()
       return compiler.scopes.macro
     end
-    local function _544_(symbol)
+    local function _645_(symbol)
       compiler.assert(compiler.scopes.macro, "must call from macro", ast)
       return compiler.scopes.macro.manglings[tostring(symbol)]
     end
-    local function _545_(base)
+    local function _646_(base)
       return utils.sym(compiler.gensym((compiler.scopes.macro or scope), base))
     end
-    local function _546_(form)
+    local function _647_(form)
       compiler.assert(compiler.scopes.macro, "must call from macro", ast)
       return compiler.macroexpand(form, compiler.scopes.macro)
     end
-    env = {["assert-compile"] = compiler.assert, ["ast-source"] = utils["ast-source"], ["comment?"] = utils["comment?"], ["get-scope"] = _543_, ["in-scope?"] = _544_, ["list?"] = utils["list?"], ["macro-loaded"] = macro_loaded, ["multi-sym?"] = utils["multi-sym?"], ["sequence?"] = utils["sequence?"], ["sym?"] = utils["sym?"], ["table?"] = utils["table?"], ["varg?"] = utils["varg?"], _AST = ast, _CHUNK = parent, _IS_COMPILER = true, _SCOPE = scope, _SPECIALS = compiler.scopes.global.specials, _VARARG = utils.varg(), comment = utils.comment, gensym = _545_, list = utils.list, macroexpand = _546_, metadata = compiler.metadata, sequence = utils.sequence, sym = utils.sym, unpack = unpack, version = utils.version, view = view}
+    env = {["assert-compile"] = compiler.assert, ["ast-source"] = utils["ast-source"], ["comment?"] = utils["comment?"], ["fennel-module-name"] = fennel_module_name, ["get-scope"] = _644_, ["in-scope?"] = _645_, ["list?"] = utils["list?"], ["macro-loaded"] = macro_loaded, ["multi-sym?"] = utils["multi-sym?"], ["sequence?"] = utils["sequence?"], ["sym?"] = utils["sym?"], ["table?"] = utils["table?"], ["varg?"] = utils["varg?"], _AST = ast, _CHUNK = parent, _IS_COMPILER = true, _SCOPE = scope, _SPECIALS = compiler.scopes.global.specials, _VARARG = utils.varg(), comment = utils.comment, gensym = _646_, list = utils.list, macroexpand = _647_, pack = pack, sequence = utils.sequence, sym = utils.sym, unpack = unpack, version = utils.version, view = view}
     env._G = env
     return setmetatable(env, {__index = provided, __newindex = provided, __pairs = combined_mt_pairs})
   end
-  local function _547_(...)
+  local function _648_(...)
     local tbl_17_ = {}
     local i_18_ = #tbl_17_
     for c in string.gmatch((package.config or ""), "([^\n]+)") do
@@ -1885,10 +2203,10 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     end
     return tbl_17_
   end
-  local _549_ = _547_(...)
-  local dirsep = _549_[1]
-  local pathsep = _549_[2]
-  local pathmark = _549_[3]
+  local _650_ = _648_(...)
+  local dirsep = _650_[1]
+  local pathsep = _650_[2]
+  local pathmark = _650_[3]
   local pkg_config = {dirsep = (dirsep or "/"), pathmark = (pathmark or "?"), pathsep = (pathsep or ";")}
   local function escapepat(str)
     return string.gsub(str, "[^%w]", "%%%1")
@@ -1900,37 +2218,36 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     local fullpath = ((_3fpathstring or utils["fennel-module"].path) .. pkg_config.pathsep)
     local function try_path(path)
       local filename = path:gsub(escapepat(pkg_config.pathmark), no_dot_module)
-      local filename2 = path:gsub(escapepat(pkg_config.pathmark), modulename)
-      local _550_0 = (io.open(filename) or io.open(filename2))
-      if (nil ~= _550_0) then
-        local file = _550_0
+      local _651_0 = io.open(filename)
+      if (nil ~= _651_0) then
+        local file = _651_0
         file:close()
         return filename
       else
-        local _ = _550_0
+        local _ = _651_0
         return nil, ("no file '" .. filename .. "'")
       end
     end
     local function find_in_path(start, _3ftried_paths)
-      local _552_0 = fullpath:match(pattern, start)
-      if (nil ~= _552_0) then
-        local path = _552_0
-        local _553_0, _554_0 = try_path(path)
-        if (nil ~= _553_0) then
-          local filename = _553_0
+      local _653_0 = fullpath:match(pattern, start)
+      if (nil ~= _653_0) then
+        local path = _653_0
+        local _654_0, _655_0 = try_path(path)
+        if (nil ~= _654_0) then
+          local filename = _654_0
           return filename
-        elseif ((_553_0 == nil) and (nil ~= _554_0)) then
-          local error = _554_0
-          local function _556_()
-            local _555_0 = (_3ftried_paths or {})
-            table.insert(_555_0, error)
-            return _555_0
+        elseif ((_654_0 == nil) and (nil ~= _655_0)) then
+          local error = _655_0
+          local function _657_()
+            local _656_0 = (_3ftried_paths or {})
+            table.insert(_656_0, error)
+            return _656_0
           end
-          return find_in_path((start + #path + 1), _556_())
+          return find_in_path((start + #path + 1), _657_())
         end
       else
-        local _ = _552_0
-        local function _558_()
+        local _ = _653_0
+        local function _659_()
           local tried_paths = table.concat((_3ftried_paths or {}), "\n\9")
           if (_VERSION < "Lua 5.4") then
             return ("\n\9" .. tried_paths)
@@ -1938,31 +2255,31 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
             return tried_paths
           end
         end
-        return nil, _558_()
+        return nil, _659_()
       end
     end
     return find_in_path(1)
   end
   local function make_searcher(_3foptions)
-    local function _561_(module_name)
+    local function _662_(module_name)
       local opts = utils.copy(utils.root.options)
       for k, v in pairs((_3foptions or {})) do
         opts[k] = v
       end
       opts["module-name"] = module_name
-      local _562_0, _563_0 = search_module(module_name)
-      if (nil ~= _562_0) then
-        local filename = _562_0
-        local function _564_(...)
+      local _663_0, _664_0 = search_module(module_name)
+      if (nil ~= _663_0) then
+        local filename = _663_0
+        local function _665_(...)
           return utils["fennel-module"].dofile(filename, opts, ...)
         end
-        return _564_, filename
-      elseif ((_562_0 == nil) and (nil ~= _563_0)) then
-        local error = _563_0
+        return _665_, filename
+      elseif ((_663_0 == nil) and (nil ~= _664_0)) then
+        local error = _664_0
         return error
       end
     end
-    return _561_
+    return _662_
   end
   local function dofile_with_searcher(fennel_macro_searcher, filename, opts, ...)
     local searchers = (package.loaders or package.searchers or {})
@@ -1974,35 +2291,35 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   local function fennel_macro_searcher(module_name)
     local opts = nil
     do
-      local _566_0 = utils.copy(utils.root.options)
-      _566_0["module-name"] = module_name
-      _566_0["env"] = "_COMPILER"
-      _566_0["requireAsInclude"] = false
-      _566_0["allowedGlobals"] = nil
-      opts = _566_0
+      local _667_0 = utils.copy(utils.root.options)
+      _667_0["module-name"] = module_name
+      _667_0["env"] = "_COMPILER"
+      _667_0["requireAsInclude"] = false
+      _667_0["allowedGlobals"] = nil
+      opts = _667_0
     end
-    local _567_0 = search_module(module_name, utils["fennel-module"]["macro-path"])
-    if (nil ~= _567_0) then
-      local filename = _567_0
-      local _568_
+    local _668_0 = search_module(module_name, utils["fennel-module"]["macro-path"])
+    if (nil ~= _668_0) then
+      local filename = _668_0
+      local _669_
       if (opts["compiler-env"] == _G) then
-        local function _569_(...)
+        local function _670_(...)
           return dofile_with_searcher(fennel_macro_searcher, filename, opts, ...)
         end
-        _568_ = _569_
+        _669_ = _670_
       else
-        local function _570_(...)
+        local function _671_(...)
           return utils["fennel-module"].dofile(filename, opts, ...)
         end
-        _568_ = _570_
+        _669_ = _671_
       end
-      return _568_, filename
+      return _669_, filename
     end
   end
   local function lua_macro_searcher(module_name)
-    local _573_0 = search_module(module_name, package.path)
-    if (nil ~= _573_0) then
-      local filename = _573_0
+    local _674_0 = search_module(module_name, package.path)
+    if (nil ~= _674_0) then
+      local filename = _674_0
       local code = nil
       do
         local f = io.open(filename)
@@ -2014,10 +2331,10 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
             return error(..., 0)
           end
         end
-        local function _575_()
+        local function _676_()
           return assert(f:read("*a"))
         end
-        code = close_handlers_10_(_G.xpcall(_575_, (package.loaded.fennel or debug).traceback))
+        code = close_handlers_10_(_G.xpcall(_676_, (package.loaded.fennel or debug).traceback))
       end
       local chunk = load_code(code, make_compiler_env(), filename)
       return chunk, filename
@@ -2025,35 +2342,38 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
   end
   local macro_searchers = {fennel_macro_searcher, lua_macro_searcher}
   local function search_macro_module(modname, n)
-    local _577_0 = macro_searchers[n]
-    if (nil ~= _577_0) then
-      local f = _577_0
-      local _578_0, _579_0 = f(modname)
-      if ((nil ~= _578_0) and true) then
-        local loader = _578_0
-        local _3ffilename = _579_0
+    local _678_0 = macro_searchers[n]
+    if (nil ~= _678_0) then
+      local f = _678_0
+      local _679_0, _680_0 = f(modname)
+      if ((nil ~= _679_0) and true) then
+        local loader = _679_0
+        local _3ffilename = _680_0
         return loader, _3ffilename
       else
-        local _ = _578_0
+        local _ = _679_0
         return search_macro_module(modname, (n + 1))
       end
     end
   end
   local function sandbox_fennel_module(modname)
     if ((modname == "fennel.macros") or (package and package.loaded and ("table" == type(package.loaded[modname])) and (package.loaded[modname].metadata == compiler.metadata))) then
-      return {metadata = compiler.metadata, view = view}
+      local function _683_(_, ...)
+        return (compiler.metadata):setall(...)
+      end
+      return {metadata = {setall = _683_}, view = view}
     end
   end
-  local function _583_(modname)
-    local function _584_()
+  local function _685_(modname)
+    local function _686_()
       local loader, filename = search_macro_module(modname, 1)
       compiler.assert(loader, (modname .. " module not found."))
       macro_loaded[modname] = loader(modname, filename)
       return macro_loaded[modname]
     end
-    return (macro_loaded[modname] or sandbox_fennel_module(modname) or _584_())
+    return (macro_loaded[modname] or sandbox_fennel_module(modname) or _686_())
   end
-  safe_require = _583_
+  safe_require = _685_
   local function add_macros(macros_2a, ast, scope)
     compiler.assert(utils["table?"](macros_2a), "expected macros to be table", ast)
     for k, v in pairs(macros_2a) do
@@ -2063,10 +2383,10 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     end
     return nil
   end
-  local function resolve_module_name(_585_0, _scope, _parent, opts)
-    local _586_ = _585_0
-    local second = _586_[2]
-    local filename = _586_["filename"]
+  local function resolve_module_name(_687_0, _scope, _parent, opts)
+    local _688_ = _687_0
+    local second = _688_[2]
+    local filename = _688_["filename"]
     local filename0 = (filename or (utils["table?"](second) and second.filename))
     local module_name = utils.root.options["module-name"]
     local modexpr = compiler.compile(second, opts)
@@ -2082,13 +2402,13 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
       compiler.assert(loader, (modname .. " module not found."), ast)
       macro_loaded[modname] = compiler.assert(utils["table?"](loader(modname, filename)), "expected macros to be table", (_3freal_ast or ast))
     end
-    if ("import-macros" == tostring(ast[1])) then
+    if ("import-macros" == str1(ast)) then
       return macro_loaded[modname]
     else
-      return add_macros(macro_loaded[modname], ast, scope, parent)
+      return add_macros(macro_loaded[modname], ast, scope)
     end
   end
-  doc_special("require-macros", {"macro-module-name"}, "Load given module and use its contents as macro definitions in current scope.\nMacro module should return a table of macro functions with string keys.\nConsider using import-macros instead as it is more flexible.")
+  doc_special("require-macros", {"macro-module-name"}, "Load given module and use its contents as macro definitions in current scope.\nDeprecated.")
   local function emit_included_fennel(src, path, opts, sub_chunk)
     local subscope = compiler["make-scope"](utils.root.scope.parent)
     local forms = {}
@@ -2123,10 +2443,10 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
           return error(..., 0)
         end
       end
-      local function _592_()
+      local function _694_()
         return assert(f:read("*all")):gsub("[\13\n]*$", "")
       end
-      src = close_handlers_10_(_G.xpcall(_592_, (package.loaded.fennel or debug).traceback))
+      src = close_handlers_10_(_G.xpcall(_694_, (package.loaded.fennel or debug).traceback))
     end
     local ret = utils.expr(("require(\"" .. mod .. "\")"), "statement")
     local target = ("package.preload[%q]"):format(mod)
@@ -2156,12 +2476,12 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     compiler.assert((#ast == 2), "expected one argument", ast)
     local modexpr = nil
     do
-      local _595_0, _596_0 = pcall(resolve_module_name, ast, scope, parent, opts)
-      if ((_595_0 == true) and (nil ~= _596_0)) then
-        local modname = _596_0
+      local _697_0, _698_0 = pcall(resolve_module_name, ast, scope, parent, opts)
+      if ((_697_0 == true) and (nil ~= _698_0)) then
+        local modname = _698_0
         modexpr = utils.expr(string.format("%q", modname), "literal")
       else
-        local _ = _595_0
+        local _ = _697_0
         modexpr = compiler.compile1(ast[2], scope, parent, {nval = 1})[1]
       end
     end
@@ -2178,13 +2498,13 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
       utils.root.options["module-name"] = mod
       _ = nil
       local res = nil
-      local function _600_()
-        local _599_0 = search_module(mod)
-        if (nil ~= _599_0) then
-          local fennel_path = _599_0
+      local function _702_()
+        local _701_0 = search_module(mod)
+        if (nil ~= _701_0) then
+          local fennel_path = _701_0
           return include_path(ast, opts, fennel_path, mod, true)
         else
-          local _0 = _599_0
+          local _0 = _701_0
           local lua_path = search_module(mod, package.path)
           if lua_path then
             return include_path(ast, opts, lua_path, mod, false)
@@ -2195,7 +2515,7 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
           end
         end
       end
-      res = ((utils["member?"](mod, (utils.root.options.skipInclude or {})) and opts.fallback(modexpr, true)) or include_circular_fallback(mod, modexpr, opts.fallback, ast) or utils.root.scope.includes[mod] or _600_())
+      res = ((utils["member?"](mod, (utils.root.options.skipInclude or {})) and opts.fallback(modexpr, true)) or include_circular_fallback(mod, modexpr, opts.fallback, ast) or utils.root.scope.includes[mod] or _702_())
       utils.root.options["module-name"] = oldmod
       return res
     end
@@ -2212,9 +2532,51 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     compiler.assert((#ast == 2), "Expected one table argument", ast)
     local macro_tbl = eval_compiler_2a(ast[2], scope, parent)
     compiler.assert(utils["table?"](macro_tbl), "Expected one table argument", ast)
-    return add_macros(macro_tbl, ast, scope, parent)
+    return add_macros(macro_tbl, ast, scope)
   end
   doc_special("macros", {"{:macro-name-1 (fn [...] ...) ... :macro-name-N macro-body-N}"}, "Define all functions in the given table as macros local to the current scope.")
+  SPECIALS["tail!"] = function(ast, scope, parent, opts)
+    compiler.assert((#ast == 2), "Expected one argument", ast)
+    local call = utils["list?"](compiler.macroexpand(ast[2], scope))
+    local callee = tostring((call and utils["sym?"](call[1])))
+    compiler.assert((call and not scope.specials[callee]), "Expected a function call as argument", ast)
+    compiler.assert(opts.tail, "Must be in tail position", ast)
+    return compiler.compile1(call, scope, parent, opts)
+  end
+  doc_special("tail!", {"body"}, "Assert that the body being called is in tail position.")
+  SPECIALS["pick-values"] = function(ast, scope, parent)
+    local n = ast[2]
+    local vals = utils.list(utils.sym("values"), unpack(ast, 3))
+    compiler.assert((("number" == type(n)) and (0 <= n) and (n == math.floor(n))), ("Expected n to be an integer >= 0, got " .. tostring(n)))
+    if (1 == n) then
+      local _706_ = compiler.compile1(vals, scope, parent, {nval = 1})
+      local _707_ = _706_[1]
+      local expr = _707_[1]
+      return {("(" .. expr .. ")")}
+    elseif (0 == n) then
+      for i = 3, #ast do
+        compiler["keep-side-effects"](compiler.compile1(ast[i], scope, parent, {nval = 0}), parent, nil, ast[i])
+      end
+      return {}
+    else
+      local syms = nil
+      do
+        local tbl_17_ = utils.list()
+        local i_18_ = #tbl_17_
+        for _ = 1, n do
+          local val_19_ = utils.sym(compiler.gensym(scope, "pv"))
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
+        syms = tbl_17_
+      end
+      compiler.destructure(syms, vals, ast, scope, parent, {declaration = true, nomulti = true, noundef = true, symtype = "pv"})
+      return syms
+    end
+  end
+  doc_special("pick-values", {"n", "..."}, "Evaluate to exactly n values.\n\nFor example,\n  (pick-values 2 ...)\nexpands to\n  (let [(_0_ _1_) ...]\n    (values _0_ _1_))")
   SPECIALS["eval-compiler"] = function(ast, scope, parent)
     local old_first = ast[1]
     ast[1] = utils.sym("do")
@@ -2227,23 +2589,25 @@ package.preload["fennel.specials"] = package.preload["fennel.specials"] or funct
     return compiler.assert(false, "tried to use unquote outside quote", ast)
   end
   doc_special("unquote", {"..."}, "Evaluate the argument even if it's in a quoted form.")
-  return {["current-global-names"] = current_global_names, ["load-code"] = load_code, ["macro-loaded"] = macro_loaded, ["macro-searchers"] = macro_searchers, ["make-compiler-env"] = make_compiler_env, ["make-searcher"] = make_searcher, ["search-module"] = search_module, ["wrap-env"] = wrap_env, doc = doc_2a}
+  return {["current-global-names"] = current_global_names, ["get-function-metadata"] = get_function_metadata, ["load-code"] = load_code, ["macro-loaded"] = macro_loaded, ["macro-searchers"] = macro_searchers, ["make-compiler-env"] = make_compiler_env, ["make-searcher"] = make_searcher, ["search-module"] = search_module, ["wrap-env"] = wrap_env, doc = doc_2a}
 end
 package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or function(...)
-  local utils = require("fennel.utils")
+  local _281_ = require("fennel.utils")
+  local utils = _281_
+  local unpack = _281_["unpack"]
   local parser = require("fennel.parser")
   local friend = require("fennel.friend")
-  local unpack = (table.unpack or _G.unpack)
-  local scopes = {}
+  local view = require("fennel.view")
+  local scopes = {compiler = nil, global = nil, macro = nil}
   local function make_scope(_3fparent)
     local parent = (_3fparent or scopes.global)
-    local _260_
+    local _282_
     if parent then
-      _260_ = ((parent.depth or 0) + 1)
+      _282_ = ((parent.depth or 0) + 1)
     else
-      _260_ = 0
+      _282_ = 0
     end
-    return {["gensym-base"] = setmetatable({}, {__index = (parent and parent["gensym-base"])}), autogensyms = setmetatable({}, {__index = (parent and parent.autogensyms)}), depth = _260_, gensyms = setmetatable({}, {__index = (parent and parent.gensyms)}), hashfn = (parent and parent.hashfn), includes = setmetatable({}, {__index = (parent and parent.includes)}), macros = setmetatable({}, {__index = (parent and parent.macros)}), manglings = setmetatable({}, {__index = (parent and parent.manglings)}), parent = parent, refedglobals = {}, specials = setmetatable({}, {__index = (parent and parent.specials)}), symmeta = setmetatable({}, {__index = (parent and parent.symmeta)}), unmanglings = setmetatable({}, {__index = (parent and parent.unmanglings)}), vararg = (parent and parent.vararg)}
+    return {["gensym-base"] = setmetatable({}, {__index = (parent and parent["gensym-base"])}), autogensyms = setmetatable({}, {__index = (parent and parent.autogensyms)}), depth = _282_, gensyms = setmetatable({}, {__index = (parent and parent.gensyms)}), hashfn = (parent and parent.hashfn), includes = setmetatable({}, {__index = (parent and parent.includes)}), macros = setmetatable({}, {__index = (parent and parent.macros)}), manglings = setmetatable({}, {__index = (parent and parent.manglings)}), parent = parent, refedglobals = {}, specials = setmetatable({}, {__index = (parent and parent.specials)}), symmeta = setmetatable({}, {__index = (parent and parent.symmeta)}), unmanglings = setmetatable({}, {__index = (parent and parent.unmanglings)}), vararg = (parent and parent.vararg)}
   end
   local function assert_msg(ast, msg)
     local ast_tbl = nil
@@ -2257,14 +2621,14 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     local line = ((m and m.line) or ast_tbl.line or "?")
     local col = ((m and m.col) or ast_tbl.col or "?")
     local target = tostring((utils["sym?"](ast_tbl[1]) or ast_tbl[1] or "()"))
-    return string.format("%s:%s:%s Compile error in '%s': %s", filename, line, col, target, msg)
+    return string.format("%s:%s:%s: Compile error in '%s': %s", filename, line, col, target, msg)
   end
   local function assert_compile(condition, msg, ast, _3ffallback_ast)
     if not condition then
-      local _263_ = (utils.root.options or {})
-      local error_pinpoint = _263_["error-pinpoint"]
-      local source = _263_["source"]
-      local unfriendly = _263_["unfriendly"]
+      local _285_ = (utils.root.options or {})
+      local error_pinpoint = _285_["error-pinpoint"]
+      local source = _285_["source"]
+      local unfriendly = _285_["unfriendly"]
       local ast0 = nil
       if next(utils["ast-source"](ast)) then
         ast0 = ast
@@ -2286,41 +2650,60 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
   scopes.global.vararg = true
   scopes.compiler = make_scope(scopes.global)
   scopes.macro = scopes.global
-  local serialize_subst = {["\11"] = "\\v", ["\12"] = "\\f", ["\7"] = "\\a", ["\8"] = "\\b", ["\9"] = "\\t", ["\n"] = "n"}
+  local serialize_subst_digits = {["\\10"] = "\\n", ["\\11"] = "\\v", ["\\12"] = "\\f", ["\\13"] = "\\r", ["\\7"] = "\\a", ["\\8"] = "\\b", ["\\9"] = "\\t"}
   local function serialize_string(str)
-    local function _268_(_241)
+    local function _290_(_241)
       return ("\\" .. _241:byte())
     end
-    return string.gsub(string.gsub(string.format("%q", str), ".", serialize_subst), "[\128-\255]", _268_)
+    return string.gsub(string.gsub(string.gsub(string.format("%q", str), "\\\n", "\\n"), "\\..?", serialize_subst_digits), "[\128-\255]", _290_)
   end
   local function global_mangling(str)
     if utils["valid-lua-identifier?"](str) then
       return str
     else
-      local function _269_(_241)
-        return string.format("_%02x", _241:byte())
+      local _292_
+      do
+        local _291_0 = utils.root.options
+        if (nil ~= _291_0) then
+          _291_0 = _291_0["global-mangle"]
+        end
+        _292_ = _291_0
       end
-      return ("__fnl_global__" .. str:gsub("[^%w]", _269_))
+      if (_292_ == false) then
+        return ("_G[%q]"):format(str)
+      else
+        local function _294_(_241)
+          return string.format("_%02x", _241:byte())
+        end
+        return ("__fnl_global__" .. str:gsub("[^%w]", _294_))
+      end
     end
   end
   local function global_unmangling(identifier)
-    local _271_0 = string.match(identifier, "^__fnl_global__(.*)$")
-    if (nil ~= _271_0) then
-      local rest = _271_0
-      local _272_0 = nil
-      local function _273_(_241)
+    local _296_0 = string.match(identifier, "^__fnl_global__(.*)$")
+    if (nil ~= _296_0) then
+      local rest = _296_0
+      local _297_0 = nil
+      local function _298_(_241)
         return string.char(tonumber(_241:sub(2), 16))
       end
-      _272_0 = string.gsub(rest, "_[%da-f][%da-f]", _273_)
-      return _272_0
+      _297_0 = rest:gsub("_[%da-f][%da-f]", _298_)
+      return _297_0
     else
-      local _ = _271_0
+      local _ = _296_0
       return identifier
     end
   end
-  local allowed_globals = nil
   local function global_allowed_3f(name)
-    return (not allowed_globals or utils["member?"](name, allowed_globals))
+    local allowed = nil
+    do
+      local _300_0 = utils.root.options
+      if (nil ~= _300_0) then
+        _300_0 = _300_0.allowedGlobals
+      end
+      allowed = _300_0
+    end
+    return (not allowed or utils["member?"](name, allowed))
   end
   local function unique_mangling(original, mangling, scope, append)
     if scope.unmanglings[mangling] then
@@ -2329,31 +2712,13 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       return mangling
     end
   end
-  local function local_mangling(str, scope, ast, _3ftemp_manglings)
-    assert_compile(not utils["multi-sym?"](str), ("unexpected multi symbol " .. str), ast)
-    local raw = nil
-    if (utils["lua-keywords"][str] or str:match("^%d")) then
-      raw = ("_" .. str)
-    else
-      raw = str
-    end
-    local mangling = nil
-    local function _277_(_241)
-      return string.format("_%02x", _241:byte())
-    end
-    mangling = string.gsub(string.gsub(raw, "-", "_"), "[^%w_]", _277_)
-    local unique = unique_mangling(mangling, mangling, scope, 0)
-    scope.unmanglings[unique] = (scope["gensym-base"][str] or str)
-    do
-      local manglings = (_3ftemp_manglings or scope.manglings)
-      manglings[str] = unique
-    end
-    return unique
-  end
-  local function apply_manglings(scope, new_manglings, ast)
-    for raw, mangled in pairs(new_manglings) do
+  local function apply_deferred_scope_changes(scope, deferred_scope_changes, ast)
+    for raw, mangled in pairs(deferred_scope_changes.manglings) do
       assert_compile(not scope.refedglobals[mangled], ("use of global " .. raw .. " is aliased by a local"), ast)
       scope.manglings[raw] = mangled
+    end
+    for raw, symmeta in pairs(deferred_scope_changes.symmeta) do
+      scope.symmeta[raw] = symmeta
     end
     return nil
   end
@@ -2372,14 +2737,18 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     end
     return ret
   end
-  local function next_append()
-    utils.root.scope["gensym-append"] = ((utils.root.scope["gensym-append"] or 0) + 1)
-    return ("_" .. utils.root.scope["gensym-append"] .. "_")
+  local function root_scope(scope)
+    return ((utils.root and utils.root.scope) or (scope.parent and root_scope(scope.parent)) or scope)
+  end
+  local function next_append(root_scope_2a)
+    root_scope_2a["gensym-append"] = ((root_scope_2a["gensym-append"] or 0) + 1)
+    return ("_" .. root_scope_2a["gensym-append"] .. "_")
   end
   local function gensym(scope, _3fbase, _3fsuffix)
-    local mangling = ((_3fbase or "") .. next_append() .. (_3fsuffix or ""))
+    local root_scope_2a = root_scope(scope)
+    local mangling = ((_3fbase or "") .. next_append(root_scope_2a) .. (_3fsuffix or ""))
     while scope.unmanglings[mangling] do
-      mangling = ((_3fbase or "") .. next_append() .. (_3fsuffix or ""))
+      mangling = ((_3fbase or "") .. next_append(root_scope_2a) .. (_3fsuffix or ""))
     end
     if (_3fbase and (0 < #_3fbase)) then
       scope["gensym-base"][mangling] = _3fbase
@@ -2396,41 +2765,58 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     return table.concat(parts, ".")
   end
   local function autogensym(base, scope)
-    local _281_0 = utils["multi-sym?"](base)
-    if (nil ~= _281_0) then
-      local parts = _281_0
+    local _306_0 = utils["multi-sym?"](base)
+    if (nil ~= _306_0) then
+      local parts = _306_0
       return combine_auto_gensym(parts, autogensym(parts[1], scope))
     else
-      local _ = _281_0
-      local function _282_()
-        local mangling = gensym(scope, base:sub(1, ( - 2)), "auto")
+      local _ = _306_0
+      local function _307_()
+        local mangling = gensym(scope, base:sub(1, -2), "auto")
         scope.autogensyms[base] = mangling
         return mangling
       end
-      return (scope.autogensyms[base] or _282_())
+      return (scope.autogensyms[base] or _307_())
     end
   end
   local function check_binding_valid(symbol, scope, ast, _3fopts)
     local name = tostring(symbol)
     local macro_3f = nil
     do
-      local _284_0 = _3fopts
-      if (nil ~= _284_0) then
-        _284_0 = _284_0["macro?"]
+      local _309_0 = _3fopts
+      if (nil ~= _309_0) then
+        _309_0 = _309_0["macro?"]
       end
-      macro_3f = _284_0
+      macro_3f = _309_0
     end
-    assert_compile(not name:find("&"), "invalid character: &", symbol)
+    assert_compile(("&" ~= name:match("[&.:]")), "invalid character: &", symbol)
     assert_compile(not name:find("^%."), "invalid character: .", symbol)
     assert_compile(not (scope.specials[name] or (not macro_3f and scope.macros[name])), ("local %s was overshadowed by a special form or macro"):format(name), ast)
     return assert_compile(not utils["quoted?"](symbol), string.format("macro tried to bind %s without gensym", name), symbol)
   end
-  local function declare_local(symbol, meta, scope, ast, _3ftemp_manglings)
+  local function declare_local(symbol, scope, ast, _3fvar_3f, _3fdeferred_scope_changes)
     check_binding_valid(symbol, scope, ast)
-    local name = tostring(symbol)
-    assert_compile(not utils["multi-sym?"](name), ("unexpected multi symbol " .. name), ast)
-    scope.symmeta[name] = meta
-    return local_mangling(name, scope, ast, _3ftemp_manglings)
+    assert_compile(not utils["multi-sym?"](symbol), ("unexpected multi symbol " .. tostring(symbol)), ast)
+    local str = tostring(symbol)
+    local raw = nil
+    if (utils["lua-keyword?"](str) or str:match("^%d")) then
+      raw = ("_" .. str)
+    else
+      raw = str
+    end
+    local mangling = nil
+    local function _312_(_241)
+      return string.format("_%02x", _241:byte())
+    end
+    mangling = string.gsub(string.gsub(raw, "-", "_"), "[^%w_]", _312_)
+    local unique = unique_mangling(mangling, mangling, scope, 0)
+    scope.unmanglings[unique] = (scope["gensym-base"][str] or str)
+    do
+      local target = (_3fdeferred_scope_changes or scope)
+      target.manglings[str] = unique
+      target.symmeta[str] = {symbol = symbol, var = _3fvar_3f}
+    end
+    return unique
   end
   local function hashfn_arg_name(name, multi_sym_parts, scope)
     if not scope.hashfn then
@@ -2454,11 +2840,19 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     local local_3f = scope.manglings[parts[1]]
     if (local_3f and scope.symmeta[parts[1]]) then
       scope.symmeta[parts[1]]["used"] = true
+      symbol.referent = scope.symmeta[parts[1]].symbol
     end
     assert_compile(not scope.macros[parts[1]], "tried to reference a macro without calling it", symbol)
     assert_compile((not scope.specials[parts[1]] or ("require" == parts[1])), "tried to reference a special form without calling it", symbol)
     assert_compile((not _3freference_3f or local_3f or ("_ENV" == parts[1]) or global_allowed_3f(parts[1])), ("unknown identifier: " .. tostring(parts[1])), symbol)
-    if (allowed_globals and not local_3f and scope.parent) then
+    local function _317_()
+      local _316_0 = utils.root.options
+      if (nil ~= _316_0) then
+        _316_0 = _316_0.allowedGlobals
+      end
+      return _316_0
+    end
+    if (_317_() and not local_3f and scope.parent) then
       scope.parent.refedglobals[parts[1]] = true
     end
     return utils.expr(combine_parts(parts, scope), etype)
@@ -2484,7 +2878,16 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       end
       return new_chunk
     else
-      return utils.map(chunk, peephole)
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for _, x in ipairs(chunk) do
+        local val_19_ = peephole(x)
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      return tbl_17_
     end
   end
   local function flatten_chunk_correlated(main_chunk, options)
@@ -2494,7 +2897,7 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
         out[last_line0] = ((out[last_line0] or "") .. " " .. chunk.leaf)
       else
         for _, subchunk in ipairs(chunk) do
-          if (subchunk.leaf or (0 < #subchunk)) then
+          if (subchunk.leaf or next(subchunk)) then
             local source = utils["ast-source"](subchunk.ast)
             if (file == source.filename) then
               last_line0 = math.max(last_line0, (source.line or 0))
@@ -2516,38 +2919,57 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
   end
   local function flatten_chunk(file_sourcemap, chunk, tab, depth)
     if chunk.leaf then
-      local _296_ = utils["ast-source"](chunk.ast)
-      local filename = _296_["filename"]
-      local line = _296_["line"]
-      table.insert(file_sourcemap, {filename, line})
+      local _327_ = utils["ast-source"](chunk.ast)
+      local endline = _327_["endline"]
+      local filename = _327_["filename"]
+      local line = _327_["line"]
+      if ("end" == chunk.leaf) then
+        table.insert(file_sourcemap, {filename, (endline or line)})
+      else
+        table.insert(file_sourcemap, {filename, line})
+      end
       return chunk.leaf
     else
       local tab0 = nil
       do
-        local _297_0 = tab
-        if (_297_0 == true) then
+        local _329_0 = tab
+        if (_329_0 == true) then
           tab0 = "  "
-        elseif (_297_0 == false) then
+        elseif (_329_0 == false) then
           tab0 = ""
-        elseif (_297_0 == tab) then
-          tab0 = tab
-        elseif (_297_0 == nil) then
+        elseif (nil ~= _329_0) then
+          local tab1 = _329_0
+          tab0 = tab1
+        elseif (_329_0 == nil) then
           tab0 = ""
         else
         tab0 = nil
         end
       end
-      local function parter(c)
-        if (c.leaf or (0 < #c)) then
-          local sub = flatten_chunk(file_sourcemap, c, tab0, (depth + 1))
-          if (0 < depth) then
-            return (tab0 .. sub:gsub("\n", ("\n" .. tab0)))
+      local _331_
+      do
+        local tbl_17_ = {}
+        local i_18_ = #tbl_17_
+        for _, c in ipairs(chunk) do
+          local val_19_ = nil
+          if (c.leaf or next(c)) then
+            local sub = flatten_chunk(file_sourcemap, c, tab0, (depth + 1))
+            if (0 < depth) then
+              val_19_ = (tab0 .. sub:gsub("\n", ("\n" .. tab0)))
+            else
+              val_19_ = sub
+            end
           else
-            return sub
+          val_19_ = nil
+          end
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
           end
         end
+        _331_ = tbl_17_
       end
-      return table.concat(utils.map(chunk, parter), "\n")
+      return table.concat(_331_, "\n")
     end
   end
   local sourcemap = {}
@@ -2561,11 +2983,12 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
   end
   local function flatten(chunk, options)
     local chunk0 = peephole(chunk)
+    local indent = (options.indent or "  ")
     if options.correlate then
       return flatten_chunk_correlated(chunk0, options), {}
     else
       local file_sourcemap = {}
-      local src = flatten_chunk(file_sourcemap, chunk0, options.indent, 0)
+      local src = flatten_chunk(file_sourcemap, chunk0, indent, 0)
       file_sourcemap.short_src = (options.filename or make_short_src((options.source or src)))
       if options.filename then
         file_sourcemap.key = ("@" .. options.filename)
@@ -2577,7 +3000,7 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     end
   end
   local function make_metadata()
-    local function _305_(self, tgt, _3fkey)
+    local function _339_(self, tgt, _3fkey)
       if self[tgt] then
         if (nil ~= _3fkey) then
           return self[tgt][_3fkey]
@@ -2586,12 +3009,12 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
         end
       end
     end
-    local function _308_(self, tgt, key, value)
+    local function _342_(self, tgt, key, value)
       self[tgt] = (self[tgt] or {})
       self[tgt][key] = value
       return tgt
     end
-    local function _309_(self, tgt, ...)
+    local function _343_(self, tgt, ...)
       local kv_len = select("#", ...)
       local kvs = {...}
       if ((kv_len % 2) ~= 0) then
@@ -2603,19 +3026,31 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       end
       return tgt
     end
-    return setmetatable({}, {__index = {get = _305_, set = _308_, setall = _309_}, __mode = "k"})
+    return setmetatable({}, {__index = {get = _339_, set = _342_, setall = _343_}, __mode = "k"})
   end
   local function exprs1(exprs)
-    return table.concat(utils.map(exprs, tostring), ", ")
+    local _345_
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for _, e in ipairs(exprs) do
+        local val_19_ = tostring(e)
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      _345_ = tbl_17_
+    end
+    return table.concat(_345_, ", ")
   end
-  local function keep_side_effects(exprs, chunk, start, ast)
-    local start0 = (start or 1)
-    for j = start0, #exprs do
-      local se = exprs[j]
-      if ((se.type == "expression") and (se[1] ~= "nil")) then
-        emit(chunk, string.format("do local _ = %s end", tostring(se)), ast)
-      elseif (se.type == "statement") then
-        local code = tostring(se)
+  local function keep_side_effects(exprs, chunk, _3fstart, ast)
+    for j = (_3fstart or 1), #exprs do
+      local subexp = exprs[j]
+      if ((subexp.type == "expression") and (subexp[1] ~= "nil")) then
+        emit(chunk, ("do local _ = %s end"):format(tostring(subexp)), ast)
+      elseif (subexp.type == "statement") then
+        local code = tostring(subexp)
         local disambiguated = nil
         if (code:byte() == 40) then
           disambiguated = ("do end " .. code)
@@ -2649,14 +3084,14 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     end
     if opts.target then
       local result = exprs1(exprs)
-      local function _317_()
+      local function _353_()
         if (result == "") then
           return "nil"
         else
           return result
         end
       end
-      emit(parent, string.format("%s = %s", opts.target, _317_()), ast)
+      emit(parent, string.format("%s = %s", opts.target, _353_()), ast)
     end
     if (opts.tail or opts.target) then
       return {returned = true}
@@ -2668,16 +3103,16 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
   local function find_macro(ast, scope)
     local macro_2a = nil
     do
-      local _320_0 = utils["sym?"](ast[1])
-      if (_320_0 ~= nil) then
-        local _321_0 = tostring(_320_0)
-        if (_321_0 ~= nil) then
-          macro_2a = scope.macros[_321_0]
+      local _356_0 = utils["sym?"](ast[1])
+      if (_356_0 ~= nil) then
+        local _357_0 = tostring(_356_0)
+        if (_357_0 ~= nil) then
+          macro_2a = scope.macros[_357_0]
         else
-          macro_2a = _321_0
+          macro_2a = _357_0
         end
       else
-        macro_2a = _320_0
+        macro_2a = _356_0
       end
     end
     local multi_sym_parts = utils["multi-sym?"](ast[1])
@@ -2689,12 +3124,12 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       return macro_2a
     end
   end
-  local function propagate_trace_info(_325_0, _index, node)
-    local _326_ = _325_0
-    local byteend = _326_["byteend"]
-    local bytestart = _326_["bytestart"]
-    local filename = _326_["filename"]
-    local line = _326_["line"]
+  local function propagate_trace_info(_361_0, _index, node)
+    local _362_ = _361_0
+    local byteend = _362_["byteend"]
+    local bytestart = _362_["bytestart"]
+    local filename = _362_["filename"]
+    local line = _362_["line"]
     do
       local src = utils["ast-source"](node)
       if (("table" == type(node)) and (filename ~= src.filename)) then
@@ -2707,19 +3142,12 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
   local function quote_literal_nils(index, node, parent)
     if (parent and utils["list?"](parent)) then
       for i = 1, utils.maxn(parent) do
-        local _328_0 = parent[i]
-        if (_328_0 == nil) then
+        if (nil == parent[i]) then
           parent[i] = utils.sym("nil")
         end
       end
     end
     return index, node, parent
-  end
-  local function comp(f, g)
-    local function _331_(...)
-      return f(g(...))
-    end
-    return _331_
   end
   local function built_in_3f(m)
     local found_3f = false
@@ -2730,45 +3158,46 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     return found_3f
   end
   local function macroexpand_2a(ast, scope, _3fonce)
-    local _332_0 = nil
+    local _366_0 = nil
     if utils["list?"](ast) then
-      _332_0 = find_macro(ast, scope)
+      _366_0 = find_macro(ast, scope)
     else
-    _332_0 = nil
+    _366_0 = nil
     end
-    if (_332_0 == false) then
+    if (_366_0 == false) then
       return ast
-    elseif (nil ~= _332_0) then
-      local macro_2a = _332_0
+    elseif (nil ~= _366_0) then
+      local macro_2a = _366_0
       local old_scope = scopes.macro
       local _ = nil
       scopes.macro = scope
       _ = nil
       local ok, transformed = nil, nil
-      local function _334_()
+      local function _368_()
         return macro_2a(unpack(ast, 2))
       end
-      local function _335_()
+      local function _369_()
         if built_in_3f(macro_2a) then
           return tostring
         else
           return debug.traceback
         end
       end
-      ok, transformed = xpcall(_334_, _335_())
-      local function _336_(...)
-        return propagate_trace_info(ast, ...)
+      ok, transformed = xpcall(_368_, _369_())
+      local function _370_(...)
+        return propagate_trace_info(ast, quote_literal_nils(...))
       end
-      utils["walk-tree"](transformed, comp(_336_, quote_literal_nils))
+      utils["walk-tree"](transformed, _370_)
       scopes.macro = old_scope
       assert_compile(ok, transformed, ast)
+      utils.hook("macroexpand", ast, transformed, scope)
       if (_3fonce or not transformed) then
         return transformed
       else
         return macroexpand_2a(transformed, scope)
       end
     else
-      local _ = _332_0
+      local _ = _366_0
       return ast
     end
   end
@@ -2794,19 +3223,30 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       return exprs2
     end
   end
+  local function callable_3f(_376_0, ctype, callee)
+    local _377_ = _376_0
+    local call_ast = _377_[1]
+    if ("literal" == ctype) then
+      return ("\"" == string.sub(callee, 1, 1))
+    else
+      return (utils["sym?"](call_ast) or utils["list?"](call_ast))
+    end
+  end
   local function compile_function_call(ast, scope, parent, opts, compile1, len)
+    local _379_ = compile1(ast[1], scope, parent, {nval = 1})[1]
+    local callee = _379_[1]
+    local ctype = _379_["type"]
     local fargs = {}
-    local fcallee = compile1(ast[1], scope, parent, {nval = 1})[1]
-    assert_compile((utils["sym?"](ast[1]) or utils["list?"](ast[1]) or ("string" == type(ast[1]))), ("cannot call literal value " .. tostring(ast[1])), ast)
+    assert_compile(callable_3f(ast, ctype, callee), ("cannot call literal value " .. tostring(ast[1])), ast)
     for i = 2, len do
       local subexprs = nil
-      local _342_
+      local _380_
       if (i ~= len) then
-        _342_ = 1
+        _380_ = 1
       else
-      _342_ = nil
+      _380_ = nil
       end
-      subexprs = compile1(ast[i], scope, parent, {nval = _342_})
+      subexprs = compile1(ast[i], scope, parent, {nval = _380_})
       table.insert(fargs, subexprs[1])
       if (i == len) then
         for j = 2, #subexprs do
@@ -2817,12 +3257,12 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       end
     end
     local pat = nil
-    if ("string" == type(ast[1])) then
+    if ("literal" == ctype) then
       pat = "(%s)(%s)"
     else
       pat = "%s(%s)"
     end
-    local call = string.format(pat, tostring(fcallee), exprs1(fargs))
+    local call = string.format(pat, tostring(callee), exprs1(fargs))
     return handle_compile_opts({utils.expr(call, "statement")}, parent, opts, ast)
   end
   local function compile_call(ast, scope, parent, opts, compile1)
@@ -2844,13 +3284,13 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     end
   end
   local function compile_varg(ast, scope, parent, opts)
-    local _347_
+    local _385_
     if scope.hashfn then
-      _347_ = "use $... in hashfn"
+      _385_ = "use $... in hashfn"
     else
-      _347_ = "unexpected vararg"
+      _385_ = "unexpected vararg"
     end
-    assert_compile(scope.vararg, _347_, ast)
+    assert_compile(scope.vararg, _385_, ast)
     return handle_compile_opts({utils.expr("...", "varg")}, parent, opts, ast)
   end
   local function compile_sym(ast, scope, parent, opts)
@@ -2864,35 +3304,48 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     end
     return handle_compile_opts({e}, parent, opts, ast)
   end
-  local function serialize_number(n)
-    local _350_0 = string.gsub(tostring(n), ",", ".")
-    return _350_0
+  local view_opts = nil
+  do
+    local nan = tostring((0 / 0))
+    local _388_
+    if (45 == nan:byte()) then
+      _388_ = "(0/0)"
+    else
+      _388_ = "(- (0/0))"
+    end
+    local _390_
+    if (45 == nan:byte()) then
+      _390_ = "(- (0/0))"
+    else
+      _390_ = "(0/0)"
+    end
+    view_opts = {["negative-infinity"] = "(-1/0)", ["negative-nan"] = _388_, infinity = "(1/0)", nan = _390_}
   end
   local function compile_scalar(ast, _scope, parent, opts)
-    local serialize = nil
+    local compiled = nil
     do
-      local _351_0 = type(ast)
-      if (_351_0 == "nil") then
-        serialize = tostring
-      elseif (_351_0 == "boolean") then
-        serialize = tostring
-      elseif (_351_0 == "string") then
-        serialize = serialize_string
-      elseif (_351_0 == "number") then
-        serialize = serialize_number
+      local _392_0 = type(ast)
+      if (_392_0 == "nil") then
+        compiled = "nil"
+      elseif (_392_0 == "boolean") then
+        compiled = tostring(ast)
+      elseif (_392_0 == "string") then
+        compiled = serialize_string(ast)
+      elseif (_392_0 == "number") then
+        compiled = view(ast, view_opts)
       else
-      serialize = nil
+      compiled = nil
       end
     end
-    return handle_compile_opts({utils.expr(serialize(ast), "literal")}, parent, opts)
+    return handle_compile_opts({utils.expr(compiled, "literal")}, parent, opts)
   end
   local function compile_table(ast, scope, parent, opts, compile1)
     local function escape_key(k)
       if ((type(k) == "string") and utils["valid-lua-identifier?"](k)) then
         return k
       else
-        local _353_ = compile1(k, scope, parent, {nval = 1})
-        local compiled = _353_[1]
+        local _394_ = compile1(k, scope, parent, {nval = 1})
+        local compiled = _394_[1]
         return ("[" .. tostring(compiled) .. "]")
       end
     end
@@ -2918,12 +3371,12 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     do
       local tbl_17_ = buffer
       local i_18_ = #tbl_17_
-      for k, v in utils.stablepairs(ast) do
+      for k in utils.stablepairs(ast) do
         local val_19_ = nil
         if not keys[k] then
-          local _356_ = compile1(ast[k], scope, parent, {nval = 1})
-          local v0 = _356_[1]
-          val_19_ = string.format("%s = %s", escape_key(k), tostring(v0))
+          local _397_ = compile1(ast[k], scope, parent, {nval = 1})
+          local v = _397_[1]
+          val_19_ = string.format("%s = %s", escape_key(k), tostring(v))
         else
         val_19_ = nil
         end
@@ -2954,12 +3407,12 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
   end
   local function destructure(to, from, ast, scope, parent, opts)
     local opts0 = (opts or {})
-    local _360_ = opts0
-    local declaration = _360_["declaration"]
-    local forceglobal = _360_["forceglobal"]
-    local forceset = _360_["forceset"]
-    local isvar = _360_["isvar"]
-    local symtype = _360_["symtype"]
+    local _401_ = opts0
+    local declaration = _401_["declaration"]
+    local forceglobal = _401_["forceglobal"]
+    local forceset = _401_["forceset"]
+    local isvar = _401_["isvar"]
+    local symtype = _401_["symtype"]
     local symtype0 = ("_" .. (symtype or "dst"))
     local setter = nil
     if declaration then
@@ -2967,16 +3420,16 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     else
       setter = "%s = %s"
     end
-    local new_manglings = {}
-    local function getname(symbol, up1)
+    local deferred_scope_changes = {manglings = {}, symmeta = {}}
+    local function getname(symbol, ast0)
       local raw = symbol[1]
-      assert_compile(not (opts0.nomulti and utils["multi-sym?"](raw)), ("unexpected multi symbol " .. raw), up1)
+      assert_compile(not (opts0.nomulti and utils["multi-sym?"](raw)), ("unexpected multi symbol " .. raw), ast0)
       if declaration then
-        return declare_local(symbol, nil, scope, symbol, new_manglings)
+        return declare_local(symbol, scope, symbol, isvar, deferred_scope_changes)
       else
         local parts = (utils["multi-sym?"](raw) or {raw})
-        local _362_ = parts
-        local first = _362_[1]
+        local _403_ = parts
+        local first = _403_[1]
         local meta = scope.symmeta[first]
         assert_compile(not raw:find(":"), "cannot set method sym", symbol)
         if ((#parts == 1) and not forceset) then
@@ -2988,8 +3441,24 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
           assert_compile(not scope.symmeta[scope.unmanglings[raw]], ("global " .. raw .. " conflicts with local"), symbol)
           scope.manglings[raw] = global_mangling(raw)
           scope.unmanglings[global_mangling(raw)] = raw
-          if allowed_globals then
-            table.insert(allowed_globals, raw)
+          local _406_
+          do
+            local _405_0 = utils.root.options
+            if (nil ~= _405_0) then
+              _405_0 = _405_0.allowedGlobals
+            end
+            _406_ = _405_0
+          end
+          if _406_ then
+            local _409_
+            do
+              local _408_0 = utils.root.options
+              if (nil ~= _408_0) then
+                _408_0 = _408_0.allowedGlobals
+              end
+              _409_ = _408_0
+            end
+            table.insert(_409_, raw)
           end
         end
         return symbol_to_expression(symbol, scope)[1]
@@ -2997,14 +3466,23 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     end
     local function compile_top_target(lvalues)
       local inits = nil
-      local function _367_(_241)
-        if scope.manglings[_241] then
-          return _241
-        else
-          return "nil"
+      do
+        local tbl_17_ = {}
+        local i_18_ = #tbl_17_
+        for _, l in ipairs(lvalues) do
+          local val_19_ = nil
+          if scope.manglings[l] then
+            val_19_ = l
+          else
+            val_19_ = "nil"
+          end
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
         end
+        inits = tbl_17_
       end
-      inits = utils.map(lvalues, _367_)
       local init = table.concat(inits, ", ")
       local lvalue = table.concat(lvalues, ", ")
       local plast = parent[#parent]
@@ -3030,19 +3508,71 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       local lname = getname(left, up1)
       check_binding_valid(left, scope, left)
       if top_3f then
-        compile_top_target({lname})
+        return compile_top_target({lname})
       else
-        emit(parent, setter:format(lname, exprs1(rightexprs)), left)
-      end
-      if declaration then
-        scope.symmeta[tostring(left)] = {var = isvar}
-        return nil
+        return emit(parent, setter:format(lname, exprs1(rightexprs)), left)
       end
     end
-    local unpack_fn = "function (t, k, e)\n                        local mt = getmetatable(t)\n                        if 'table' == type(mt) and mt.__fennelrest then\n                          return mt.__fennelrest(t, k)\n                        elseif e then\n                          local rest = {}\n                          for k, v in pairs(t) do\n                            if not e[k] then rest[k] = v end\n                          end\n                          return rest\n                        else\n                          return {(table.unpack or unpack)(t, k)}\n                        end\n                      end"
+    local function dynamic_set_target(_420_0)
+      local _421_ = _420_0
+      local _ = _421_[1]
+      local target = _421_[2]
+      local keys = {(table.unpack or unpack)(_421_, 3)}
+      assert_compile(utils["sym?"](target), "dynamic set needs symbol target", ast)
+      assert_compile(next(keys), "dynamic set needs at least one key", ast)
+      local keys0 = nil
+      do
+        local tbl_17_ = {}
+        local i_18_ = #tbl_17_
+        for _0, k in ipairs(keys) do
+          local val_19_ = tostring(compile1(k, scope, parent, {nval = 1})[1])
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
+        keys0 = tbl_17_
+      end
+      return string.format("%s[%s]", tostring(symbol_to_expression(target, scope, true)), table.concat(keys0, "]["))
+    end
+    local function destructure_values(left, rightexprs, up1, destructure1, top_3f)
+      local left_names, tables = {}, {}
+      for i, name in ipairs(left) do
+        if utils["sym?"](name) then
+          table.insert(left_names, getname(name, up1))
+        elseif utils["call-of?"](name, ".") then
+          table.insert(left_names, dynamic_set_target(name))
+        else
+          local symname = gensym(scope, symtype0)
+          table.insert(left_names, symname)
+          tables[i] = {name, utils.expr(symname, "sym")}
+        end
+      end
+      assert_compile(left[1], "must provide at least one value", left)
+      if top_3f then
+        compile_top_target(left_names)
+      elseif utils["expr?"](rightexprs) then
+        emit(parent, setter:format(table.concat(left_names, ","), exprs1(rightexprs)), left)
+      else
+        local names = table.concat(left_names, ",")
+        local target = nil
+        if declaration then
+          target = ("local " .. names)
+        else
+          target = names
+        end
+        emit(parent, compile1(rightexprs, scope, parent, {target = target}), left)
+      end
+      for _, pair in utils.stablepairs(tables) do
+        destructure1(pair[1], {pair[2]}, left)
+      end
+      return nil
+    end
+    local unpack_fn = "function (t, k)\n                        return ((getmetatable(t) or {}).__fennelrest\n                                or function (t, k) return {(table.unpack or unpack)(t, k)} end)(t, k)\n                      end"
+    local unpack_ks = "function (t, e)\n                        local rest = {}\n                        for k, v in pairs(t) do\n                          if not e[k] then rest[k] = v end\n                        end\n                        return rest\n                      end"
     local function destructure_kv_rest(s, v, left, excluded_keys, destructure1)
       local exclude_str = nil
-      local _374_
+      local _426_
       do
         local tbl_17_ = {}
         local i_18_ = #tbl_17_
@@ -3053,139 +3583,144 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
             tbl_17_[i_18_] = val_19_
           end
         end
-        _374_ = tbl_17_
+        _426_ = tbl_17_
       end
-      exclude_str = table.concat(_374_, ", ")
-      local subexpr = utils.expr(string.format(string.gsub(("(" .. unpack_fn .. ")(%s, %s, {%s})"), "\n%s*", " "), s, tostring(v), exclude_str), "expression")
+      exclude_str = table.concat(_426_, ", ")
+      local subexpr = utils.expr(string.format(string.gsub(("(" .. unpack_ks .. ")(%s, {%s})"), "\n%s*", " "), s, exclude_str), "expression")
       return destructure1(v, {subexpr}, left)
     end
     local function destructure_rest(s, k, left, destructure1)
       local unpack_str = ("(" .. unpack_fn .. ")(%s, %s)")
       local formatted = string.format(string.gsub(unpack_str, "\n%s*", " "), s, k)
       local subexpr = utils.expr(formatted, "expression")
-      assert_compile((utils["sequence?"](left) and (nil == left[(k + 2)])), "expected rest argument before last parameter", left)
+      local function _428_()
+        local next_symbol = left[(k + 2)]
+        return ((nil == next_symbol) or utils["sym?"](next_symbol, "&as"))
+      end
+      assert_compile((utils["sequence?"](left) and _428_()), "expected rest argument before last parameter", left)
       return destructure1(left[(k + 1)], {subexpr}, left)
     end
-    local function destructure_table(left, rightexprs, top_3f, destructure1)
-      local s = gensym(scope, symtype0)
-      local right = nil
-      do
-        local _376_0 = nil
-        if top_3f then
-          _376_0 = exprs1(compile1(from, scope, parent))
-        else
-          _376_0 = exprs1(rightexprs)
+    local function optimize_table_destructure_3f(left, right)
+      local function _429_()
+        local all = next(left)
+        for _, d in ipairs(left) do
+          if not all then break end
+          all = ((utils["sym?"](d) and not tostring(d):find("^&")) or (utils["list?"](d) and utils["sym?"](d[1], ".")))
         end
-        if (_376_0 == "") then
-          right = "nil"
-        elseif (nil ~= _376_0) then
-          local right0 = _376_0
-          right = right0
-        else
-        right = nil
-        end
+        return all
       end
-      local excluded_keys = {}
-      emit(parent, string.format("local %s = %s", s, right), left)
-      for k, v in utils.stablepairs(left) do
-        if not (("number" == type(k)) and tostring(left[(k - 1)]):find("^&")) then
-          if (utils["sym?"](k) and (tostring(k) == "&")) then
-            destructure_kv_rest(s, v, left, excluded_keys, destructure1)
-          elseif (utils["sym?"](v) and (tostring(v) == "&")) then
-            destructure_rest(s, k, left, destructure1)
-          elseif (utils["sym?"](k) and (tostring(k) == "&as")) then
-            destructure_sym(v, {utils.expr(tostring(s))}, left)
-          elseif (utils["sequence?"](left) and (tostring(v) == "&as")) then
-            local _, next_sym, trailing = select(k, unpack(left))
-            assert_compile((nil == trailing), "expected &as argument before last parameter", left)
-            destructure_sym(next_sym, {utils.expr(tostring(s))}, left)
-          else
-            local key = nil
-            if (type(k) == "string") then
-              key = serialize_string(k)
-            else
-              key = k
-            end
-            local subexpr = utils.expr(string.format("%s[%s]", s, key), "expression")
-            if (type(k) == "string") then
-              table.insert(excluded_keys, k)
-            end
-            destructure1(v, {subexpr}, left)
-          end
-        end
-      end
-      return nil
+      return (utils["sequence?"](left) and utils["sequence?"](right) and _429_())
     end
-    local function destructure_values(left, up1, top_3f, destructure1)
-      local left_names, tables = {}, {}
-      for i, name in ipairs(left) do
-        if utils["sym?"](name) then
-          table.insert(left_names, getname(name, up1))
-        else
-          local symname = gensym(scope, symtype0)
-          table.insert(left_names, symname)
-          tables[i] = {name, utils.expr(symname, "sym")}
-        end
-      end
-      assert_compile(left[1], "must provide at least one value", left)
-      assert_compile(top_3f, "can't nest multi-value destructuring", left)
-      compile_top_target(left_names)
-      if declaration then
-        for _, sym in ipairs(left) do
-          if utils["sym?"](sym) then
-            scope.symmeta[tostring(sym)] = {var = isvar}
+    local function destructure_table(left, rightexprs, top_3f, destructure1, up1)
+      assert_compile((("table" == type(rightexprs)) and not utils["sym?"](rightexprs, "nil")), "could not destructure literal", left)
+      if optimize_table_destructure_3f(left, rightexprs) then
+        return destructure_values(utils.list(unpack(left)), utils.list(utils.sym("values"), unpack(rightexprs)), up1, destructure1)
+      else
+        local right = nil
+        do
+          local _430_0 = nil
+          if top_3f then
+            _430_0 = exprs1(compile1(from, scope, parent))
+          else
+            _430_0 = exprs1(rightexprs)
+          end
+          if (_430_0 == "") then
+            right = "nil"
+          elseif (nil ~= _430_0) then
+            local right0 = _430_0
+            right = right0
+          else
+          right = nil
           end
         end
+        local s = nil
+        if utils["sym?"](rightexprs) then
+          s = right
+        else
+          s = gensym(scope, symtype0)
+        end
+        local excluded_keys = {}
+        if not utils["sym?"](rightexprs) then
+          emit(parent, string.format("local %s = %s", s, right), left)
+        end
+        for k, v in utils.stablepairs(left) do
+          if not (("number" == type(k)) and tostring(left[(k - 1)]):find("^&")) then
+            if (utils["sym?"](k) and (tostring(k) == "&")) then
+              destructure_kv_rest(s, v, left, excluded_keys, destructure1)
+            elseif (utils["sym?"](v) and (tostring(v) == "&")) then
+              destructure_rest(s, k, left, destructure1)
+            elseif (utils["sym?"](k) and (tostring(k) == "&as")) then
+              destructure_sym(v, {utils.expr(tostring(s))}, left)
+            elseif (utils["sequence?"](left) and (tostring(v) == "&as")) then
+              local _, next_sym, trailing = select(k, unpack(left))
+              assert_compile((nil == trailing), "expected &as argument before last parameter", left)
+              destructure_sym(next_sym, {utils.expr(tostring(s))}, left)
+            else
+              local key = nil
+              if (type(k) == "string") then
+                key = serialize_string(k)
+              else
+                key = k
+              end
+              local subexpr = utils.expr(("%s[%s]"):format(s, key), "expression")
+              if (type(k) == "string") then
+                table.insert(excluded_keys, k)
+              end
+              destructure1(v, subexpr, left)
+            end
+          end
+        end
+        return nil
       end
-      for _, pair in utils.stablepairs(tables) do
-        destructure1(pair[1], {pair[2]}, left)
-      end
-      return nil
     end
     local function destructure1(left, rightexprs, up1, top_3f)
       if (utils["sym?"](left) and (left[1] ~= "nil")) then
         destructure_sym(left, rightexprs, up1, top_3f)
       elseif utils["table?"](left) then
-        destructure_table(left, rightexprs, top_3f, destructure1)
+        destructure_table(left, rightexprs, top_3f, destructure1, up1)
+      elseif utils["call-of?"](left, ".") then
+        destructure_values({left}, rightexprs, up1, destructure1)
       elseif utils["list?"](left) then
-        destructure_values(left, up1, top_3f, destructure1)
+        assert_compile(top_3f, "can't nest multi-value destructuring", left)
+        destructure_values(left, rightexprs, up1, destructure1, true)
       else
         assert_compile(false, string.format("unable to bind %s %s", type(left), tostring(left)), (((type(up1[2]) == "table") and up1[2]) or up1))
       end
-      if top_3f then
-        return {returned = true}
-      end
+      return (top_3f and {returned = true})
     end
-    local ret = destructure1(to, nil, ast, true)
+    local ret = destructure1(to, from, ast, true)
     utils.hook("destructure", from, to, scope, opts0)
-    apply_manglings(scope, new_manglings, ast)
+    apply_deferred_scope_changes(scope, deferred_scope_changes, ast)
     return ret
   end
   local function require_include(ast, scope, parent, opts)
     opts.fallback = function(e, no_warn)
-      if (not no_warn and ("literal" == e.type)) then
-        utils.warn(("include module not found, falling back to require: %s"):format(tostring(e)))
+      if not no_warn then
+        utils.warn(("include module not found, falling back to require: %s"):format(tostring(e)), ast)
       end
       return utils.expr(string.format("require(%s)", tostring(e)), "statement")
     end
     return scopes.global.specials.include(ast, scope, parent, opts)
   end
-  local function opts_for_compile(options)
-    local opts = utils.copy(options)
-    opts.indent = (opts.indent or "  ")
-    allowed_globals = opts.allowedGlobals
-    return opts
-  end
   local function compile_asts(asts, options)
-    local old_globals = allowed_globals
-    local opts = opts_for_compile(options)
-    local scope = (opts.scope or make_scope(scopes.global))
+    local opts = utils.copy(options)
+    local scope = nil
+    if ("_COMPILER" == opts.scope) then
+      scope = scopes.compiler
+    elseif opts.scope then
+      scope = opts.scope
+    else
+      scope = make_scope(scopes.global)
+    end
     local chunk = {}
     if opts.requireAsInclude then
       scope.specials.require = require_include
     end
-    local _390_ = utils.root
-    _390_["set-reset"](_390_)
+    if opts.assertAsRepl then
+      scope.macros.assert = scope.macros["assert-repl"]
+    end
+    local _445_ = utils.root
+    _445_["set-reset"](_445_)
     utils.root.chunk, utils.root.scope, utils.root.options = chunk, scope, opts
     for i = 1, #asts do
       local exprs = compile1(asts[i], scope, chunk, {nval = (((i < #asts) and 0) or nil), tail = (i == #asts)})
@@ -3194,11 +3729,11 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
         utils.hook("chunk", asts[i], scope)
       end
     end
-    allowed_globals = old_globals
     utils.root.reset()
     return flatten(chunk, opts)
   end
-  local function compile_stream(stream, opts)
+  local function compile_stream(stream, _3fopts)
+    local opts = (_3fopts or {})
     local asts = nil
     do
       local tbl_17_ = {}
@@ -3215,16 +3750,32 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     return compile_asts(asts, opts)
   end
   local function compile_string(str, _3fopts)
-    return compile_stream(parser["string-stream"](str, (_3fopts or {})), (_3fopts or {}))
+    return compile_stream(parser["string-stream"](str, _3fopts), _3fopts)
   end
-  local function compile(ast, _3fopts)
-    return compile_asts({ast}, _3fopts)
+  local function compile(from, _3fopts)
+    local _448_0 = type(from)
+    if (_448_0 == "userdata") then
+      local function _449_()
+        local _450_0 = from:read(1)
+        if (nil ~= _450_0) then
+          return _450_0:byte()
+        else
+          return _450_0
+        end
+      end
+      return compile_stream(_449_, _3fopts)
+    elseif (_448_0 == "function") then
+      return compile_stream(from, _3fopts)
+    else
+      local _ = _448_0
+      return compile_asts({from}, _3fopts)
+    end
   end
   local function traceback_frame(info)
     if ((info.what == "C") and info.name) then
-      return string.format("  [C]: in function '%s'", info.name)
+      return string.format("\9[C]: in function '%s'", info.name)
     elseif (info.what == "C") then
-      return "  [C]: in ?"
+      return "\9[C]: in ?"
     else
       local remap = sourcemap[info.source]
       if (remap and remap[info.currentline]) then
@@ -3236,59 +3787,98 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
         info.currentline = (remap[info.currentline][2] or -1)
       end
       if (info.what == "Lua") then
-        local function _395_()
+        local function _455_()
           if info.name then
             return ("'" .. info.name .. "'")
           else
             return "?"
           end
         end
-        return string.format("  %s:%d: in function %s", info.short_src, info.currentline, _395_())
+        return string.format("\9%s:%d: in function %s", info.short_src, info.currentline, _455_())
       elseif (info.short_src == "(tail call)") then
         return "  (tail call)"
       else
-        return string.format("  %s:%d: in main chunk", info.short_src, info.currentline)
+        return string.format("\9%s:%d: in main chunk", info.short_src, info.currentline)
       end
     end
   end
+  local lua_getinfo = debug.getinfo
   local function traceback(_3fmsg, _3fstart)
-    local msg = tostring((_3fmsg or ""))
-    if ((msg:find("^%g+:%d+:%d+ Compile error:.*") or msg:find("^%g+:%d+:%d+ Parse error:.*")) and not utils["debug-on?"]("trace")) then
-      return msg
-    else
-      local lines = {}
-      if (msg:find("^%g+:%d+:%d+ Compile error:") or msg:find("^%g+:%d+:%d+ Parse error:")) then
-        table.insert(lines, msg)
+    local _458_0 = type(_3fmsg)
+    if ((_458_0 == "nil") or (_458_0 == "string")) then
+      local msg = (_3fmsg or "")
+      if ((msg:find("^%g+:%d+:%d+ Compile error:.*") or msg:find("^%g+:%d+:%d+ Parse error:.*")) and not utils["debug-on?"]("trace")) then
+        return msg
       else
-        local newmsg = msg:gsub("^[^:]*:%d+:%s+", "runtime error: ")
-        table.insert(lines, newmsg)
+        local lines = {}
+        if (msg:find("^%g+:%d+:%d+ Compile error:") or msg:find("^%g+:%d+:%d+ Parse error:")) then
+          table.insert(lines, msg)
+        else
+          local newmsg = msg:gsub("^[^:]*:%d+:%s+", "runtime error: ")
+          table.insert(lines, newmsg)
+        end
+        table.insert(lines, "stack traceback:")
+        local done_3f, level = false, (_3fstart or 2)
+        while not done_3f do
+          do
+            local _460_0 = lua_getinfo(level, "Sln")
+            if (_460_0 == nil) then
+              done_3f = true
+            elseif (nil ~= _460_0) then
+              local info = _460_0
+              table.insert(lines, traceback_frame(info))
+            end
+          end
+          level = (level + 1)
+        end
+        return table.concat(lines, "\n")
       end
-      table.insert(lines, "stack traceback:")
-      local done_3f, level = false, (_3fstart or 2)
-      while not done_3f do
+    else
+      local _ = _458_0
+      return _3fmsg
+    end
+  end
+  local function getinfo(thread_or_level, ...)
+    local thread_or_level0 = nil
+    if ("number" == type(thread_or_level)) then
+      thread_or_level0 = (1 + thread_or_level)
+    else
+      thread_or_level0 = thread_or_level
+    end
+    local info = lua_getinfo(thread_or_level0, ...)
+    local mapped = (info and sourcemap[info.source])
+    if mapped then
+      for _, key in ipairs({"currentline", "linedefined", "lastlinedefined"}) do
+        local mapped_value = nil
         do
-          local _399_0 = debug.getinfo(level, "Sln")
-          if (_399_0 == nil) then
-            done_3f = true
-          elseif (nil ~= _399_0) then
-            local info = _399_0
-            table.insert(lines, traceback_frame(info))
+          local _465_0 = mapped
+          if (nil ~= _465_0) then
+            _465_0 = _465_0[info[key]]
+          end
+          if (nil ~= _465_0) then
+            _465_0 = _465_0[2]
+          end
+          mapped_value = _465_0
+        end
+        if (info[key] and mapped_value) then
+          info[key] = mapped_value
+        end
+      end
+      if info.activelines then
+        local tbl_14_ = {}
+        for line in pairs(info.activelines) do
+          local k_15_, v_16_ = mapped[line][2], true
+          if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+            tbl_14_[k_15_] = v_16_
           end
         end
-        level = (level + 1)
+        info.activelines = tbl_14_
       end
-      return table.concat(lines, "\n")
-    end
-  end
-  local function entry_transform(fk, fv)
-    local function _402_(k, v)
-      if (type(k) == "number") then
-        return k, fv(v)
-      else
-        return fk(k), fv(v)
+      if (info.what == "Lua") then
+        info.what = "Fennel"
       end
     end
-    return _402_
+    return info
   end
   local function mixed_concat(t, joiner)
     local seen = {}
@@ -3307,8 +3897,22 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
     return ret
   end
   local function do_quote(form, scope, parent, runtime_3f)
-    local function q(x)
-      return do_quote(x, scope, parent, runtime_3f)
+    local function quote_all(form0, discard_non_numbers)
+      local tbl_14_ = {}
+      for k, v in utils.stablepairs(form0) do
+        local k_15_, v_16_ = nil, nil
+        if (type(k) == "number") then
+          k_15_, v_16_ = k, do_quote(v, scope, parent, runtime_3f)
+        elseif not discard_non_numbers then
+          k_15_, v_16_ = do_quote(k, scope, parent, runtime_3f), do_quote(v, scope, parent, runtime_3f)
+        else
+        k_15_, v_16_ = nil
+        end
+        if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+          tbl_14_[k_15_] = v_16_
+        end
+      end
+      return tbl_14_
     end
     if utils["varg?"](form) then
       assert_compile(not runtime_3f, "quoted ... may only be used at compile time", form)
@@ -3323,20 +3927,15 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       local symstr = tostring(form)
       assert_compile(not runtime_3f, "symbols may only be used at compile time", form)
       if (symstr:find("#$") or symstr:find("#[:.]")) then
-        return string.format("sym('%s', {filename=%s, line=%s})", autogensym(symstr, scope), filename, (form.line or "nil"))
+        return string.format("_G.sym('%s', {filename=%s, line=%s})", autogensym(symstr, scope), filename, (form.line or "nil"))
       else
-        return string.format("sym('%s', {quoted=true, filename=%s, line=%s})", symstr, filename, (form.line or "nil"))
+        return string.format("_G.sym('%s', {quoted=true, filename=%s, line=%s})", symstr, filename, (form.line or "nil"))
       end
-    elseif (utils["list?"](form) and utils["sym?"](form[1]) and (tostring(form[1]) == "unquote")) then
-      local payload = form[2]
-      local res = unpack(compile1(payload, scope, parent))
+    elseif utils["call-of?"](form, "unquote") then
+      local res = unpack(compile1(form[2], scope, parent))
       return res[1]
     elseif utils["list?"](form) then
-      local mapped = nil
-      local function _407_()
-        return nil
-      end
-      mapped = utils.kvmap(form, entry_transform(_407_, q))
+      local mapped = quote_all(form, true)
       local filename = nil
       if form.filename then
         filename = string.format("%q", form.filename)
@@ -3344,25 +3943,22 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
         filename = "nil"
       end
       assert_compile(not runtime_3f, "lists may only be used at compile time", form)
-      return string.format(("setmetatable({filename=%s, line=%s, bytestart=%s, %s}" .. ", getmetatable(list()))"), filename, (form.line or "nil"), (form.bytestart or "nil"), mixed_concat(mapped, ", "))
+      return string.format(("setmetatable({filename=%s, line=%s, bytestart=%s, %s}" .. ", getmetatable(_G.list()))"), filename, (form.line or "nil"), (form.bytestart or "nil"), mixed_concat(mapped, ", "))
     elseif utils["sequence?"](form) then
-      local mapped = utils.kvmap(form, entry_transform(q, q))
+      local mapped_str = mixed_concat(quote_all(form), ", ")
       local source = getmetatable(form)
       local filename = nil
       if source.filename then
-        filename = string.format("%q", source.filename)
+        filename = ("%q"):format(source.filename)
       else
         filename = "nil"
       end
-      local _410_
-      if source then
-        _410_ = source.line
+      if runtime_3f then
+        return string.format("{%s}", mapped_str)
       else
-        _410_ = "nil"
+        return string.format("setmetatable({%s}, {filename=%s, line=%s, sequence=%s})", mapped_str, filename, (source.line or "nil"), "(getmetatable(_G.sequence()))['sequence']")
       end
-      return string.format("setmetatable({%s}, {filename=%s, line=%s, sequence=%s})", mixed_concat(mapped, ", "), filename, _410_, "(getmetatable(sequence()))['sequence']")
     elseif (type(form) == "table") then
-      local mapped = utils.kvmap(form, entry_transform(q, q))
       local source = getmetatable(form)
       local filename = nil
       if source.filename then
@@ -3370,33 +3966,34 @@ package.preload["fennel.compiler"] = package.preload["fennel.compiler"] or funct
       else
         filename = "nil"
       end
-      local function _413_()
+      local function _482_()
         if source then
           return source.line
         else
           return "nil"
         end
       end
-      return string.format("setmetatable({%s}, {filename=%s, line=%s})", mixed_concat(mapped, ", "), filename, _413_())
+      return string.format("setmetatable({%s}, {filename=%s, line=%s})", mixed_concat(quote_all(form), ", "), filename, _482_())
     elseif (type(form) == "string") then
       return serialize_string(form)
     else
       return tostring(form)
     end
   end
-  return {["apply-manglings"] = apply_manglings, ["check-binding-valid"] = check_binding_valid, ["compile-stream"] = compile_stream, ["compile-string"] = compile_string, ["declare-local"] = declare_local, ["do-quote"] = do_quote, ["global-mangling"] = global_mangling, ["global-unmangling"] = global_unmangling, ["keep-side-effects"] = keep_side_effects, ["make-scope"] = make_scope, ["require-include"] = require_include, ["symbol-to-expression"] = symbol_to_expression, assert = assert_compile, autogensym = autogensym, compile = compile, compile1 = compile1, destructure = destructure, emit = emit, gensym = gensym, macroexpand = macroexpand_2a, metadata = make_metadata(), scopes = scopes, sourcemap = sourcemap, traceback = traceback}
+  return {["apply-deferred-scope-changes"] = apply_deferred_scope_changes, ["check-binding-valid"] = check_binding_valid, ["compile-stream"] = compile_stream, ["compile-string"] = compile_string, ["declare-local"] = declare_local, ["do-quote"] = do_quote, ["global-allowed?"] = global_allowed_3f, ["global-mangling"] = global_mangling, ["global-unmangling"] = global_unmangling, ["keep-side-effects"] = keep_side_effects, ["make-scope"] = make_scope, ["require-include"] = require_include, ["symbol-to-expression"] = symbol_to_expression, assert = assert_compile, autogensym = autogensym, compile = compile, compile1 = compile1, destructure = destructure, emit = emit, gensym = gensym, getinfo = getinfo, macroexpand = macroexpand_2a, metadata = make_metadata(), scopes = scopes, sourcemap = sourcemap, traceback = traceback}
 end
 package.preload["fennel.friend"] = package.preload["fennel.friend"] or function(...)
-  local utils = require("fennel.utils")
+  local _193_ = require("fennel.utils")
+  local utils = _193_
+  local unpack = _193_["unpack"]
   local utf8_ok_3f, utf8 = pcall(require, "utf8")
-  local suggestions = {["$ and $... in hashfn are mutually exclusive"] = {"modifying the hashfn so it only contains $... or $, $1, $2, $3, etc"}, ["can't start multisym segment with a digit"] = {"removing the digit", "adding a non-digit before the digit"}, ["cannot call literal value"] = {"checking for typos", "checking for a missing function name", "making sure to use prefix operators, not infix"}, ["could not compile value of type "] = {"debugging the macro you're calling to return a list or table"}, ["could not read number (.*)"] = {"removing the non-digit character", "beginning the identifier with a non-digit if it is not meant to be a number"}, ["expected a function.* to call"] = {"removing the empty parentheses", "using square brackets if you want an empty table"}, ["expected at least one pattern/body pair"] = {"adding a pattern and a body to execute when the pattern matches"}, ["expected binding and iterator"] = {"making sure you haven't omitted a local name or iterator"}, ["expected binding sequence"] = {"placing a table here in square brackets containing identifiers to bind"}, ["expected body expression"] = {"putting some code in the body of this form after the bindings"}, ["expected each macro to be function"] = {"ensuring that the value for each key in your macros table contains a function", "avoid defining nested macro tables"}, ["expected even number of name/value bindings"] = {"finding where the identifier or value is missing"}, ["expected even number of pattern/body pairs"] = {"checking that every pattern has a body to go with it", "adding _ before the final body"}, ["expected even number of values in table literal"] = {"removing a key", "adding a value"}, ["expected local"] = {"looking for a typo", "looking for a local which is used out of its scope"}, ["expected macros to be table"] = {"ensuring your macro definitions return a table"}, ["expected parameters"] = {"adding function parameters as a list of identifiers in brackets"}, ["expected range to include start and stop"] = {"adding missing arguments"}, ["expected rest argument before last parameter"] = {"moving & to right before the final identifier when destructuring"}, ["expected symbol for function parameter: (.*)"] = {"changing %s to an identifier instead of a literal value"}, ["expected var (.*)"] = {"declaring %s using var instead of let/local", "introducing a new local instead of changing the value of %s"}, ["expected vararg as last parameter"] = {"moving the \"...\" to the end of the parameter list"}, ["expected whitespace before opening delimiter"] = {"adding whitespace"}, ["global (.*) conflicts with local"] = {"renaming local %s"}, ["invalid character: (.)"] = {"deleting or replacing %s", "avoiding reserved characters like \", \\, ', ~, ;, @, `, and comma"}, ["local (.*) was overshadowed by a special form or macro"] = {"renaming local %s"}, ["macro not found in macro module"] = {"checking the keys of the imported macro module's returned table"}, ["macro tried to bind (.*) without gensym"] = {"changing to %s# when introducing identifiers inside macros"}, ["malformed multisym"] = {"ensuring each period or colon is not followed by another period or colon"}, ["may only be used at compile time"] = {"moving this to inside a macro if you need to manipulate symbols/lists", "using square brackets instead of parens to construct a table"}, ["method must be last component"] = {"using a period instead of a colon for field access", "removing segments after the colon", "making the method call, then looking up the field on the result"}, ["mismatched closing delimiter (.), expected (.)"] = {"replacing %s with %s", "deleting %s", "adding matching opening delimiter earlier"}, ["missing subject"] = {"adding an item to operate on"}, ["multisym method calls may only be in call position"] = {"using a period instead of a colon to reference a table's fields", "putting parens around this"}, ["tried to reference a macro without calling it"] = {"renaming the macro so as not to conflict with locals"}, ["tried to reference a special form without calling it"] = {"making sure to use prefix operators, not infix", "wrapping the special in a function if you need it to be first class"}, ["tried to use unquote outside quote"] = {"moving the form to inside a quoted form", "removing the comma"}, ["tried to use vararg with operator"] = {"accumulating over the operands"}, ["unable to bind (.*)"] = {"replacing the %s with an identifier"}, ["unexpected arguments"] = {"removing an argument", "checking for typos"}, ["unexpected closing delimiter (.)"] = {"deleting %s", "adding matching opening delimiter earlier"}, ["unexpected iterator clause"] = {"removing an argument", "checking for typos"}, ["unexpected multi symbol (.*)"] = {"removing periods or colons from %s"}, ["unexpected vararg"] = {"putting \"...\" at the end of the fn parameters if the vararg was intended"}, ["unknown identifier: (.*)"] = {"looking to see if there's a typo", "using the _G table instead, eg. _G.%s if you really want a global", "moving this code to somewhere that %s is in scope", "binding %s as a local in the scope of this code"}, ["unused local (.*)"] = {"renaming the local to _%s if it is meant to be unused", "fixing a typo so %s is used", "disabling the linter which checks for unused locals"}, ["use of global (.*) is aliased by a local"] = {"renaming local %s", "refer to the global using _G.%s instead of directly"}}
-  local unpack = (table.unpack or _G.unpack)
+  local suggestions = {["$ and $... in hashfn are mutually exclusive"] = {"modifying the hashfn so it only contains $... or $, $1, $2, $3, etc"}, ["can't introduce (.*) here"] = {"declaring the local at the top-level"}, ["can't start multisym segment with a digit"] = {"removing the digit", "adding a non-digit before the digit"}, ["cannot call literal value"] = {"checking for typos", "checking for a missing function name", "making sure to use prefix operators, not infix"}, ["could not compile value of type "] = {"debugging the macro you're calling to return a list or table"}, ["could not read number (.*)"] = {"removing the non-digit character", "beginning the identifier with a non-digit if it is not meant to be a number"}, ["expected a function.* to call"] = {"removing the empty parentheses", "using square brackets if you want an empty table"}, ["expected at least one pattern/body pair"] = {"adding a pattern and a body to execute when the pattern matches"}, ["expected binding and iterator"] = {"making sure you haven't omitted a local name or iterator"}, ["expected binding sequence"] = {"placing a table here in square brackets containing identifiers to bind"}, ["expected body expression"] = {"putting some code in the body of this form after the bindings"}, ["expected each macro to be function"] = {"ensuring that the value for each key in your macros table contains a function", "avoid defining nested macro tables"}, ["expected even number of name/value bindings"] = {"finding where the identifier or value is missing"}, ["expected even number of pattern/body pairs"] = {"checking that every pattern has a body to go with it", "adding _ before the final body"}, ["expected even number of values in table literal"] = {"removing a key", "adding a value"}, ["expected local"] = {"looking for a typo", "looking for a local which is used out of its scope"}, ["expected macros to be table"] = {"ensuring your macro definitions return a table"}, ["expected parameters"] = {"adding function parameters as a list of identifiers in brackets"}, ["expected range to include start and stop"] = {"adding missing arguments"}, ["expected rest argument before last parameter"] = {"moving & to right before the final identifier when destructuring"}, ["expected symbol for function parameter: (.*)"] = {"changing %s to an identifier instead of a literal value"}, ["expected var (.*)"] = {"declaring %s using var instead of let/local", "introducing a new local instead of changing the value of %s"}, ["expected vararg as last parameter"] = {"moving the \"...\" to the end of the parameter list"}, ["expected whitespace before opening delimiter"] = {"adding whitespace"}, ["global (.*) conflicts with local"] = {"renaming local %s"}, ["invalid character: (.)"] = {"deleting or replacing %s", "avoiding reserved characters like \", \\, ', ~, ;, @, `, and comma"}, ["local (.*) was overshadowed by a special form or macro"] = {"renaming local %s"}, ["macro not found in macro module"] = {"checking the keys of the imported macro module's returned table"}, ["macro tried to bind (.*) without gensym"] = {"changing to %s# when introducing identifiers inside macros"}, ["malformed multisym"] = {"ensuring each period or colon is not followed by another period or colon"}, ["may only be used at compile time"] = {"moving this to inside a macro if you need to manipulate symbols/lists", "using square brackets instead of parens to construct a table"}, ["method must be last component"] = {"using a period instead of a colon for field access", "removing segments after the colon", "making the method call, then looking up the field on the result"}, ["mismatched closing delimiter (.), expected (.)"] = {"replacing %s with %s", "deleting %s", "adding matching opening delimiter earlier"}, ["missing subject"] = {"adding an item to operate on"}, ["multisym method calls may only be in call position"] = {"using a period instead of a colon to reference a table's fields", "putting parens around this"}, ["tried to reference a macro without calling it"] = {"renaming the macro so as not to conflict with locals"}, ["tried to reference a special form without calling it"] = {"making sure to use prefix operators, not infix", "wrapping the special in a function if you need it to be first class"}, ["tried to use unquote outside quote"] = {"moving the form to inside a quoted form", "removing the comma"}, ["tried to use vararg with operator"] = {"accumulating over the operands"}, ["unable to bind (.*)"] = {"replacing the %s with an identifier"}, ["unexpected arguments"] = {"removing an argument", "checking for typos"}, ["unexpected closing delimiter (.)"] = {"deleting %s", "adding matching opening delimiter earlier"}, ["unexpected iterator clause"] = {"removing an argument", "checking for typos"}, ["unexpected multi symbol (.*)"] = {"removing periods or colons from %s"}, ["unexpected vararg"] = {"putting \"...\" at the end of the fn parameters if the vararg was intended"}, ["unknown identifier: (.*)"] = {"looking to see if there's a typo", "using the _G table instead, eg. _G.%s if you really want a global", "moving this code to somewhere that %s is in scope", "binding %s as a local in the scope of this code"}, ["unused local (.*)"] = {"renaming the local to _%s if it is meant to be unused", "fixing a typo so %s is used", "disabling the linter which checks for unused locals"}, ["use of global (.*) is aliased by a local"] = {"renaming local %s", "refer to the global using _G.%s instead of directly"}}
   local function suggest(msg)
     local s = nil
     for pat, sug in pairs(suggestions) do
       if s then break end
       local matches = {msg:match(pat)}
-      if (0 < #matches) then
+      if next(matches) then
         local tbl_17_ = {}
         local i_18_ = #tbl_17_
         for _, s0 in ipairs(sug) do
@@ -3430,13 +4027,13 @@ package.preload["fennel.friend"] = package.preload["fennel.friend"] or function(
           return error(..., 0)
         end
       end
-      local function _184_()
+      local function _197_()
         for _ = 2, line do
           f:read()
         end
         return f:read()
       end
-      return close_handlers_10_(_G.xpcall(_184_, (package.loaded.fennel or debug).traceback))
+      return close_handlers_10_(_G.xpcall(_197_, (package.loaded.fennel or debug).traceback))
     end
   end
   local function sub(str, start, _end)
@@ -3452,8 +4049,8 @@ package.preload["fennel.friend"] = package.preload["fennel.friend"] or function(
     if ((opts and (false == opts["error-pinpoint"])) or (os and os.getenv and os.getenv("NO_COLOR"))) then
       return codeline
     else
-      local _187_ = (opts or {})
-      local error_pinpoint = _187_["error-pinpoint"]
+      local _200_ = (opts or {})
+      local error_pinpoint = _200_["error-pinpoint"]
       local endcol = (_3fendcol or col)
       local eol = nil
       if utf8_ok_3f then
@@ -3461,19 +4058,19 @@ package.preload["fennel.friend"] = package.preload["fennel.friend"] or function(
       else
         eol = string.len(codeline)
       end
-      local _189_ = (error_pinpoint or {"\27[7m", "\27[0m"})
-      local open = _189_[1]
-      local close = _189_[2]
+      local _202_ = (error_pinpoint or {"\27[7m", "\27[0m"})
+      local open = _202_[1]
+      local close = _202_[2]
       return (sub(codeline, 1, col) .. open .. sub(codeline, (col + 1), (endcol + 1)) .. close .. sub(codeline, (endcol + 2), eol))
     end
   end
-  local function friendly_msg(msg, _191_0, source, opts)
-    local _192_ = _191_0
-    local col = _192_["col"]
-    local endcol = _192_["endcol"]
-    local endline = _192_["endline"]
-    local filename = _192_["filename"]
-    local line = _192_["line"]
+  local function friendly_msg(msg, _204_0, source, opts)
+    local _205_ = _204_0
+    local col = _205_["col"]
+    local endcol = _205_["endcol"]
+    local endline = _205_["endline"]
+    local filename = _205_["filename"]
+    local line = _205_["line"]
     local ok, codeline = pcall(read_line, filename, line, source)
     local endcol0 = nil
     if (ok and codeline and (line ~= endline)) then
@@ -3496,55 +4093,51 @@ package.preload["fennel.friend"] = package.preload["fennel.friend"] or function(
   end
   local function assert_compile(condition, msg, ast, source, opts)
     if not condition then
-      local _196_ = utils["ast-source"](ast)
-      local col = _196_["col"]
-      local filename = _196_["filename"]
-      local line = _196_["line"]
-      error(friendly_msg(("%s:%s:%s Compile error: %s"):format((filename or "unknown"), (line or "?"), (col or "?"), msg), utils["ast-source"](ast), source, opts), 0)
+      local _209_ = utils["ast-source"](ast)
+      local col = _209_["col"]
+      local filename = _209_["filename"]
+      local line = _209_["line"]
+      error(friendly_msg(("%s:%s:%s: Compile error: %s"):format((filename or "unknown"), (line or "?"), (col or "?"), msg), utils["ast-source"](ast), source, opts), 0)
     end
     return condition
   end
   local function parse_error(msg, filename, line, col, source, opts)
-    return error(friendly_msg(("%s:%s:%s Parse error: %s"):format(filename, line, col, msg), {col = col, filename = filename, line = line}, source, opts), 0)
+    return error(friendly_msg(("%s:%s:%s: Parse error: %s"):format(filename, line, col, msg), {col = col, filename = filename, line = line}, source, opts), 0)
   end
   return {["assert-compile"] = assert_compile, ["parse-error"] = parse_error}
 end
 package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(...)
-  local utils = require("fennel.utils")
+  local _192_ = require("fennel.utils")
+  local utils = _192_
+  local unpack = _192_["unpack"]
   local friend = require("fennel.friend")
-  local unpack = (table.unpack or _G.unpack)
   local function granulate(getchunk)
     local c, index, done_3f = "", 1, false
-    local function _198_(parser_state)
+    local function _211_(parser_state)
       if not done_3f then
         if (index <= #c) then
           local b = c:byte(index)
           index = (index + 1)
           return b
         else
-          local _199_0 = getchunk(parser_state)
-          local function _200_()
-            local char = _199_0
-            return (char ~= "")
-          end
-          if ((nil ~= _199_0) and _200_()) then
-            local char = _199_0
-            c = char
-            index = 2
+          local _212_0 = getchunk(parser_state)
+          if (nil ~= _212_0) then
+            local input = _212_0
+            c, index = input, 2
             return c:byte()
           else
-            local _ = _199_0
+            local _ = _212_0
             done_3f = true
             return nil
           end
         end
       end
     end
-    local function _204_()
+    local function _216_()
       c = ""
       return nil
     end
-    return _198_, _204_
+    return _211_, _216_
   end
   local function string_stream(str, _3foptions)
     local str0 = str:gsub("^#!", ";;")
@@ -3552,12 +4145,12 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
       _3foptions.source = str0
     end
     local index = 1
-    local function _206_()
+    local function _218_()
       local r = str0:byte(index)
       index = (index + 1)
       return r
     end
-    return _206_
+    return _218_
   end
   local delims = {[123] = 125, [125] = true, [40] = 41, [41] = true, [91] = 93, [93] = true}
   local function sym_char_3f(b)
@@ -3570,15 +4163,21 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
     return ((32 < b0) and not delims[b0] and (b0 ~= 127) and (b0 ~= 34) and (b0 ~= 39) and (b0 ~= 126) and (b0 ~= 59) and (b0 ~= 44) and (b0 ~= 64) and (b0 ~= 96))
   end
   local prefixes = {[35] = "hashfn", [39] = "quote", [44] = "unquote", [96] = "quote"}
+  local nan, negative_nan = nil, nil
+  if (45 == string.byte(tostring((0 / 0)))) then
+    nan, negative_nan = ( - (0 / 0)), (0 / 0)
+  else
+    nan, negative_nan = (0 / 0), ( - (0 / 0))
+  end
   local function char_starter_3f(b)
     return (((1 < b) and (b < 127)) or ((192 < b) and (b < 247)))
   end
-  local function parser_fn(getbyte, filename, _208_0)
-    local _209_ = _208_0
-    local options = _209_
-    local comments = _209_["comments"]
-    local source = _209_["source"]
-    local unfriendly = _209_["unfriendly"]
+  local function parser_fn(getbyte, filename, _221_0)
+    local _222_ = _221_0
+    local options = _222_
+    local comments = _222_["comments"]
+    local source = _222_["source"]
+    local unfriendly = _222_["unfriendly"]
     local stack = {}
     local line, byteindex, col, prev_col, lastb = 1, 0, 0, 0, nil
     local function ungetb(ub)
@@ -3599,7 +4198,9 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
       else
         r = getbyte({["stack-size"] = #stack})
       end
-      byteindex = (byteindex + 1)
+      if r then
+        byteindex = (byteindex + 1)
+      end
       if (r and char_starter_3f(r)) then
         col = (col + 1)
       end
@@ -3608,22 +4209,25 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
       end
       return r
     end
+    local function warn(...)
+      return (options.warn or utils.warn)(...)
+    end
     local function whitespace_3f(b)
-      local function _216_()
-        local _215_0 = options.whitespace
-        if (nil ~= _215_0) then
-          _215_0 = _215_0[b]
+      local function _230_()
+        local _229_0 = options.whitespace
+        if (nil ~= _229_0) then
+          _229_0 = _229_0[b]
         end
-        return _215_0
+        return _229_0
       end
-      return ((b == 32) or ((9 <= b) and (b <= 13)) or _216_())
+      return ((b == 32) or ((9 <= b) and (b <= 13)) or _230_())
     end
     local function parse_error(msg, _3fcol_adjust)
       local col0 = (col + (_3fcol_adjust or -1))
       if (nil == utils["hook-opts"]("parse-error", options, msg, filename, (line or "?"), col0, source, utils.root.reset)) then
         utils.root.reset()
         if unfriendly then
-          return error(string.format("%s:%s:%s Parse error: %s", filename, (line or "?"), col0, msg), 0)
+          return error(string.format("%s:%s:%s: Parse error: %s", filename, (line or "?"), col0, msg), 0)
         else
           return friend["parse-error"](msg, filename, (line or "?"), col0, source, options)
         end
@@ -3635,57 +4239,83 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
         source0.byteend, source0.endcol, source0.endline = byteindex, (col - 1), line
         return nil
       end
-      local function dispatch(v)
-        local _220_0 = stack[#stack]
-        if (_220_0 == nil) then
-          retval, done_3f, whitespace_since_dispatch = v, true, false
+      local function dispatch(v, _3fsource, _3fraw)
+        whitespace_since_dispatch = false
+        local v0 = nil
+        do
+          local _234_0 = utils["hook-opts"]("parse-form", options, v, _3fsource, _3fraw, stack)
+          if (nil ~= _234_0) then
+            local hookv = _234_0
+            v0 = hookv
+          else
+            local _ = _234_0
+            v0 = v
+          end
+        end
+        local _236_0 = stack[#stack]
+        if (_236_0 == nil) then
+          retval, done_3f = v0, true
           return nil
-        elseif ((_G.type(_220_0) == "table") and (nil ~= _220_0.prefix)) then
-          local prefix = _220_0.prefix
+        elseif ((_G.type(_236_0) == "table") and (nil ~= _236_0.prefix)) then
+          local prefix = _236_0.prefix
           local source0 = nil
           do
-            local _221_0 = table.remove(stack)
-            set_source_fields(_221_0)
-            source0 = _221_0
+            local _237_0 = table.remove(stack)
+            set_source_fields(_237_0)
+            source0 = _237_0
           end
-          local list = utils.list(utils.sym(prefix, source0), v)
-          for k, v0 in pairs(source0) do
-            list[k] = v0
-          end
-          return dispatch(list)
-        elseif (nil ~= _220_0) then
-          local top = _220_0
-          whitespace_since_dispatch = false
-          return table.insert(top, v)
+          local list = utils.list(utils.sym(prefix, source0), v0)
+          return dispatch(utils.copy(source0, list))
+        elseif (nil ~= _236_0) then
+          local top = _236_0
+          return table.insert(top, v0)
         end
       end
       local function badend()
-        local accum = utils.map(stack, "closer")
-        local _223_
-        if (#stack == 1) then
-          _223_ = ""
-        else
-          _223_ = "s"
+        local closers = nil
+        do
+          local tbl_17_ = {}
+          local i_18_ = #tbl_17_
+          for _, _239_0 in ipairs(stack) do
+            local _240_ = _239_0
+            local closer = _240_["closer"]
+            local val_19_ = closer
+            if (nil ~= val_19_) then
+              i_18_ = (i_18_ + 1)
+              tbl_17_[i_18_] = val_19_
+            end
+          end
+          closers = tbl_17_
         end
-        return parse_error(string.format("expected closing delimiter%s %s", _223_, string.char(unpack(accum))))
+        local _242_
+        if (#stack == 1) then
+          _242_ = ""
+        else
+          _242_ = "s"
+        end
+        return parse_error(string.format("expected closing delimiter%s %s", _242_, string.char(unpack(closers))), 0)
       end
-      local function skip_whitespace(b)
+      local function skip_whitespace(b, close_table)
         if (b and whitespace_3f(b)) then
           whitespace_since_dispatch = true
-          return skip_whitespace(getb())
-        elseif (not b and (0 < #stack)) then
-          return badend()
+          return skip_whitespace(getb(), close_table)
+        elseif (not b and next(stack)) then
+          badend()
+          for i = #stack, 2, -1 do
+            close_table(stack[i].closer)
+          end
+          return stack[1].closer
         else
           return b
         end
       end
       local function parse_comment(b, contents)
         if (b and (10 ~= b)) then
-          local function _226_()
+          local function _245_()
             table.insert(contents, string.char(b))
             return contents
           end
-          return parse_comment(getb(), _226_())
+          return parse_comment(getb(), _245_())
         elseif comments then
           ungetb(10)
           return dispatch(utils.comment(table.concat(contents), {filename = filename, line = line}))
@@ -3711,12 +4341,12 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
         return dispatch(setmetatable(tbl, mt))
       end
       local function add_comment_at(comments0, index, node)
-        local _230_0 = comments0[index]
-        if (nil ~= _230_0) then
-          local existing = _230_0
+        local _249_0 = comments0[index]
+        if (nil ~= _249_0) then
+          local existing = _249_0
           return table.insert(existing, node)
         else
-          local _ = _230_0
+          local _ = _249_0
           comments0[index] = {node}
           return nil
         end
@@ -3795,16 +4425,16 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
         end
         local state0 = nil
         do
-          local _241_0 = {state, b}
-          if ((_G.type(_241_0) == "table") and (_241_0[1] == "base") and (_241_0[2] == 92)) then
+          local _260_0 = {state, b}
+          if ((_G.type(_260_0) == "table") and (_260_0[1] == "base") and (_260_0[2] == 92)) then
             state0 = "backslash"
-          elseif ((_G.type(_241_0) == "table") and (_241_0[1] == "base") and (_241_0[2] == 34)) then
+          elseif ((_G.type(_260_0) == "table") and (_260_0[1] == "base") and (_260_0[2] == 34)) then
             state0 = "done"
-          elseif ((_G.type(_241_0) == "table") and (_241_0[1] == "backslash") and (_241_0[2] == 10)) then
+          elseif ((_G.type(_260_0) == "table") and (_260_0[1] == "backslash") and (_260_0[2] == 10)) then
             table.remove(chars, (#chars - 1))
             state0 = "base"
           else
-            local _ = _241_0
+            local _ = _260_0
             state0 = "base"
           end
         end
@@ -3817,7 +4447,10 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
       local function escape_char(c)
         return ({[10] = "\\n", [11] = "\\v", [12] = "\\f", [13] = "\\r", [7] = "\\a", [8] = "\\b", [9] = "\\t"})[c:byte()]
       end
-      local function parse_string()
+      local function parse_string(source0)
+        if not whitespace_since_dispatch then
+          warn("expected whitespace before string", nil, filename, line)
+        end
         table.insert(stack, {closer = 34})
         local chars = {"\""}
         if not parse_string_loop(chars, getb(), "base") then
@@ -3826,25 +4459,27 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
         table.remove(stack)
         local raw = table.concat(chars)
         local formatted = raw:gsub("[\7-\13]", escape_char)
-        local _245_0 = (rawget(_G, "loadstring") or load)(("return " .. formatted))
-        if (nil ~= _245_0) then
-          local load_fn = _245_0
-          return dispatch(load_fn())
-        elseif (_245_0 == nil) then
+        local _265_0 = (rawget(_G, "loadstring") or load)(("return " .. formatted))
+        if (nil ~= _265_0) then
+          local load_fn = _265_0
+          return dispatch(load_fn(), source0, raw)
+        elseif (_265_0 == nil) then
           return parse_error(("Invalid string: " .. raw))
         end
       end
       local function parse_prefix(b)
         table.insert(stack, {bytestart = byteindex, col = (col - 1), filename = filename, line = line, prefix = prefixes[b]})
         local nextb = getb()
-        if (whitespace_3f(nextb) or (true == delims[nextb])) then
-          if (b ~= 35) then
-            parse_error("invalid whitespace after quoting prefix")
-          end
-          table.remove(stack)
-          dispatch(utils.sym("#"))
+        local trailing_whitespace_3f = (whitespace_3f(nextb) or (true == delims[nextb]))
+        if (trailing_whitespace_3f and (b ~= 35)) then
+          parse_error("invalid whitespace after quoting prefix")
         end
-        return ungetb(nextb)
+        ungetb(nextb)
+        if (trailing_whitespace_3f and (b == 35)) then
+          local source0 = table.remove(stack)
+          set_source_fields(source0)
+          return dispatch(utils.sym("#", source0))
+        end
       end
       local function parse_sym_loop(chars, b)
         if (b and sym_char_3f(b)) then
@@ -3857,19 +4492,21 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
           return chars
         end
       end
-      local function parse_number(rawstr)
-        local number_with_stripped_underscores = (not rawstr:find("^_") and rawstr:gsub("_", ""))
-        if rawstr:match("^%d") then
-          dispatch((tonumber(number_with_stripped_underscores) or parse_error(("could not read number \"" .. rawstr .. "\""))))
+      local function parse_number(rawstr, source0)
+        local trimmed = (not rawstr:find("^_") and rawstr:gsub("_", ""))
+        if ((trimmed == "nan") or (trimmed == "-nan")) then
+          return false
+        elseif rawstr:match("^%d") then
+          dispatch((tonumber(trimmed) or parse_error(("could not read number \"" .. rawstr .. "\""))), source0, rawstr)
           return true
         else
-          local _251_0 = tonumber(number_with_stripped_underscores)
-          if (nil ~= _251_0) then
-            local x = _251_0
-            dispatch(x)
+          local _271_0 = tonumber(trimmed)
+          if (nil ~= _271_0) then
+            local x = _271_0
+            dispatch(x, source0, rawstr)
             return true
           else
-            local _ = _251_0
+            local _ = _271_0
             return false
           end
         end
@@ -3879,32 +4516,40 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
           return (rawstr:find(pat) - utils.len(rawstr) - 1)
         end
         if (rawstr:match("^~") and (rawstr ~= "~=")) then
-          return parse_error("invalid character: ~")
-        elseif rawstr:match("%.[0-9]") then
-          return parse_error(("can't start multisym segment with a digit: " .. rawstr), col_adjust("%.[0-9]"))
+          parse_error("invalid character: ~")
         elseif (rawstr:match("[%.:][%.:]") and (rawstr ~= "..") and (rawstr ~= "$...")) then
-          return parse_error(("malformed multisym: " .. rawstr), col_adjust("[%.:][%.:]"))
+          parse_error(("malformed multisym: " .. rawstr), col_adjust("[%.:][%.:]"))
         elseif ((rawstr ~= ":") and rawstr:match(":$")) then
-          return parse_error(("malformed multisym: " .. rawstr), col_adjust(":$"))
+          parse_error(("malformed multisym: " .. rawstr), col_adjust(":$"))
         elseif rawstr:match(":.+[%.:]") then
-          return parse_error(("method must be last component of multisym: " .. rawstr), col_adjust(":.+[%.:]"))
-        else
-          return rawstr
+          parse_error(("method must be last component of multisym: " .. rawstr), col_adjust(":.+[%.:]"))
         end
+        if not whitespace_since_dispatch then
+          warn("expected whitespace before token", nil, filename, line)
+        end
+        return rawstr
       end
       local function parse_sym(b)
         local source0 = {bytestart = byteindex, col = (col - 1), filename = filename, line = line}
         local rawstr = table.concat(parse_sym_loop({string.char(b)}, getb()))
         set_source_fields(source0)
         if (rawstr == "true") then
-          return dispatch(true)
+          return dispatch(true, source0)
         elseif (rawstr == "false") then
-          return dispatch(false)
+          return dispatch(false, source0)
         elseif (rawstr == "...") then
           return dispatch(utils.varg(source0))
+        elseif (rawstr == ".inf") then
+          return dispatch((1 / 0), source0, rawstr)
+        elseif (rawstr == "-.inf") then
+          return dispatch((-1 / 0), source0, rawstr)
+        elseif (rawstr == ".nan") then
+          return dispatch(nan, source0, rawstr)
+        elseif (rawstr == "-.nan") then
+          return dispatch(negative_nan, source0, rawstr)
         elseif rawstr:match("^:.+$") then
-          return dispatch(rawstr:sub(2))
-        elseif not parse_number(rawstr) then
+          return dispatch(rawstr:sub(2), source0, rawstr)
+        elseif not parse_number(rawstr, source0) then
           return dispatch(utils.sym(check_malformed_sym(rawstr), source0))
         end
       end
@@ -3917,7 +4562,7 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
         elseif delims[b] then
           close_table(b)
         elseif (b == 34) then
-          parse_string(b)
+          parse_string({bytestart = byteindex, col = col, filename = filename, line = line})
         elseif prefixes[b] then
           parse_prefix(b)
         elseif (sym_char_3f(b) or (b == string.byte("~"))) then
@@ -3930,16 +4575,16 @@ package.preload["fennel.parser"] = package.preload["fennel.parser"] or function(
         elseif done_3f then
           return true, retval
         else
-          return parse_loop(skip_whitespace(getb()))
+          return parse_loop(skip_whitespace(getb(), close_table))
         end
       end
-      return parse_loop(skip_whitespace(getb()))
+      return parse_loop(skip_whitespace(getb(), close_table))
     end
-    local function _258_()
-      stack, line, byteindex, col, lastb = {}, 1, 0, 0, nil
+    local function _279_()
+      stack, line, byteindex, col, lastb = {}, 1, 0, 0, ((lastb ~= 10) and lastb)
       return nil
     end
-    return parse_stream, _258_
+    return parse_stream, _279_
   end
   local function parser(stream_or_string, _3ffilename, _3foptions)
     local filename = (_3ffilename or "unknown")
@@ -3956,7 +4601,7 @@ end
 local utils = nil
 package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
   local type_order = {["function"] = 5, boolean = 2, number = 1, string = 3, table = 4, thread = 7, userdata = 6}
-  local default_opts = {["detect-cycles?"] = true, ["empty-as-sequence?"] = false, ["escape-newlines?"] = false, ["line-length"] = 80, ["max-sparse-gap"] = 10, ["metamethod?"] = true, ["one-line?"] = false, ["prefer-colon?"] = false, ["utf8?"] = true, depth = 128}
+  local default_opts = {["detect-cycles?"] = true, ["empty-as-sequence?"] = false, ["escape-newlines?"] = false, ["line-length"] = 80, ["max-sparse-gap"] = 1, ["metamethod?"] = true, ["one-line?"] = false, ["prefer-colon?"] = false, ["utf8?"] = true, depth = 128}
   local lua_pairs = pairs
   local lua_ipairs = ipairs
   local function pairs(t)
@@ -4092,11 +4737,14 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
     return nil
   end
   local function table_kv_pairs(t, options)
+    if (("number" ~= type(options["max-sparse-gap"])) or (options["max-sparse-gap"] ~= math.floor(options["max-sparse-gap"]))) then
+      error(("max-sparse-gap must be an integer: got '%s'"):format(tostring(options["max-sparse-gap"])))
+    end
     local assoc_3f = false
     local kv = {}
     local insert = table.insert
     for k, v in pairs(t) do
-      if ((type(k) ~= "number") or (k < 1)) then
+      if (("number" ~= type(k)) or (k < 1) or (k ~= math.floor(k))) then
         assoc_3f = true
       end
       insert(kv, {k, v})
@@ -4112,14 +4760,14 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
     if (length_2a(kv) == 0) then
       return kv, "empty"
     else
-      local function _31_()
+      local function _32_()
         if assoc_3f then
           return "table"
         else
           return "seq"
         end
       end
-      return kv, _31_()
+      return kv, _32_()
     end
   end
   local function count_table_appearances(t, appearances)
@@ -4172,14 +4820,14 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
   local function concat_table_lines(elements, options, multiline_3f, indent, table_type, prefix, last_comment_3f)
     local indent_str = ("\n" .. string.rep(" ", indent))
     local open = nil
-    local function _38_()
+    local function _39_()
       if ("seq" == table_type) then
         return "["
       else
         return "{"
       end
     end
-    open = ((prefix or "") .. _38_())
+    open = ((prefix or "") .. _39_())
     local close = nil
     if ("seq" == table_type) then
       close = "]"
@@ -4188,14 +4836,14 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
     end
     local oneline = (open .. table.concat(elements, " ") .. close)
     if (not getopt(options, "one-line?") and (multiline_3f or (options["line-length"] < (indent + length_2a(oneline))) or last_comment_3f)) then
-      local function _40_()
+      local function _41_()
         if last_comment_3f then
           return indent_str
         else
           return ""
         end
       end
-      return (open .. table.concat(elements, indent_str) .. _40_() .. close)
+      return (open .. table.concat(elements, indent_str) .. _41_() .. close)
     else
       return oneline
     end
@@ -4230,10 +4878,10 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
       if getopt(options, "utf8?") then
         slength = utf8_len
       else
-        local function _43_(_241)
+        local function _44_(_241)
           return #_241
         end
-        slength = _43_
+        slength = _44_
       end
       local prefix = nil
       if visible_cycle_3f0 then
@@ -4246,10 +4894,10 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
         local options0 = normalize_opts(options)
         local tbl_17_ = {}
         local i_18_ = #tbl_17_
-        for _, _46_0 in ipairs(kv) do
-          local _47_ = _46_0
-          local k = _47_[1]
-          local v = _47_[2]
+        for _, _47_0 in ipairs(kv) do
+          local _48_ = _47_0
+          local k = _48_[1]
+          local v = _48_[2]
           local val_19_ = nil
           do
             local k0 = pp(k, options0, (indent0 + 1), true)
@@ -4290,10 +4938,10 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
         local options0 = normalize_opts(options)
         local tbl_17_ = {}
         local i_18_ = #tbl_17_
-        for _, _51_0 in ipairs(kv) do
-          local _52_ = _51_0
-          local _0 = _52_[1]
-          local v = _52_[2]
+        for _, _52_0 in ipairs(kv) do
+          local _53_ = _52_0
+          local _0 = _53_[1]
+          local v = _53_[2]
           local val_19_ = nil
           do
             local v0 = pp(v, options0, indent0)
@@ -4319,7 +4967,7 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
       end
     else
       local oneline = nil
-      local _56_
+      local _57_
       do
         local tbl_17_ = {}
         local i_18_ = #tbl_17_
@@ -4330,9 +4978,9 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
             tbl_17_[i_18_] = val_19_
           end
         end
-        _56_ = tbl_17_
+        _57_ = tbl_17_
       end
-      oneline = table.concat(_56_, " ")
+      oneline = table.concat(_57_, " ")
       if (not getopt(options, "one-line?") and (force_multi_line_3f or oneline:find("\n") or (options["line-length"] < (indent + length_2a(oneline))))) then
         return table.concat(lines, ("\n" .. string.rep(" ", indent)))
       else
@@ -4349,10 +4997,10 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
       end
     else
       local _ = nil
-      local function _61_(_241)
+      local function _62_(_241)
         return visible_cycle_3f(_241, options)
       end
-      options["visible-cycle?"] = _61_
+      options["visible-cycle?"] = _62_
       _ = nil
       local lines, force_multi_line_3f = nil, nil
       do
@@ -4360,13 +5008,13 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
         lines, force_multi_line_3f = metamethod(t, pp, options0, indent)
       end
       options["visible-cycle?"] = nil
-      local _62_0 = type(lines)
-      if (_62_0 == "string") then
+      local _63_0 = type(lines)
+      if (_63_0 == "string") then
         return lines
-      elseif (_62_0 == "table") then
+      elseif (_63_0 == "table") then
         return concat_lines(lines, options, indent, force_multi_line_3f)
       else
-        local _0 = _62_0
+        local _0 = _63_0
         return error("__fennelview metamethod must return a table of lines")
       end
     end
@@ -4375,40 +5023,40 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
     options.level = (options.level + 1)
     local x0 = nil
     do
-      local _65_0 = nil
+      local _66_0 = nil
       if getopt(options, "metamethod?") then
-        local _66_0 = x
-        if (nil ~= _66_0) then
-          local _67_0 = getmetatable(_66_0)
-          if (nil ~= _67_0) then
-            _65_0 = _67_0.__fennelview
+        local _67_0 = x
+        if (nil ~= _67_0) then
+          local _68_0 = getmetatable(_67_0)
+          if (nil ~= _68_0) then
+            _66_0 = _68_0.__fennelview
           else
-            _65_0 = _67_0
+            _66_0 = _68_0
           end
         else
-          _65_0 = _66_0
+          _66_0 = _67_0
         end
       else
-      _65_0 = nil
+      _66_0 = nil
       end
-      if (nil ~= _65_0) then
-        local metamethod = _65_0
+      if (nil ~= _66_0) then
+        local metamethod = _66_0
         x0 = pp_metamethod(x, metamethod, options, indent)
       else
-        local _ = _65_0
-        local _71_0, _72_0 = table_kv_pairs(x, options)
-        if (true and (_72_0 == "empty")) then
-          local _0 = _71_0
+        local _ = _66_0
+        local _72_0, _73_0 = table_kv_pairs(x, options)
+        if (true and (_73_0 == "empty")) then
+          local _0 = _72_0
           if getopt(options, "empty-as-sequence?") then
             x0 = "[]"
           else
             x0 = "{}"
           end
-        elseif ((nil ~= _71_0) and (_72_0 == "table")) then
-          local kv = _71_0
+        elseif ((nil ~= _72_0) and (_73_0 == "table")) then
+          local kv = _72_0
           x0 = pp_associative(x, kv, options, indent)
-        elseif ((nil ~= _71_0) and (_72_0 == "seq")) then
-          local kv = _71_0
+        elseif ((nil ~= _72_0) and (_73_0 == "seq")) then
+          local kv = _72_0
           x0 = pp_sequence(x, kv, options, indent)
         else
         x0 = nil
@@ -4418,9 +5066,50 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
     options.level = (options.level - 1)
     return x0
   end
-  local function number__3estring(n)
-    local _76_0 = string.gsub(tostring(n), ",", ".")
-    return _76_0
+  local function exponential_notation(n, fallback)
+    local s = nil
+    for i = 0, 99 do
+      if s then break end
+      local s0 = string.format(("%." .. i .. "e"), n)
+      if (n == tonumber(s0)) then
+        local exp = s0:match("e%+?(%d+)$")
+        if (exp and (14 < tonumber(exp))) then
+          s = s0
+        else
+          s = fallback
+        end
+      else
+      s = nil
+      end
+    end
+    return s
+  end
+  local inf_str = tostring((1 / 0))
+  local neg_inf_str = tostring((-1 / 0))
+  local function number__3estring(n, options)
+    local val = nil
+    if (n ~= n) then
+      if (45 == string.byte(tostring(n))) then
+        val = (options["negative-nan"] or "-.nan")
+      else
+        val = (options.nan or ".nan")
+      end
+    elseif (math.floor(n) == n) then
+      local s1 = string.format("%.0f", n)
+      if (s1 == inf_str) then
+        val = (options.infinity or ".inf")
+      elseif (s1 == neg_inf_str) then
+        val = (options["negative-infinity"] or "-.inf")
+      elseif (s1 == tostring(n)) then
+        val = s1
+      else
+        val = (exponential_notation(n, s1) or s1)
+      end
+    else
+      val = tostring(n)
+    end
+    local _82_0 = string.gsub(val, ",", ".")
+    return _82_0
   end
   local function colon_string_3f(s)
     return s:find("^[-%w?^_!$%&*+./|<=>]+$")
@@ -4438,12 +5127,12 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
         local ret = nil
         for _, init0 in ipairs(inits) do
           if ret then break end
-          ret = (byte and (function(_77_,_78_,_79_) return (_77_ <= _78_) and (_78_ <= _79_) end)(init0["min-byte"],byte,init0["max-byte"]) and init0)
+          ret = (byte and (function(_83_,_84_,_85_) return (_83_ <= _84_) and (_84_ <= _85_) end)(init0["min-byte"],byte,init0["max-byte"]) and init0)
         end
         init = ret
       end
       local code = nil
-      local function _80_()
+      local function _86_()
         local code0 = nil
         if init then
           code0 = (byte - init["min-byte"])
@@ -4456,8 +5145,8 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
         end
         return code0
       end
-      code = (init and _80_())
-      if (code and (function(_82_,_83_,_84_) return (_82_ <= _83_) and (_83_ <= _84_) end)(init["min-code"],code,init["max-code"]) and not ((55296 <= code) and (code <= 57343))) then
+      code = (init and _86_())
+      if (code and (function(_88_,_89_,_90_) return (_88_ <= _89_) and (_89_ <= _90_) end)(init["min-code"],code,init["max-code"]) and not ((55296 <= code) and (code <= 57343))) then
         return init.len
       end
     end
@@ -4484,16 +5173,16 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
     local esc_newline_3f = ((len < 2) or (getopt(options, "escape-newlines?") and (len < (options["line-length"] - indent))))
     local byte_escape = (getopt(options, "byte-escape") or default_byte_escape)
     local escs = nil
-    local _88_
+    local _94_
     if esc_newline_3f then
-      _88_ = "\\n"
+      _94_ = "\\n"
     else
-      _88_ = "\n"
+      _94_ = "\n"
     end
-    local function _90_(_241, _242)
+    local function _96_(_241, _242)
       return byte_escape(_242:byte(), options)
     end
-    escs = setmetatable({["\""] = "\\\"", ["\11"] = "\\v", ["\12"] = "\\f", ["\13"] = "\\r", ["\7"] = "\\a", ["\8"] = "\\b", ["\9"] = "\\t", ["\\"] = "\\\\", ["\n"] = _88_}, {__index = _90_})
+    escs = setmetatable({["\""] = "\\\"", ["\11"] = "\\v", ["\12"] = "\\f", ["\13"] = "\\r", ["\7"] = "\\a", ["\8"] = "\\b", ["\9"] = "\\t", ["\\"] = "\\\\", ["\n"] = _94_}, {__index = _96_})
     local str0 = ("\"" .. str:gsub("[%c\\\"]", escs) .. "\"")
     if getopt(options, "utf8?") then
       return utf8_escape(str0, options)
@@ -4522,7 +5211,7 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
     end
     return defaults
   end
-  local function _93_(x, options, indent, colon_3f)
+  local function _99_(x, options, indent, colon_3f)
     local indent0 = (indent or 0)
     local options0 = (options or make_options(x))
     local x0 = nil
@@ -4532,19 +5221,19 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
       x0 = x
     end
     local tv = type(x0)
-    local function _96_()
-      local _95_0 = getmetatable(x0)
-      if ((_G.type(_95_0) == "table") and true) then
-        local __fennelview = _95_0.__fennelview
+    local function _102_()
+      local _101_0 = getmetatable(x0)
+      if ((_G.type(_101_0) == "table") and true) then
+        local __fennelview = _101_0.__fennelview
         return __fennelview
       end
     end
-    if ((tv == "table") or ((tv == "userdata") and _96_())) then
+    if ((tv == "table") or ((tv == "userdata") and _102_())) then
       return pp_table(x0, options0, indent0)
     elseif (tv == "number") then
-      return number__3estring(x0)
+      return number__3estring(x0, options0)
     else
-      local function _98_()
+      local function _104_()
         if (colon_3f ~= nil) then
           return colon_3f
         elseif ("function" == type(options0["prefer-colon?"])) then
@@ -4553,7 +5242,7 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
           return getopt(options0, "prefer-colon?")
         end
       end
-      if ((tv == "string") and colon_string_3f(x0) and _98_()) then
+      if ((tv == "string") and colon_string_3f(x0) and _104_()) then
         return (":" .. x0)
       elseif (tv == "string") then
         return pp_string(x0, options0, indent0)
@@ -4564,15 +5253,36 @@ package.preload["fennel.view"] = package.preload["fennel.view"] or function(...)
       end
     end
   end
-  pp = _93_
-  local function view(x, _3foptions)
+  pp = _99_
+  local function _view(x, _3foptions)
     return pp(x, make_options(x, _3foptions), 0)
   end
-  return view
+  return _view
 end
 package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(...)
   local view = require("fennel.view")
-  local version = "1.3.1"
+  local version = "1.5.3"
+  local unpack = (table.unpack or _G.unpack)
+  local pack = nil
+  local function _106_(...)
+    local _107_0 = {...}
+    _107_0["n"] = select("#", ...)
+    return _107_0
+  end
+  pack = (table.pack or _106_)
+  local maxn = nil
+  local function _108_(_241)
+    local max = 0
+    for k in pairs(_241) do
+      if (("number" == type(k)) and (max < k)) then
+        max = k
+      else
+        max = max
+      end
+    end
+    return max
+  end
+  maxn = (table.maxn or _108_)
   local function luajit_vm_3f()
     return ((nil ~= _G.jit) and (type(_G.jit) == "table") and (nil ~= _G.jit.on) and (nil ~= _G.jit.off) and (type(_G.jit.version_num) == "number"))
   end
@@ -4607,39 +5317,34 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
       return ("Fennel " .. version .. " on " .. lua_vm_version())
     end
   end
-  local function warn(message)
-    if (_G.io and _G.io.stderr) then
-      return (_G.io.stderr):write(("--WARNING: %s\n"):format(tostring(message)))
-    end
-  end
   local len = nil
   do
-    local _104_0, _105_0 = pcall(require, "utf8")
-    if ((_104_0 == true) and (nil ~= _105_0)) then
-      local utf8 = _105_0
+    local _113_0, _114_0 = pcall(require, "utf8")
+    if ((_113_0 == true) and (nil ~= _114_0)) then
+      local utf8 = _114_0
       len = utf8.len
     else
-      local _ = _104_0
+      local _ = _113_0
       len = string.len
     end
   end
   local kv_order = {boolean = 2, number = 1, string = 3, table = 4}
   local function kv_compare(a, b)
-    local _107_0, _108_0 = type(a), type(b)
-    if (((_107_0 == "number") and (_108_0 == "number")) or ((_107_0 == "string") and (_108_0 == "string"))) then
+    local _116_0, _117_0 = type(a), type(b)
+    if (((_116_0 == "number") and (_117_0 == "number")) or ((_116_0 == "string") and (_117_0 == "string"))) then
       return (a < b)
     else
-      local function _109_()
-        local a_t = _107_0
-        local b_t = _108_0
+      local function _118_()
+        local a_t = _116_0
+        local b_t = _117_0
         return (a_t ~= b_t)
       end
-      if (((nil ~= _107_0) and (nil ~= _108_0)) and _109_()) then
-        local a_t = _107_0
-        local b_t = _108_0
+      if (((nil ~= _116_0) and (nil ~= _117_0)) and _118_()) then
+        local a_t = _116_0
+        local b_t = _117_0
         return ((kv_order[a_t] or 5) < (kv_order[b_t] or 5))
       else
-        local _ = _107_0
+        local _ = _116_0
         return (tostring(a) < tostring(b))
       end
     end
@@ -4671,20 +5376,20 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
   local function stablepairs(t)
     local mt_keys = nil
     do
-      local _113_0 = getmetatable(t)
-      if (nil ~= _113_0) then
-        _113_0 = _113_0.keys
+      local _122_0 = getmetatable(t)
+      if (nil ~= _122_0) then
+        _122_0 = _122_0.keys
       end
-      mt_keys = _113_0
+      mt_keys = _122_0
     end
     local succ, prev, first_mt = nil, nil, nil
-    local function _115_(_241)
+    local function _124_(_241)
       return t[_241]
     end
-    succ, prev, first_mt = add_stable_keys({}, nil, (mt_keys or {}), _115_)
+    succ, prev, first_mt = add_stable_keys({}, nil, (mt_keys or {}), _124_)
     local pairs_keys = nil
     do
-      local _116_0 = nil
+      local _125_0 = nil
       do
         local tbl_17_ = {}
         local i_18_ = #tbl_17_
@@ -4695,10 +5400,10 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
             tbl_17_[i_18_] = val_19_
           end
         end
-        _116_0 = tbl_17_
+        _125_0 = tbl_17_
       end
-      table.sort(_116_0, kv_compare)
-      pairs_keys = _116_0
+      table.sort(_125_0, kv_compare)
+      pairs_keys = _125_0
     end
     local succ0, _, first_after_mt = add_stable_keys(succ, prev, pairs_keys)
     local first = nil
@@ -4708,99 +5413,41 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
       first = first_mt
     end
     local function stablenext(tbl, key)
-      local _119_0 = nil
+      local _128_0 = nil
       if (key == nil) then
-        _119_0 = first
+        _128_0 = first
       else
-        _119_0 = succ0[key]
+        _128_0 = succ0[key]
       end
-      if (nil ~= _119_0) then
-        local next_key = _119_0
-        local _121_0 = tbl[next_key]
-        if (_121_0 ~= nil) then
-          return next_key, _121_0
+      if (nil ~= _128_0) then
+        local next_key = _128_0
+        local _130_0 = tbl[next_key]
+        if (_130_0 ~= nil) then
+          return next_key, _130_0
         else
-          return _121_0
+          return _130_0
         end
       end
     end
     return stablenext, t, nil
   end
-  local function get_in(tbl, path, _3ffallback)
-    assert(("table" == type(tbl)), "get-in expects path to be a table")
-    if (0 == #path) then
-      return _3ffallback
-    else
-      local _124_0 = nil
-      do
-        local t = tbl
-        for _, k in ipairs(path) do
-          if (nil == t) then break end
-          local _125_0 = type(t)
-          if (_125_0 == "table") then
-            t = t[k]
-          else
-          t = nil
-          end
+  local function get_in(tbl, path)
+    if (nil ~= path[1]) then
+      local t = tbl
+      for _, k in ipairs(path) do
+        if (nil == t) then break end
+        if (type(t) == "table") then
+          t = t[k]
+        else
+        t = nil
         end
-        _124_0 = t
       end
-      if (nil ~= _124_0) then
-        local res = _124_0
-        return res
-      else
-        local _ = _124_0
-        return _3ffallback
-      end
+      return t
     end
   end
-  local function map(t, f, _3fout)
-    local out = (_3fout or {})
-    local f0 = nil
-    if (type(f) == "function") then
-      f0 = f
-    else
-      local function _129_(_241)
-        return _241[f]
-      end
-      f0 = _129_
-    end
-    for _, x in ipairs(t) do
-      local _131_0 = f0(x)
-      if (nil ~= _131_0) then
-        local v = _131_0
-        table.insert(out, v)
-      end
-    end
-    return out
-  end
-  local function kvmap(t, f, _3fout)
-    local out = (_3fout or {})
-    local f0 = nil
-    if (type(f) == "function") then
-      f0 = f
-    else
-      local function _133_(_241)
-        return _241[f]
-      end
-      f0 = _133_
-    end
-    for k, x in stablepairs(t) do
-      local _135_0, _136_0 = f0(k, x)
-      if ((nil ~= _135_0) and (nil ~= _136_0)) then
-        local key = _135_0
-        local value = _136_0
-        out[key] = value
-      elseif (nil ~= _135_0) then
-        local value = _135_0
-        table.insert(out, value)
-      end
-    end
-    return out
-  end
-  local function copy(from, _3fto)
+  local function copy(_3ffrom, _3fto)
     local tbl_14_ = (_3fto or {})
-    for k, v in pairs((from or {})) do
+    for k, v in pairs((_3ffrom or {})) do
       local k_15_, v_16_ = k, v
       if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
         tbl_14_[k_15_] = v_16_
@@ -4809,26 +5456,15 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
     return tbl_14_
   end
   local function member_3f(x, tbl, _3fn)
-    local _139_0 = tbl[(_3fn or 1)]
-    if (_139_0 == x) then
+    local _136_0 = tbl[(_3fn or 1)]
+    if (_136_0 == x) then
       return true
-    elseif (_139_0 == nil) then
+    elseif (_136_0 == nil) then
       return nil
     else
-      local _ = _139_0
+      local _ = _136_0
       return member_3f(x, tbl, ((_3fn or 1) + 1))
     end
-  end
-  local function maxn(tbl)
-    local max = 0
-    for k in pairs(tbl) do
-      if ("number" == type(k)) then
-        max = math.max(max, k)
-      else
-        max = max
-      end
-    end
-    return max
   end
   local function every_3f(t, predicate)
     local result = true
@@ -4850,9 +5486,9 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
         seen[next_state] = true
         return next_state, value
       else
-        local _142_0 = getmetatable(t)
-        if ((_G.type(_142_0) == "table") and true) then
-          local __index = _142_0.__index
+        local _138_0 = getmetatable(t)
+        if ((_G.type(_138_0) == "table") and true) then
+          local __index = _138_0.__index
           if ("table" == type(__index)) then
             t = __index
             return allpairs_next(t)
@@ -4865,26 +5501,26 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
   local function deref(self)
     return self[1]
   end
-  local nil_sym = nil
   local function list__3estring(self, _3fview, _3foptions, _3findent)
-    local safe = {}
-    local view0 = nil
-    if _3fview then
-      local function _146_(_241)
-        return _3fview(_241, _3foptions, _3findent)
+    local viewed = nil
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for i = 1, maxn(self) do
+        local val_19_ = nil
+        if _3fview then
+          val_19_ = _3fview(self[i], _3foptions, _3findent)
+        else
+          val_19_ = view(self[i])
+        end
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
       end
-      view0 = _146_
-    else
-      view0 = view
+      viewed = tbl_17_
     end
-    local max = maxn(self)
-    for i = 1, max do
-      safe[i] = (((self[i] == nil) and nil_sym) or self[i])
-    end
-    return ("(" .. table.concat(map(safe, view0), " ", 1, max) .. ")")
-  end
-  local function comment_view(c)
-    return c, true
+    return ("(" .. table.concat(viewed, " ") .. ")")
   end
   local function sym_3d(a, b)
     return ((deref(a) == deref(b)) and (getmetatable(a) == getmetatable(b)))
@@ -4894,19 +5530,23 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
   end
   local symbol_mt = {"SYMBOL", __eq = sym_3d, __fennelview = deref, __lt = sym_3c, __tostring = deref}
   local expr_mt = nil
-  local function _148_(x)
+  local function _144_(x)
     return tostring(deref(x))
   end
-  expr_mt = {"EXPR", __tostring = _148_}
+  expr_mt = {"EXPR", __tostring = _144_}
   local list_mt = {"LIST", __fennelview = list__3estring, __tostring = list__3estring}
-  local comment_mt = {"COMMENT", __eq = sym_3d, __fennelview = comment_view, __lt = sym_3c, __tostring = deref}
+  local comment_mt = nil
+  local function _145_(_241)
+    return _241
+  end
+  comment_mt = {"COMMENT", __eq = sym_3d, __fennelview = _145_, __lt = sym_3c, __tostring = deref}
   local sequence_marker = {"SEQUENCE"}
   local varg_mt = {"VARARG", __fennelview = deref, __tostring = deref}
   local getenv = nil
-  local function _149_()
+  local function _146_()
     return nil
   end
-  getenv = ((os and os.getenv) or _149_)
+  getenv = ((os and os.getenv) or _146_)
   local function debug_on_3f(flag)
     local level = (getenv("FENNEL_DEBUG") or "")
     return ((level == "all") or level:find(flag))
@@ -4915,7 +5555,7 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
     return setmetatable({...}, list_mt)
   end
   local function sym(str, _3fsource)
-    local _150_
+    local _147_
     do
       local tbl_14_ = {str}
       for k, v in pairs((_3fsource or {})) do
@@ -4929,13 +5569,12 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
           tbl_14_[k_15_] = v_16_
         end
       end
-      _150_ = tbl_14_
+      _147_ = tbl_14_
     end
-    return setmetatable(_150_, symbol_mt)
+    return setmetatable(_147_, symbol_mt)
   end
-  nil_sym = sym("nil")
   local function sequence(...)
-    local function _153_(seq, view0, inspector, indent)
+    local function _150_(seq, view0, inspector, indent)
       local opts = nil
       do
         inspector["empty-as-sequence?"] = {after = inspector["empty-as-sequence?"], once = true}
@@ -4944,19 +5583,19 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
       end
       return view0(seq, opts, indent)
     end
-    return setmetatable({...}, {__fennelview = _153_, sequence = sequence_marker})
+    return setmetatable({...}, {__fennelview = _150_, sequence = sequence_marker})
   end
   local function expr(strcode, etype)
     return setmetatable({strcode, type = etype}, expr_mt)
   end
   local function comment_2a(contents, _3fsource)
-    local _154_ = (_3fsource or {})
-    local filename = _154_["filename"]
-    local line = _154_["line"]
+    local _151_ = (_3fsource or {})
+    local filename = _151_["filename"]
+    local line = _151_["line"]
     return setmetatable({contents, filename = filename, line = line}, comment_mt)
   end
   local function varg(_3fsource)
-    local _155_
+    local _152_
     do
       local tbl_14_ = {"..."}
       for k, v in pairs((_3fsource or {})) do
@@ -4970,9 +5609,9 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
           tbl_14_[k_15_] = v_16_
         end
       end
-      _155_ = tbl_14_
+      _152_ = tbl_14_
     end
-    return setmetatable(_155_, varg_mt)
+    return setmetatable(_152_, varg_mt)
   end
   local function expr_3f(x)
     return ((type(x) == "table") and (getmetatable(x) == expr_mt) and x)
@@ -5010,7 +5649,11 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
     end
   end
   local function string_3f(x)
-    return (type(x) == "string")
+    if (type(x) == "string") then
+      return x
+    else
+      return false
+    end
   end
   local function multi_sym_3f(str)
     if sym_3f(str) then
@@ -5018,29 +5661,89 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
     elseif (type(str) ~= "string") then
       return false
     else
-      local function _160_()
+      local function _158_()
         local parts = {}
         for part in str:gmatch("[^%.%:]+[%.%:]?") do
-          local last_char = part:sub(( - 1))
+          local last_char = part:sub(-1)
           if (last_char == ":") then
             parts["multi-sym-method-call"] = true
           end
           if ((last_char == ":") or (last_char == ".")) then
-            parts[(#parts + 1)] = part:sub(1, ( - 2))
+            parts[(#parts + 1)] = part:sub(1, -2)
           else
             parts[(#parts + 1)] = part
           end
         end
-        return ((0 < #parts) and parts)
+        return (next(parts) and parts)
       end
-      return ((str:match("%.") or str:match(":")) and not str:match("%.%.") and (str:byte() ~= string.byte(".")) and (str:byte(( - 1)) ~= string.byte(".")) and _160_())
+      return ((str:match("%.") or str:match(":")) and not str:match("%.%.") and (str:byte() ~= string.byte(".")) and (str:byte() ~= string.byte(":")) and (str:byte(-1) ~= string.byte(".")) and (str:byte(-1) ~= string.byte(":")) and _158_())
     end
+  end
+  local function call_of_3f(ast, callee)
+    return (list_3f(ast) and sym_3f(ast[1], callee))
   end
   local function quoted_3f(symbol)
     return symbol.quoted
   end
   local function idempotent_expr_3f(x)
-    return ((type(x) == "string") or (type(x) == "integer") or (type(x) == "number") or (sym_3f(x) and not multi_sym_3f(x)))
+    local t = type(x)
+    return ((t == "string") or (t == "number") or (t == "boolean") or (sym_3f(x) and not multi_sym_3f(x)))
+  end
+  local function walk_tree(root, f, _3fcustom_iterator)
+    local function walk(iterfn, parent, idx, node)
+      if (f(idx, node, parent) and not sym_3f(node)) then
+        for k, v in iterfn(node) do
+          walk(iterfn, node, k, v)
+        end
+        return nil
+      end
+    end
+    walk((_3fcustom_iterator or pairs), nil, nil, root)
+    return root
+  end
+  local root = nil
+  local function _163_()
+  end
+  root = {chunk = nil, options = nil, reset = _163_, scope = nil}
+  root["set-reset"] = function(_164_0)
+    local _165_ = _164_0
+    local chunk = _165_["chunk"]
+    local options = _165_["options"]
+    local reset = _165_["reset"]
+    local scope = _165_["scope"]
+    root.reset = function()
+      root.chunk, root.scope, root.options, root.reset = chunk, scope, options, reset
+      return nil
+    end
+    return root.reset
+  end
+  local lua_keywords = {["and"] = true, ["break"] = true, ["do"] = true, ["else"] = true, ["elseif"] = true, ["end"] = true, ["false"] = true, ["for"] = true, ["function"] = true, ["goto"] = true, ["if"] = true, ["in"] = true, ["local"] = true, ["nil"] = true, ["not"] = true, ["or"] = true, ["repeat"] = true, ["return"] = true, ["then"] = true, ["true"] = true, ["until"] = true, ["while"] = true}
+  local function lua_keyword_3f(str)
+    local function _167_()
+      local _166_0 = root.options
+      if (nil ~= _166_0) then
+        _166_0 = _166_0.keywords
+      end
+      if (nil ~= _166_0) then
+        _166_0 = _166_0[str]
+      end
+      return _166_0
+    end
+    return (lua_keywords[str] or _167_())
+  end
+  local function valid_lua_identifier_3f(str)
+    return (str:match("^[%a_][%w_]*$") and not lua_keyword_3f(str))
+  end
+  local propagated_options = {"allowedGlobals", "indent", "correlate", "useMetadata", "env", "compiler-env", "compilerEnv"}
+  local function propagate_options(options, subopts)
+    local tbl_14_ = subopts
+    for _, name in ipairs(propagated_options) do
+      local k_15_, v_16_ = name, options[name]
+      if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+        tbl_14_[k_15_] = v_16_
+      end
+    end
+    return tbl_14_
   end
   local function ast_source(ast)
     if (table_3f(ast) or sequence_3f(ast)) then
@@ -5051,81 +5754,77 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
       return {}
     end
   end
-  local function walk_tree(root, f, _3fcustom_iterator)
-    local function walk(iterfn, parent, idx, node)
-      if f(idx, node, parent) then
-        for k, v in iterfn(node) do
-          walk(iterfn, node, k, v)
+  local function warn(msg, _3fast, _3ffilename, _3fline)
+    local _172_0 = nil
+    do
+      local _173_0 = root.options
+      if (nil ~= _173_0) then
+        _173_0 = _173_0.warn
+      end
+      _172_0 = _173_0
+    end
+    if (nil ~= _172_0) then
+      local opt_warn = _172_0
+      return opt_warn(msg, _3fast, _3ffilename, _3fline)
+    else
+      local _ = _172_0
+      if (_G.io and _G.io.stderr) then
+        local loc = nil
+        do
+          local _175_0 = ast_source(_3fast)
+          if ((_G.type(_175_0) == "table") and (nil ~= _175_0.filename) and (nil ~= _175_0.line)) then
+            local filename = _175_0.filename
+            local line = _175_0.line
+            loc = (filename .. ":" .. line .. ": ")
+          else
+            local _0 = _175_0
+            if (_3ffilename and _3fline) then
+              loc = (_3ffilename .. ":" .. _3fline .. ": ")
+            else
+              loc = ""
+            end
+          end
         end
-        return nil
+        return (_G.io.stderr):write(("--WARNING: %s%s\n"):format(loc, msg))
       end
     end
-    walk((_3fcustom_iterator or pairs), nil, nil, root)
-    return root
-  end
-  local lua_keywords = {["and"] = true, ["break"] = true, ["do"] = true, ["else"] = true, ["elseif"] = true, ["end"] = true, ["false"] = true, ["for"] = true, ["function"] = true, ["goto"] = true, ["if"] = true, ["in"] = true, ["local"] = true, ["nil"] = true, ["not"] = true, ["or"] = true, ["repeat"] = true, ["return"] = true, ["then"] = true, ["true"] = true, ["until"] = true, ["while"] = true}
-  local function valid_lua_identifier_3f(str)
-    return (str:match("^[%a_][%w_]*$") and not lua_keywords[str])
-  end
-  local propagated_options = {"allowedGlobals", "indent", "correlate", "useMetadata", "env", "compiler-env", "compilerEnv"}
-  local function propagate_options(options, subopts)
-    for _, name in ipairs(propagated_options) do
-      subopts[name] = options[name]
-    end
-    return subopts
-  end
-  local root = nil
-  local function _166_()
-  end
-  root = {chunk = nil, options = nil, reset = _166_, scope = nil}
-  root["set-reset"] = function(_167_0)
-    local _168_ = _167_0
-    local chunk = _168_["chunk"]
-    local options = _168_["options"]
-    local reset = _168_["reset"]
-    local scope = _168_["scope"]
-    root.reset = function()
-      root.chunk, root.scope, root.options, root.reset = chunk, scope, options, reset
-      return nil
-    end
-    return root.reset
   end
   local warned = {}
-  local function check_plugin_version(_169_0)
-    local _170_ = _169_0
-    local plugin = _170_
-    local name = _170_["name"]
-    local versions = _170_["versions"]
-    if (not member_3f(version:gsub("-dev", ""), (versions or {})) and not warned[plugin]) then
+  local function check_plugin_version(_180_0)
+    local _181_ = _180_0
+    local plugin = _181_
+    local name = _181_["name"]
+    local versions = _181_["versions"]
+    if (not member_3f(version:gsub("-dev", ""), (versions or {})) and not (string_3f(versions) and version:find(versions)) and not warned[plugin]) then
       warned[plugin] = true
       return warn(string.format("plugin %s does not support Fennel version %s", (name or "unknown"), version))
     end
   end
   local function hook_opts(event, _3foptions, ...)
     local plugins = nil
-    local function _173_(...)
-      local _172_0 = _3foptions
-      if (nil ~= _172_0) then
-        _172_0 = _172_0.plugins
+    local function _184_(...)
+      local _183_0 = _3foptions
+      if (nil ~= _183_0) then
+        _183_0 = _183_0.plugins
       end
-      return _172_0
+      return _183_0
     end
-    local function _176_(...)
-      local _175_0 = root.options
-      if (nil ~= _175_0) then
-        _175_0 = _175_0.plugins
+    local function _187_(...)
+      local _186_0 = root.options
+      if (nil ~= _186_0) then
+        _186_0 = _186_0.plugins
       end
-      return _175_0
+      return _186_0
     end
-    plugins = (_173_(...) or _176_(...))
+    plugins = (_184_(...) or _187_(...))
     if plugins then
       local result = nil
       for _, plugin in ipairs(plugins) do
-        if result then break end
+        if (nil ~= result) then break end
         check_plugin_version(plugin)
-        local _178_0 = plugin[event]
-        if (nil ~= _178_0) then
-          local f = _178_0
+        local _189_0 = plugin[event]
+        if (nil ~= _189_0) then
+          local f = _189_0
           result = f(...)
         else
         result = nil
@@ -5137,7 +5836,7 @@ package.preload["fennel.utils"] = package.preload["fennel.utils"] or function(..
   local function hook(event, ...)
     return hook_opts(event, root.options, ...)
   end
-  return {["ast-source"] = ast_source, ["comment?"] = comment_3f, ["debug-on?"] = debug_on_3f, ["every?"] = every_3f, ["expr?"] = expr_3f, ["get-in"] = get_in, ["hook-opts"] = hook_opts, ["idempotent-expr?"] = idempotent_expr_3f, ["kv-table?"] = kv_table_3f, ["list?"] = list_3f, ["lua-keywords"] = lua_keywords, ["macro-path"] = table.concat({"./?.fnl", "./?/init-macros.fnl", "./?/init.fnl", getenv("FENNEL_MACRO_PATH")}, ";"), ["member?"] = member_3f, ["multi-sym?"] = multi_sym_3f, ["propagate-options"] = propagate_options, ["quoted?"] = quoted_3f, ["runtime-version"] = runtime_version, ["sequence?"] = sequence_3f, ["string?"] = string_3f, ["sym?"] = sym_3f, ["table?"] = table_3f, ["valid-lua-identifier?"] = valid_lua_identifier_3f, ["varg?"] = varg_3f, ["walk-tree"] = walk_tree, allpairs = allpairs, comment = comment_2a, copy = copy, expr = expr, hook = hook, kvmap = kvmap, len = len, list = list, map = map, maxn = maxn, path = table.concat({"./?.fnl", "./?/init.fnl", getenv("FENNEL_PATH")}, ";"), root = root, sequence = sequence, stablepairs = stablepairs, sym = sym, varg = varg, version = version, warn = warn}
+  return {["ast-source"] = ast_source, ["call-of?"] = call_of_3f, ["comment?"] = comment_3f, ["debug-on?"] = debug_on_3f, ["every?"] = every_3f, ["expr?"] = expr_3f, ["fennel-module"] = nil, ["get-in"] = get_in, ["hook-opts"] = hook_opts, ["idempotent-expr?"] = idempotent_expr_3f, ["kv-table?"] = kv_table_3f, ["list?"] = list_3f, ["lua-keyword?"] = lua_keyword_3f, ["macro-path"] = table.concat({"./?.fnl", "./?/init-macros.fnl", "./?/init.fnl", getenv("FENNEL_MACRO_PATH")}, ";"), ["member?"] = member_3f, ["multi-sym?"] = multi_sym_3f, ["propagate-options"] = propagate_options, ["quoted?"] = quoted_3f, ["runtime-version"] = runtime_version, ["sequence?"] = sequence_3f, ["string?"] = string_3f, ["sym?"] = sym_3f, ["table?"] = table_3f, ["valid-lua-identifier?"] = valid_lua_identifier_3f, ["varg?"] = varg_3f, ["walk-tree"] = walk_tree, allpairs = allpairs, comment = comment_2a, copy = copy, expr = expr, hook = hook, len = len, list = list, maxn = maxn, pack = pack, path = table.concat({"./?.fnl", "./?/init.fnl", getenv("FENNEL_PATH")}, ";"), root = root, sequence = sequence, stablepairs = stablepairs, sym = sym, unpack = unpack, varg = varg, version = version, warn = warn}
 end
 utils = require("fennel.utils")
 local parser = require("fennel.parser")
@@ -5174,14 +5873,14 @@ local function eval(str, _3foptions, ...)
   local env = eval_env(opts.env, opts)
   local lua_source = compiler["compile-string"](str, opts)
   local loader = nil
-  local function _732_(...)
+  local function _858_(...)
     if opts.filename then
       return ("@" .. opts.filename)
     else
       return str
     end
   end
-  loader = specials["load-code"](lua_source, env, _732_(...))
+  loader = specials["load-code"](lua_source, env, _858_(...))
   opts.filename = nil
   return loader(...)
 end
@@ -5197,855 +5896,872 @@ local function syntax()
   local body_3f = {"when", "with-open", "collect", "icollect", "fcollect", "lambda", "\206\187", "macro", "match", "match-try", "case", "case-try", "accumulate", "faccumulate", "doto"}
   local binding_3f = {"collect", "icollect", "fcollect", "each", "for", "let", "with-open", "accumulate", "faccumulate"}
   local define_3f = {"fn", "lambda", "\206\187", "var", "local", "macro", "macros", "global"}
+  local deprecated = {"~=", "#", "global", "require-macros", "pick-args"}
   local out = {}
   for k, v in pairs(compiler.scopes.global.specials) do
     local metadata = (compiler.metadata[v] or {})
-    out[k] = {["binding-form?"] = utils["member?"](k, binding_3f), ["body-form?"] = metadata["fnl/body-form?"], ["define?"] = utils["member?"](k, define_3f), ["special?"] = true}
+    out[k] = {["binding-form?"] = utils["member?"](k, binding_3f), ["body-form?"] = metadata["fnl/body-form?"], ["define?"] = utils["member?"](k, define_3f), ["deprecated?"] = utils["member?"](k, deprecated), ["special?"] = true}
   end
-  for k, v in pairs(compiler.scopes.global.macros) do
+  for k in pairs(compiler.scopes.global.macros) do
     out[k] = {["binding-form?"] = utils["member?"](k, binding_3f), ["body-form?"] = utils["member?"](k, body_3f), ["define?"] = utils["member?"](k, define_3f), ["macro?"] = true}
   end
   for k, v in pairs(_G) do
-    local _733_0 = type(v)
-    if (_733_0 == "function") then
+    local _859_0 = type(v)
+    if (_859_0 == "function") then
       out[k] = {["function?"] = true, ["global?"] = true}
-    elseif (_733_0 == "table") then
-      for k2, v2 in pairs(v) do
-        if (("function" == type(v2)) and (k ~= "_G")) then
-          out[(k .. "." .. k2)] = {["function?"] = true, ["global?"] = true}
+    elseif (_859_0 == "table") then
+      if not k:find("^_") then
+        for k2, v2 in pairs(v) do
+          if ("function" == type(v2)) then
+            out[(k .. "." .. k2)] = {["function?"] = true, ["global?"] = true}
+          end
         end
+        out[k] = {["global?"] = true}
       end
-      out[k] = {["global?"] = true}
     end
   end
   return out
 end
-local mod = {["ast-source"] = utils["ast-source"], ["comment?"] = utils["comment?"], ["compile-stream"] = compiler["compile-stream"], ["compile-string"] = compiler["compile-string"], ["list?"] = utils["list?"], ["load-code"] = specials["load-code"], ["macro-loaded"] = specials["macro-loaded"], ["macro-path"] = utils["macro-path"], ["macro-searchers"] = specials["macro-searchers"], ["make-searcher"] = specials["make-searcher"], ["multi-sym?"] = utils["multi-sym?"], ["runtime-version"] = utils["runtime-version"], ["search-module"] = specials["search-module"], ["sequence?"] = utils["sequence?"], ["string-stream"] = parser["string-stream"], ["sym-char?"] = parser["sym-char?"], ["sym?"] = utils["sym?"], ["table?"] = utils["table?"], ["varg?"] = utils["varg?"], comment = utils.comment, compile = compiler.compile, compile1 = compiler.compile1, compileStream = compiler["compile-stream"], compileString = compiler["compile-string"], doc = specials.doc, dofile = dofile_2a, eval = eval, gensym = compiler.gensym, granulate = parser.granulate, list = utils.list, loadCode = specials["load-code"], macroLoaded = specials["macro-loaded"], macroPath = utils["macro-path"], macroSearchers = specials["macro-searchers"], makeSearcher = specials["make-searcher"], make_searcher = specials["make-searcher"], mangle = compiler["global-mangling"], metadata = compiler.metadata, parser = parser.parser, path = utils.path, repl = repl, runtimeVersion = utils["runtime-version"], scope = compiler["make-scope"], searchModule = specials["search-module"], searcher = specials["make-searcher"](), sequence = utils.sequence, stringStream = parser["string-stream"], sym = utils.sym, syntax = syntax, traceback = compiler.traceback, unmangle = compiler["global-unmangling"], varg = utils.varg, version = utils.version, view = view}
+local mod = {["ast-source"] = utils["ast-source"], ["comment?"] = utils["comment?"], ["compile-stream"] = compiler["compile-stream"], ["compile-string"] = compiler["compile-string"], ["list?"] = utils["list?"], ["load-code"] = specials["load-code"], ["macro-loaded"] = specials["macro-loaded"], ["macro-path"] = utils["macro-path"], ["macro-searchers"] = specials["macro-searchers"], ["make-searcher"] = specials["make-searcher"], ["multi-sym?"] = utils["multi-sym?"], ["runtime-version"] = utils["runtime-version"], ["search-module"] = specials["search-module"], ["sequence?"] = utils["sequence?"], ["string-stream"] = parser["string-stream"], ["sym-char?"] = parser["sym-char?"], ["sym?"] = utils["sym?"], ["table?"] = utils["table?"], ["varg?"] = utils["varg?"], comment = utils.comment, compile = compiler.compile, compile1 = compiler.compile1, compileStream = compiler["compile-stream"], compileString = compiler["compile-string"], doc = specials.doc, dofile = dofile_2a, eval = eval, gensym = compiler.gensym, getinfo = compiler.getinfo, granulate = parser.granulate, list = utils.list, loadCode = specials["load-code"], macroLoaded = specials["macro-loaded"], macroPath = utils["macro-path"], macroSearchers = specials["macro-searchers"], makeSearcher = specials["make-searcher"], make_searcher = specials["make-searcher"], mangle = compiler["global-mangling"], metadata = compiler.metadata, parser = parser.parser, path = utils.path, repl = repl, runtimeVersion = utils["runtime-version"], scope = compiler["make-scope"], searchModule = specials["search-module"], searcher = specials["make-searcher"](), sequence = utils.sequence, stringStream = parser["string-stream"], sym = utils.sym, syntax = syntax, traceback = compiler.traceback, unmangle = compiler["global-unmangling"], varg = utils.varg, version = utils.version, view = view}
 mod.install = function(_3fopts)
   table.insert((package.searchers or package.loaders), specials["make-searcher"](_3fopts))
   return mod
 end
 utils["fennel-module"] = mod
+local function load_macros(src, env)
+  local chunk = assert(specials["load-code"](src, env, "src/fennel/macros.fnl"))
+  for k, v in pairs(chunk()) do
+    compiler.scopes.global.macros[k] = v
+  end
+  return nil
+end
 do
-  local module_name = "fennel.macros"
-  local _ = nil
-  local function _736_()
-    return mod
+  local env = specials["make-compiler-env"](nil, compiler.scopes.compiler, {})
+  env.utils = utils
+  env["get-function-metadata"] = specials["get-function-metadata"]
+  load_macros([===[local function copy(t)
+    local out = {}
+    for _, v in ipairs(t) do
+      table.insert(out, v)
+    end
+    return setmetatable(out, getmetatable(t))
   end
-  package.preload[module_name] = _736_
-  _ = nil
-  local env = nil
-  do
-    local _737_0 = specials["make-compiler-env"](nil, compiler.scopes.compiler, {})
-    _737_0["utils"] = utils
-    _737_0["fennel"] = mod
-    env = _737_0
+  utils['fennel-module'].metadata:setall(copy, "fnl/arglist", {"t"})
+  local function __3e_2a(val, ...)
+    local x = val
+    for _, e in ipairs({...}) do
+      local elt = nil
+      if _G["list?"](e) then
+        elt = copy(e)
+      else
+        elt = list(e)
+      end
+      table.insert(elt, 2, x)
+      x = elt
+    end
+    return x
   end
-  local built_ins = eval([===[;; These macros are awkward because their definition cannot rely on the any
-  ;; built-in macros, only special forms. (no when, no icollect, etc)
-  
-  (fn copy [t]
-    (let [out []]
-      (each [_ v (ipairs t)] (table.insert out v))
-      (setmetatable out (getmetatable t))))
-  
-  (fn ->* [val ...]
-    "Thread-first macro.
-  Take the first value and splice it into the second form as its first argument.
-  The value of the second form is spliced into the first arg of the third, etc."
-    (var x val)
-    (each [_ e (ipairs [...])]
-      (let [elt (if (list? e) (copy e) (list e))]
-        (table.insert elt 2 x)
-        (set x elt)))
-    x)
-  
-  (fn ->>* [val ...]
-    "Thread-last macro.
-  Same as ->, except splices the value into the last position of each form
-  rather than the first."
-    (var x val)
-    (each [_ e (ipairs [...])]
-      (let [elt (if (list? e) (copy e) (list e))]
-        (table.insert elt x)
-        (set x elt)))
-    x)
-  
-  (fn -?>* [val ?e ...]
-    "Nil-safe thread-first macro.
-  Same as -> except will short-circuit with nil when it encounters a nil value."
-    (if (= nil ?e)
-        val
-        (let [el (if (list? ?e) (copy ?e) (list ?e))
-              tmp (gensym)]
-          (table.insert el 2 tmp)
-          `(let [,tmp ,val]
-             (if (not= nil ,tmp)
-                 (-?> ,el ,...)
-                 ,tmp)))))
-  
-  (fn -?>>* [val ?e ...]
-    "Nil-safe thread-last macro.
-  Same as ->> except will short-circuit with nil when it encounters a nil value."
-    (if (= nil ?e)
-        val
-        (let [el (if (list? ?e) (copy ?e) (list ?e))
-              tmp (gensym)]
-          (table.insert el tmp)
-          `(let [,tmp ,val]
-             (if (not= ,tmp nil)
-                 (-?>> ,el ,...)
-                 ,tmp)))))
-  
-  (fn ?dot [tbl ...]
-    "Nil-safe table look up.
-  Same as . (dot), except will short-circuit with nil when it encounters
-  a nil value in any of subsequent keys."
-    (let [head (gensym :t)
-          lookups `(do
-                     (var ,head ,tbl)
-                     ,head)]
-      (each [_ k (ipairs [...])]
-        ;; Kinda gnarly to reassign in place like this, but it emits the best lua.
-        ;; With this impl, it emits a flat, concise, and readable set of ifs
-        (table.insert lookups (# lookups) `(if (not= nil ,head)
-                                             (set ,head (. ,head ,k)))))
-      lookups))
-  
-  (fn doto* [val ...]
-    "Evaluate val and splice it into the first argument of subsequent forms."
-    (assert (not= val nil) "missing subject")
-    (let [rebind? (or (not (sym? val))
-                      (multi-sym? val))
-          name (if rebind? (gensym)            val)
-          form (if rebind? `(let [,name ,val]) `(do))]
-      (each [_ elt (ipairs [...])]
-        (let [elt (if (list? elt) (copy elt) (list elt))]
-          (table.insert elt 2 name)
-          (table.insert form elt)))
-      (table.insert form name)
-      form))
-  
-  (fn when* [condition body1 ...]
-    "Evaluate body for side-effects only when condition is truthy."
-    (assert body1 "expected body")
-    `(if ,condition
-         (do
-           ,body1
-           ,...)))
-  
-  (fn with-open* [closable-bindings ...]
-    "Like `let`, but invokes (v:close) on each binding after evaluating the body.
-  The body is evaluated inside `xpcall` so that bound values will be closed upon
-  encountering an error before propagating it."
-    (let [bodyfn `(fn []
-                    ,...)
-          closer `(fn close-handlers# [ok# ...]
-                    (if ok# ... (error ... 0)))
-          traceback `(. (or package.loaded.fennel debug) :traceback)]
-      (for [i 1 (length closable-bindings) 2]
-        (assert (sym? (. closable-bindings i))
-                "with-open only allows symbols in bindings")
-        (table.insert closer 4 `(: ,(. closable-bindings i) :close)))
-      `(let ,closable-bindings
-         ,closer
-         (close-handlers# (_G.xpcall ,bodyfn ,traceback)))))
-  
-  (fn extract-into [iter-tbl]
-    (var (into iter-out found?) (values [] (copy iter-tbl)))
-    (for [i (length iter-tbl) 2 -1]
-      (let [item (. iter-tbl i)]
-        (if (or (sym? item "&into") (= :into item))
-            (do
-              (assert (not found?) "expected only one &into clause")
-              (set found? true)
-              (set into (. iter-tbl (+ i 1)))
-              (table.remove iter-out i)
-              (table.remove iter-out i)))))
-    (assert (or (not found?) (sym? into) (table? into) (list? into))
-            "expected table, function call, or symbol in &into clause")
-    (values into iter-out))
-  
-  (fn collect* [iter-tbl key-expr value-expr ...]
-    "Return a table made by running an iterator and evaluating an expression that
-  returns key-value pairs to be inserted sequentially into the table.  This can
-  be thought of as a table comprehension. The body should provide two expressions
-  (used as key and value) or nil, which causes it to be omitted.
-  
-  For example,
-    (collect [k v (pairs {:apple \"red\" :orange \"orange\"})]
-      (values v k))
-  returns
-    {:red \"apple\" :orange \"orange\"}
-  
-  Supports an &into clause after the iterator to put results in an existing table.
-  Supports early termination with an &until clause."
-    (assert (and (sequence? iter-tbl) (<= 2 (length iter-tbl)))
-            "expected iterator binding table")
-    (assert (not= nil key-expr) "expected key and value expression")
-    (assert (= nil ...)
-            "expected 1 or 2 body expressions; wrap multiple expressions with do")
-    (let [kv-expr (if (= nil value-expr) key-expr `(values ,key-expr ,value-expr))
-          (into iter) (extract-into iter-tbl)]
-      `(let [tbl# ,into]
-         (each ,iter
-           (let [(k# v#) ,kv-expr]
-             (if (and (not= k# nil) (not= v# nil))
-               (tset tbl# k# v#))))
-         tbl#)))
-  
-  (fn seq-collect [how iter-tbl value-expr ...]
-    "Common part between icollect and fcollect for producing sequential tables.
-  
-  Iteration code only differs in using the for or each keyword, the rest
-  of the generated code is identical."
-    (assert (not= nil value-expr) "expected table value expression")
-    (assert (= nil ...)
-            "expected exactly one body expression. Wrap multiple expressions in do")
-    (let [(into iter) (extract-into iter-tbl)]
-      `(let [tbl# ,into]
-         ;; believe it or not, using a var here has a pretty good performance
-         ;; boost: https://p.hagelb.org/icollect-performance.html
-         (var i# (length tbl#))
-         (,how ,iter
-               (let [val# ,value-expr]
-                 (when (not= nil val#)
-                   (set i# (+ i# 1))
-                   (tset tbl# i# val#))))
-         tbl#)))
-  
-  (fn icollect* [iter-tbl value-expr ...]
-    "Return a sequential table made by running an iterator and evaluating an
-  expression that returns values to be inserted sequentially into the table.
-  This can be thought of as a table comprehension. If the body evaluates to nil
-  that element is omitted.
-  
-  For example,
-    (icollect [_ v (ipairs [1 2 3 4 5])]
-      (when (not= v 3)
-        (* v v)))
-  returns
-    [1 4 16 25]
-  
-  Supports an &into clause after the iterator to put results in an existing table.
-  Supports early termination with an &until clause."
-    (assert (and (sequence? iter-tbl) (<= 2 (length iter-tbl)))
-            "expected iterator binding table")
-    (seq-collect 'each iter-tbl value-expr ...))
-  
-  (fn fcollect* [iter-tbl value-expr ...]
-    "Return a sequential table made by advancing a range as specified by
-  for, and evaluating an expression that returns values to be inserted
-  sequentially into the table.  This can be thought of as a range
-  comprehension. If the body evaluates to nil that element is omitted.
-  
-  For example,
-    (fcollect [i 1 10 2]
-      (when (not= i 3)
-        (* i i)))
-  returns
-    [1 25 49 81]
-  
-  Supports an &into clause after the range to put results in an existing table.
-  Supports early termination with an &until clause."
-    (assert (and (sequence? iter-tbl) (< 2 (length iter-tbl)))
-            "expected range binding table")
-    (seq-collect 'for iter-tbl value-expr ...))
-  
-  (fn accumulate-impl [for? iter-tbl body ...]
-    (assert (and (sequence? iter-tbl) (<= 4 (length iter-tbl)))
-            "expected initial value and iterator binding table")
-    (assert (not= nil body) "expected body expression")
-    (assert (= nil ...)
-            "expected exactly one body expression. Wrap multiple expressions with do")
-    (let [[accum-var accum-init] iter-tbl
-          iter (sym (if for? "for" "each"))] ; accumulate or faccumulate?
-      `(do
-         (var ,accum-var ,accum-init)
-         (,iter ,[(unpack iter-tbl 3)]
-                (set ,accum-var ,body))
-         ,(if (list? accum-var)
-            (list (sym :values) (unpack accum-var))
-            accum-var))))
-  
-  (fn accumulate* [iter-tbl body ...]
-    "Accumulation macro.
-  
-  It takes a binding table and an expression as its arguments.  In the binding
-  table, the first form starts out bound to the second value, which is an initial
-  accumulator. The rest are an iterator binding table in the format `each` takes.
-  
-  It runs through the iterator in each step of which the given expression is
-  evaluated, and the accumulator is set to the value of the expression. It
-  eventually returns the final value of the accumulator.
-  
-  For example,
-    (accumulate [total 0
-                 _ n (pairs {:apple 2 :orange 3})]
-      (+ total n))
-  returns 5"
-    (accumulate-impl false iter-tbl body ...))
-  
-  (fn faccumulate* [iter-tbl body ...]
-    "Identical to accumulate, but after the accumulator the binding table is the
-  same as `for` instead of `each`. Like collect to fcollect, will iterate over a
-  numerical range like `for` rather than an iterator."
-    (accumulate-impl true iter-tbl body ...))
-  
-  (fn double-eval-safe? [x type]
-    (or (= :number type) (= :string type) (= :boolean type)
-        (and (sym? x) (not (multi-sym? x)))))
-  
-  (fn partial* [f ...]
-    "Return a function with all arguments partially applied to f."
-    (assert f "expected a function to partially apply")
-    (let [bindings []
-          args []]
-      (each [_ arg (ipairs [...])]
-        (if (double-eval-safe? arg (type arg))
-          (table.insert args arg)
-          (let [name (gensym)]
-            (table.insert bindings name)
-            (table.insert bindings arg)
-            (table.insert args name))))
-      (let [body (list f (unpack args))]
-        (table.insert body _VARARG)
-        ;; only use the extra let if we need double-eval protection
-        (if (= 0 (length bindings))
-            `(fn [,_VARARG] ,body)
-            `(let ,bindings
-               (fn [,_VARARG] ,body))))))
-  
-  (fn pick-args* [n f]
-    "Create a function of arity n that applies its arguments to f.
-  
-  For example,
-    (pick-args 2 func)
-  expands to
-    (fn [_0_ _1_] (func _0_ _1_))"
-    (if (and _G.io _G.io.stderr)
-        (_G.io.stderr:write
-         "-- WARNING: pick-args is deprecated and will be removed in the future.\n"))
-    (assert (and (= (type n) :number) (= n (math.floor n)) (<= 0 n))
-            (.. "Expected n to be an integer literal >= 0, got " (tostring n)))
-    (let [bindings []]
-      (for [i 1 n]
-        (tset bindings i (gensym)))
-      `(fn ,bindings
-         (,f ,(unpack bindings)))))
-  
-  (fn pick-values* [n ...]
-    "Evaluate to exactly n values.
-  
-  For example,
-    (pick-values 2 ...)
-  expands to
-    (let [(_0_ _1_) ...]
-      (values _0_ _1_))"
-    (assert (and (= :number (type n)) (<= 0 n) (= n (math.floor n)))
-            (.. "Expected n to be an integer >= 0, got " (tostring n)))
-    (let [let-syms (list)
-          let-values (if (= 1 (select "#" ...)) ... `(values ,...))]
-      (for [i 1 n]
-        (table.insert let-syms (gensym)))
-      (if (= n 0) `(values)
-          `(let [,let-syms ,let-values]
-             (values ,(unpack let-syms))))))
-  
-  (fn lambda* [...]
-    "Function literal with nil-checked arguments.
-  Like `fn`, but will throw an exception if a declared argument is passed in as
-  nil, unless that argument's name begins with a question mark."
-    (let [args [...]
-          args-len (length args)
-          has-internal-name? (sym? (. args 1))
-          arglist (if has-internal-name? (. args 2) (. args 1))
-          metadata-position (if has-internal-name? 3 2)
-          has-metadata? (and (< metadata-position args-len)
-                             (or (= :string (type (. args metadata-position)))
-                                 (utils.kv-table? (. args metadata-position))))
-          arity-check-position (- 4 (if has-internal-name? 0 1)
-                                  (if has-metadata? 0 1))
-          empty-body? (< args-len arity-check-position)]
-      (fn check! [a]
-        (if (table? a)
-            (each [_ a (pairs a)] (check! a))
-            (let [as (tostring a)]
-              (and (not (as:match "^?")) (not= as "&") (not= as "_")
-                   (not= as "...") (not= as "&as")))
-            (table.insert args arity-check-position
-                          `(_G.assert (not= nil ,a)
-                                      ,(: "Missing argument %s on %s:%s" :format
-                                          (tostring a)
-                                          (or a.filename :unknown)
-                                          (or a.line "?"))))))
-  
-      (assert (= :table (type arglist)) "expected arg list")
-      (each [_ a (ipairs arglist)] (check! a))
-      (if empty-body?
-          (table.insert args (sym :nil)))
-      `(fn ,(unpack args))))
-  
-  (fn macro* [name ...]
-    "Define a single macro."
-    (assert (sym? name) "expected symbol for macro name")
-    (local args [...])
-    `(macros {,(tostring name) (fn ,(unpack args))}))
-  
-  (fn macrodebug* [form return?]
-    "Print the resulting form after performing macroexpansion.
-  With a second argument, returns expanded form as a string instead of printing."
-    (let [handle (if return? `do `print)]
-      `(,handle ,(view (macroexpand form _SCOPE)))))
-  
-  (fn import-macros* [binding1 module-name1 ...]
-    "Bind a table of macros from each macro module according to a binding form.
-  Each binding form can be either a symbol or a k/v destructuring table.
-  Example:
-    (import-macros mymacros                 :my-macros    ; bind to symbol
-                   {:macro1 alias : macro2} :proj.macros) ; import by name"
-    (assert (and binding1 module-name1 (= 0 (% (select "#" ...) 2)))
-            "expected even number of binding/modulename pairs")
-    (for [i 1 (select "#" binding1 module-name1 ...) 2]
-      ;; delegate the actual loading of the macros to the require-macros
-      ;; special which already knows how to set up the compiler env and stuff.
-      ;; this is weird because require-macros is deprecated but it works.
-      (let [(binding modname) (select i binding1 module-name1 ...)
-            scope (get-scope)
-            ;; if the module-name is an expression (and not just a string) we
-            ;; patch our expression to have the correct source filename so
-            ;; require-macros can pass it down when resolving the module-name.
-            expr `(import-macros ,modname)
-            filename (if (list? modname) (. modname 1 :filename) :unknown)
-            _ (tset expr :filename filename)
-            macros* (_SPECIALS.require-macros expr scope {} binding)]
-        (if (sym? binding)
-            ;; bind whole table of macros to table bound to symbol
-            (tset scope.macros (. binding 1) macros*)
-            ;; 1-level table destructuring for importing individual macros
-            (table? binding)
-            (each [macro-name [import-key] (pairs binding)]
-              (assert (= :function (type (. macros* macro-name)))
-                      (.. "macro " macro-name " not found in module "
-                          (tostring modname)))
-              (tset scope.macros import-key (. macros* macro-name))))))
-    nil)
-  
-  {:-> ->*
-   :->> ->>*
-   :-?> -?>*
-   :-?>> -?>>*
-   :?. ?dot
-   :doto doto*
-   :when when*
-   :with-open with-open*
-   :collect collect*
-   :icollect icollect*
-   :fcollect fcollect*
-   :accumulate accumulate*
-   :faccumulate faccumulate*
-   :partial partial*
-   :lambda lambda*
-   :λ lambda*
-   :pick-args pick-args*
-   :pick-values pick-values*
-   :macro macro*
-   :macrodebug macrodebug*
-   :import-macros import-macros*}
-  ]===], {env = env, filename = "src/fennel/macros.fnl", moduleName = module_name, scope = compiler.scopes.compiler, useMetadata = true})
-  local _0 = nil
-  for k, v in pairs(built_ins) do
-    compiler.scopes.global.macros[k] = v
+  utils['fennel-module'].metadata:setall(__3e_2a, "fnl/arglist", {"val", "..."}, "fnl/docstring", "Thread-first macro.\nTake the first value and splice it into the second form as its first argument.\nThe value of the second form is spliced into the first arg of the third, etc.")
+  local function __3e_3e_2a(val, ...)
+    local x = val
+    for _, e in ipairs({...}) do
+      local elt = nil
+      if _G["list?"](e) then
+        elt = copy(e)
+      else
+        elt = list(e)
+      end
+      table.insert(elt, x)
+      x = elt
+    end
+    return x
   end
-  _0 = nil
-  local match_macros = eval([===[;;; Pattern matching
-  ;; This is separated out so we can use the "core" macros during the
-  ;; implementation of pattern matching.
-  
-  (fn copy [t] (collect [k v (pairs t)] k v))
-  
-  (fn with [opts k]
-    (doto (copy opts) (tset k true)))
-  
-  (fn without [opts k]
-    (doto (copy opts) (tset k nil)))
-  
-  (fn case-values [vals pattern unifications case-pattern opts]
-    (let [condition `(and)
-          bindings []]
-      (each [i pat (ipairs pattern)]
-        (let [(subcondition subbindings) (case-pattern [(. vals i)] pat
-                                                        unifications (without opts :multival?))]
-          (table.insert condition subcondition)
-          (icollect [_ b (ipairs subbindings) &into bindings] b)))
-      (values condition bindings)))
-  
-  (fn case-table [val pattern unifications case-pattern opts]
-    (let [condition `(and (= (_G.type ,val) :table))
-          bindings []]
-      (each [k pat (pairs pattern)]
-        (if (sym? pat :&)
-            (let [rest-pat (. pattern (+ k 1))
-                  rest-val `(select ,k ((or table.unpack _G.unpack) ,val))
-                  subcondition (case-table `(pick-values 1 ,rest-val)
-                                            rest-pat unifications case-pattern
-                                            (without opts :multival?))]
-              (if (not (sym? rest-pat))
-                  (table.insert condition subcondition))
-              (assert (= nil (. pattern (+ k 2)))
-                      "expected & rest argument before last parameter")
-              (table.insert bindings rest-pat)
-              (table.insert bindings [rest-val]))
-            (sym? k :&as)
-            (do
-              (table.insert bindings pat)
-              (table.insert bindings val))
-            (and (= :number (type k)) (sym? pat :&as))
-            (do
-              (assert (= nil (. pattern (+ k 2)))
-                      "expected &as argument before last parameter")
-              (table.insert bindings (. pattern (+ k 1)))
-              (table.insert bindings val))
-            ;; don't process the pattern right after &/&as; already got it
-            (or (not= :number (type k)) (and (not (sym? (. pattern (- k 1)) :&as))
-                                             (not (sym? (. pattern (- k 1)) :&))))
-            (let [subval `(. ,val ,k)
-                  (subcondition subbindings) (case-pattern [subval] pat
-                                                            unifications
-                                                            (without opts :multival?))]
-              (table.insert condition subcondition)
-              (icollect [_ b (ipairs subbindings) &into bindings] b))))
-      (values condition bindings)))
-  
-  (fn case-guard [vals condition guards unifications case-pattern opts]
-    (if (= 0 (length guards))
-      (case-pattern vals condition unifications opts)
-      (let [(pcondition bindings) (case-pattern vals condition unifications opts)
-            condition `(and ,(unpack guards))]
-         (values `(and ,pcondition
-                       (let ,bindings
-                         ,condition)) bindings))))
-  
-  (fn symbols-in-pattern [pattern]
-    "gives the set of symbols inside a pattern"
-    (if (list? pattern)
-        (if (or (sym? (. pattern 1) :where)
-                (sym? (. pattern 1) :=))
-            (symbols-in-pattern (. pattern 2))
-            (sym? (. pattern 2) :?)
-            (symbols-in-pattern (. pattern 1))
-            (let [result {}]
-              (each [_ child-pattern (ipairs pattern)]
-                (collect [name symbol (pairs (symbols-in-pattern child-pattern)) &into result]
-                  name symbol))
-              result))
-        (sym? pattern)
-        (if (and (not (sym? pattern :or))
-                 (not (sym? pattern :nil)))
-            {(tostring pattern) pattern}
-            {})
-        (= (type pattern) :table)
-        (let [result {}]
-          (each [key-pattern value-pattern (pairs pattern)]
-            (collect [name symbol (pairs (symbols-in-pattern key-pattern)) &into result]
-              name symbol)
-            (collect [name symbol (pairs (symbols-in-pattern value-pattern)) &into result]
-              name symbol))
-          result)
-        {}))
-  
-  (fn symbols-in-every-pattern [pattern-list infer-unification?]
-    "gives a list of symbols that are present in every pattern in the list"
-    (let [?symbols (accumulate [?symbols nil
-                                _ pattern (ipairs pattern-list)]
-                     (let [in-pattern (symbols-in-pattern pattern)]
-                       (if ?symbols
-                         (do
-                           (each [name symbol (pairs ?symbols)]
-                             (when (not (. in-pattern name))
-                               (tset ?symbols name nil)))
-                           ?symbols)
-                         in-pattern)))]
-      (icollect [_ symbol (pairs (or ?symbols {}))]
-        (if (not (and infer-unification?
-                      (in-scope? symbol)))
-          symbol))))
-  
-  (fn case-or [vals pattern guards unifications case-pattern opts]
-    (let [pattern [(unpack pattern 2)]
-          bindings (symbols-in-every-pattern pattern opts.infer-unification?)] ;; TODO opts.infer-unification instead of opts.unification?
-      (if (= 0 (length bindings))
-        ;; no bindings special case generates simple code
-        (let [condition
-              (icollect [i subpattern (ipairs pattern) &into `(or)]
-                (let [(subcondition subbindings) (case-pattern vals subpattern unifications opts)]
-                  subcondition))]
-          (values
-            (if (= 0 (length guards))
-              condition
-              `(and ,condition ,(unpack guards)))
-            []))
-        ;; case with bindings is handled specially, and returns three values instead of two
-        (let [matched? (gensym :matched?)
-              bindings-mangled (icollect [_ binding (ipairs bindings)]
-                                 (gensym (tostring binding)))
-              pre-bindings `(if)]
-          (each [i subpattern (ipairs pattern)]
-            (let [(subcondition subbindings) (case-guard vals subpattern guards {} case-pattern opts)]
-              (table.insert pre-bindings subcondition)
-              (table.insert pre-bindings `(let ,subbindings
-                                            (values true ,(unpack bindings))))))
-          (values matched?
-                  [`(,(unpack bindings)) `(values ,(unpack bindings-mangled))]
-                  [`(,matched? ,(unpack bindings-mangled)) pre-bindings])))))
-  
-  (fn case-pattern [vals pattern unifications opts top-level?]
-    "Take the AST of values and a single pattern and returns a condition
-  to determine if it matches as well as a list of bindings to
-  introduce for the duration of the body if it does match."
-  
-    ;; This function returns the following values (multival):
-    ;; a "condition", which is an expression that determines whether the
-    ;;   pattern should match,
-    ;; a "bindings", which bind all of the symbols used in a pattern
-    ;; an optional "pre-bindings", which is a list of bindings that happen
-    ;;   before the condition and bindings are evaluated. These should only
-    ;;   come from a (case-or). In this case there should be no recursion:
-    ;;   the call stack should be case-condition > case-pattern > case-or
-    ;;
-    ;; Here are the expected flags in the opts table:
-    ;;   :infer-unification? boolean - if the pattern should guess when to unify  (ie, match -> true, case -> false)
-    ;;   :multival? boolean - if the pattern can contain multivals  (in order to disallow patterns like [(1 2)])
-    ;;   :in-where? boolean - if the pattern is surrounded by (where)  (where opts into more pattern features)
-    ;;   :legacy-guard-allowed? boolean - if the pattern should allow `(a ? b) patterns
-  
-    ;; we have to assume we're matching against multiple values here until we
-    ;; know we're either in a multi-valued clause (in which case we know the #
-    ;; of vals) or we're not, in which case we only care about the first one.
-    (let [[val] vals]
-      (if (and (sym? pattern)
-               (or (sym? pattern :nil)
-                   (and opts.infer-unification?
-                        (in-scope? pattern)
-                        (not (sym? pattern :_)))
-                   (and opts.infer-unification?
-                        (multi-sym? pattern)
-                        (in-scope? (. (multi-sym? pattern) 1)))))
-          (values `(= ,val ,pattern) [])
-          ;; unify a local we've seen already
-          (and (sym? pattern) (. unifications (tostring pattern)))
-          (values `(= ,(. unifications (tostring pattern)) ,val) [])
-          ;; bind a fresh local
-          (sym? pattern)
-          (let [wildcard? (: (tostring pattern) :find "^_")]
-            (if (not wildcard?) (tset unifications (tostring pattern) val))
-            (values (if (or wildcard? (string.find (tostring pattern) "^?")) true
-                        `(not= ,(sym :nil) ,val)) [pattern val]))
-          ;; opt-in unify with (=)
-          (and (list? pattern)
-               (sym? (. pattern 1) :=)
-               (sym? (. pattern 2)))
-          (let [bind (. pattern 2)]
-            (assert-compile (= 2 (length pattern)) "(=) should take only one argument" pattern)
-            (assert-compile (not opts.infer-unification?) "(=) cannot be used inside of match" pattern)
-            (assert-compile opts.in-where? "(=) must be used in (where) patterns" pattern)
-            (assert-compile (and (sym? bind) (not (sym? bind :nil)) "= has to bind to a symbol" bind))
-            (values `(= ,val ,bind) []))
-          ;; where-or clause
-          (and (list? pattern) (sym? (. pattern 1) :where) (list? (. pattern 2)) (sym? (. pattern 2 1) :or))
-          (do
-            (assert-compile top-level? "can't nest (where) pattern" pattern)
-            (case-or vals (. pattern 2) [(unpack pattern 3)] unifications case-pattern (with opts :in-where?)))
-          ;; where clause
-          (and (list? pattern) (sym? (. pattern 1) :where))
-          (do
-            (assert-compile top-level? "can't nest (where) pattern" pattern)
-            (case-guard vals (. pattern 2) [(unpack pattern 3)] unifications case-pattern (with opts :in-where?)))
-          ;; or clause (not allowed on its own)
-          (and (list? pattern) (sym? (. pattern 1) :or))
-          (do
-            (assert-compile top-level? "can't nest (or) pattern" pattern)
-            ;; This assertion can be removed to make patterns more permissive
-            (assert-compile false "(or) must be used in (where) patterns" pattern)
-            (case-or vals pattern [] unifications case-pattern opts))
-          ;; guard clause
-          (and (list? pattern) (sym? (. pattern 2) :?))
-          (do
-            (assert-compile opts.legacy-guard-allowed? "legacy guard clause not supported in case" pattern)
-            (case-guard vals (. pattern 1) [(unpack pattern 3)] unifications case-pattern opts))
-          ;; multi-valued patterns (represented as lists)
-          (list? pattern)
-          (do
-            (assert-compile opts.multival? "can't nest multi-value destructuring" pattern)
-            (case-values vals pattern unifications case-pattern opts))
-          ;; table patterns
-          (= (type pattern) :table)
-          (case-table val pattern unifications case-pattern opts)
-          ;; literal value
-          (values `(= ,val ,pattern) []))))
-  
-  (fn add-pre-bindings [out pre-bindings]
-    "Decide when to switch from the current `if` AST to a new one"
-    (if pre-bindings
-        ;; `out` no longer needs to grow.
-        ;; Instead, a new tail `if` AST is introduced, which is where the rest of
-        ;; the clauses will get appended. This way, all future clauses have the
-        ;; pre-bindings in scope.
-        (let [tail `(if)]
-          (table.insert out true)
-          (table.insert out `(let ,pre-bindings ,tail))
-          tail)
-        ;; otherwise, keep growing the current `if` AST.
-        out))
-  
-  (fn case-condition [vals clauses match?]
-    "Construct the actual `if` AST for the given match values and clauses."
-    ;; root is the original `if` AST.
-    ;; out is the `if` AST that is currently being grown.
-    (let [root `(if)]
-      (faccumulate [out root
-                    i 1 (length clauses) 2]
-        (let [pattern (. clauses i)
-              body (. clauses (+ i 1))
-              (condition bindings pre-bindings) (case-pattern vals pattern {}
-                                                              {:multival? true
-                                                               :infer-unification? match?
-                                                               :legacy-guard-allowed? match?}
-                                                              true)
-              out (add-pre-bindings out pre-bindings)]
-          ;; grow the `if` AST by one extra condition
-          (table.insert out condition)
-          (table.insert out `(let ,bindings
-                              ,body))
-          out))
-      root))
-  
-  (fn count-case-multival [pattern]
-    "Identify the amount of multival values that a pattern requires."
-    (if (and (list? pattern) (sym? (. pattern 2) :?))
-        (count-case-multival (. pattern 1))
-        (and (list? pattern) (sym? (. pattern 1) :where))
-        (count-case-multival (. pattern 2))
-        (and (list? pattern) (sym? (. pattern 1) :or))
-        (accumulate [longest 0
-                     _ child-pattern (ipairs pattern)]
-          (math.max longest (count-case-multival child-pattern)))
-        (list? pattern)
-        (length pattern)
-        1))
-  
-  (fn case-count-syms [clauses]
-    "Find the length of the largest multi-valued clause"
-    (let [patterns (fcollect [i 1 (length clauses) 2]
-                     (. clauses i))]
-      (accumulate [longest 0
-                   _ pattern (ipairs patterns)]
-        (math.max longest (count-case-multival pattern)))))
-  
-  (fn case-impl [match? val ...]
-    "The shared implementation of case and match."
-    (assert (not= val nil) "missing subject")
-    (assert (= 0 (math.fmod (select :# ...) 2))
-            "expected even number of pattern/body pairs")
-    (assert (not= 0 (select :# ...))
-            "expected at least one pattern/body pair")
-    (let [clauses [...]
-          vals-count (case-count-syms clauses)
-          skips-multiple-eval-protection? (and (= vals-count 1) (sym? val) (not (multi-sym? val)))]
-      (if skips-multiple-eval-protection?
-        (case-condition (list val) clauses match?)
-        ;; protect against multiple evaluation of the value, bind against as
-        ;; many values as we ever match against in the clauses.
-        (let [vals (fcollect [i 1 vals-count &into (list)] (gensym))]
-          (list `let [vals val] (case-condition vals clauses match?))))))
-  
-  (fn case* [val ...]
-    "Perform pattern matching on val. See reference for details.
-  
-  Syntax:
-  
-  (case data-expression
-    pattern body
-    (where pattern guards*) body
-    (or pattern patterns*) body
-    (where (or pattern patterns*) guards*) body
-    ;; legacy:
-    (pattern ? guards*) body)"
-    (case-impl false val ...))
-  
-  (fn match* [val ...]
-    "Perform pattern matching on val, automatically unifying on variables in
-  local scope. See reference for details.
-  
-  Syntax:
-  
-  (match data-expression
-    pattern body
-    (where pattern guards*) body
-    (or pattern patterns*) body
-    (where (or pattern patterns*) guards*) body
-    ;; legacy:
-    (pattern ? guards*) body)"
-    (case-impl true val ...))
-  
-  (fn case-try-step [how expr else pattern body ...]
-    (if (= nil pattern body)
-        expr
-        ;; unlike regular match, we can't know how many values the value
-        ;; might evaluate to, so we have to capture them all in ... via IIFE
-        ;; to avoid double-evaluation.
-        `((fn [...]
-            (,how ...
-              ,pattern ,(case-try-step how body else ...)
-              ,(unpack else)))
-          ,expr)))
-  
-  (fn case-try-impl [how expr pattern body ...]
-    (let [clauses [pattern body ...]
-          last (. clauses (length clauses))
-          catch (if (sym? (and (= :table (type last)) (. last 1)) :catch)
-                   (let [[_ & e] (table.remove clauses)] e) ; remove `catch sym
-                   [`_# `...])]
-      (assert (= 0 (math.fmod (length clauses) 2))
-              "expected every pattern to have a body")
-      (assert (= 0 (math.fmod (length catch) 2))
-              "expected every catch pattern to have a body")
-      (case-try-step how expr catch (unpack clauses))))
-  
-  (fn case-try* [expr pattern body ...]
-    "Perform chained pattern matching for a sequence of steps which might fail.
-  
-  The values from the initial expression are matched against the first pattern.
-  If they match, the first body is evaluated and its values are matched against
-  the second pattern, etc.
-  
-  If there is a (catch pat1 body1 pat2 body2 ...) form at the end, any mismatch
-  from the steps will be tried against these patterns in sequence as a fallback
-  just like a normal match. If there is no catch, the mismatched values will be
-  returned as the value of the entire expression."
-    (case-try-impl `case expr pattern body ...))
-  
-  (fn match-try* [expr pattern body ...]
-    "Perform chained pattern matching for a sequence of steps which might fail.
-  
-  The values from the initial expression are matched against the first pattern.
-  If they match, the first body is evaluated and its values are matched against
-  the second pattern, etc.
-  
-  If there is a (catch pat1 body1 pat2 body2 ...) form at the end, any mismatch
-  from the steps will be tried against these patterns in sequence as a fallback
-  just like a normal match. If there is no catch, the mismatched values will be
-  returned as the value of the entire expression."
-    (case-try-impl `match expr pattern body ...))
-  
-  {:case case*
-   :case-try case-try*
-   :match match*
-   :match-try match-try*}
-  ]===], {allowedGlobals = false, env = env, filename = "src/fennel/match.fnl", moduleName = module_name, scope = compiler.scopes.compiler, useMetadata = true})
-  for k, v in pairs(match_macros) do
-    compiler.scopes.global.macros[k] = v
+  utils['fennel-module'].metadata:setall(__3e_3e_2a, "fnl/arglist", {"val", "..."}, "fnl/docstring", "Thread-last macro.\nSame as ->, except splices the value into the last position of each form\nrather than the first.")
+  local function __3f_3e_2a(val, _3fe, ...)
+    if (nil == _3fe) then
+      return val
+    elseif not utils["idempotent-expr?"](val) then
+      return setmetatable({filename="src/fennel/macros.fnl", line=40, bytestart=1174, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=40}), setmetatable({sym('tmp_3_', nil, {filename="src/fennel/macros.fnl", line=40}), val}, {filename="src/fennel/macros.fnl", line=40}), setmetatable({filename="src/fennel/macros.fnl", line=41, bytestart=1199, sym('-?>', nil, {quoted=true, filename="src/fennel/macros.fnl", line=41}), sym('tmp_3_', nil, {filename="src/fennel/macros.fnl", line=41}), _3fe, ...}, getmetatable(list()))}, getmetatable(list()))
+    else
+      local call = nil
+      if _G["list?"](_3fe) then
+        call = copy(_3fe)
+      else
+        call = list(_3fe)
+      end
+      table.insert(call, 2, val)
+      return setmetatable({filename="src/fennel/macros.fnl", line=44, bytestart=1317, sym('if', nil, {quoted=true, filename="src/fennel/macros.fnl", line=44}), setmetatable({filename="src/fennel/macros.fnl", line=44, bytestart=1321, sym('not=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=44}), sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=44}), val}, getmetatable(list())), __3f_3e_2a(call, ...)}, getmetatable(list()))
+    end
   end
-  package.preload[module_name] = nil
+  utils['fennel-module'].metadata:setall(__3f_3e_2a, "fnl/arglist", {"val", "?e", "..."}, "fnl/docstring", "Nil-safe thread-first macro.\nSame as -> except will short-circuit with nil when it encounters a nil value.")
+  local function __3f_3e_3e_2a(val, _3fe, ...)
+    if (nil == _3fe) then
+      return val
+    elseif not utils["idempotent-expr?"](val) then
+      return setmetatable({filename="src/fennel/macros.fnl", line=54, bytestart=1627, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=54}), setmetatable({sym('tmp_6_', nil, {filename="src/fennel/macros.fnl", line=54}), val}, {filename="src/fennel/macros.fnl", line=54}), setmetatable({filename="src/fennel/macros.fnl", line=55, bytestart=1652, sym('-?>>', nil, {quoted=true, filename="src/fennel/macros.fnl", line=55}), sym('tmp_6_', nil, {filename="src/fennel/macros.fnl", line=55}), _3fe, ...}, getmetatable(list()))}, getmetatable(list()))
+    else
+      local call = nil
+      if _G["list?"](_3fe) then
+        call = copy(_3fe)
+      else
+        call = list(_3fe)
+      end
+      table.insert(call, val)
+      return setmetatable({filename="src/fennel/macros.fnl", line=58, bytestart=1769, sym('if', nil, {quoted=true, filename="src/fennel/macros.fnl", line=58}), setmetatable({filename="src/fennel/macros.fnl", line=58, bytestart=1773, sym('not=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=58}), val, sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=58})}, getmetatable(list())), __3f_3e_3e_2a(call, ...)}, getmetatable(list()))
+    end
+  end
+  utils['fennel-module'].metadata:setall(__3f_3e_3e_2a, "fnl/arglist", {"val", "?e", "..."}, "fnl/docstring", "Nil-safe thread-last macro.\nSame as ->> except will short-circuit with nil when it encounters a nil value.")
+  local function _3fdot(tbl, ...)
+    local head = gensym("t")
+    local lookups = setmetatable({filename="src/fennel/macros.fnl", line=66, bytestart=2024, sym('do', nil, {quoted=true, filename="src/fennel/macros.fnl", line=66}), setmetatable({filename="src/fennel/macros.fnl", line=67, bytestart=2047, sym('var', nil, {quoted=true, filename="src/fennel/macros.fnl", line=67}), head, tbl}, getmetatable(list())), head}, getmetatable(list()))
+    for i, k in ipairs({...}) do
+      table.insert(lookups, (i + 2), setmetatable({filename="src/fennel/macros.fnl", line=73, bytestart=2335, sym('if', nil, {quoted=true, filename="src/fennel/macros.fnl", line=73}), setmetatable({filename="src/fennel/macros.fnl", line=73, bytestart=2339, sym('not=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=73}), sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=73}), head}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=73, bytestart=2356, sym('set', nil, {quoted=true, filename="src/fennel/macros.fnl", line=73}), head, setmetatable({filename="src/fennel/macros.fnl", line=73, bytestart=2367, sym('.', nil, {quoted=true, filename="src/fennel/macros.fnl", line=73}), head, k}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list())))
+    end
+    return lookups
+  end
+  utils['fennel-module'].metadata:setall(_3fdot, "fnl/arglist", {"tbl", "..."}, "fnl/docstring", "Nil-safe table look up.\nSame as . (dot), except will short-circuit with nil when it encounters\na nil value in any of subsequent keys.")
+  local function doto_2a(val, ...)
+    assert((val ~= nil), "missing subject")
+    if not utils["idempotent-expr?"](val) then
+      return setmetatable({filename="src/fennel/macros.fnl", line=80, bytestart=2585, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=80}), setmetatable({sym('tmp_9_', nil, {filename="src/fennel/macros.fnl", line=80}), val}, {filename="src/fennel/macros.fnl", line=80}), setmetatable({filename="src/fennel/macros.fnl", line=81, bytestart=2609, sym('doto', nil, {quoted=true, filename="src/fennel/macros.fnl", line=81}), sym('tmp_9_', nil, {filename="src/fennel/macros.fnl", line=81}), ...}, getmetatable(list()))}, getmetatable(list()))
+    else
+      local form = setmetatable({filename="src/fennel/macros.fnl", line=82, bytestart=2643, sym('do', nil, {quoted=true, filename="src/fennel/macros.fnl", line=82})}, getmetatable(list()))
+      for _, elt in ipairs({...}) do
+        local elt0 = nil
+        if _G["list?"](elt) then
+          elt0 = copy(elt)
+        else
+          elt0 = list(elt)
+        end
+        table.insert(elt0, 2, val)
+        table.insert(form, elt0)
+      end
+      table.insert(form, val)
+      return form
+    end
+  end
+  utils['fennel-module'].metadata:setall(doto_2a, "fnl/arglist", {"val", "..."}, "fnl/docstring", "Evaluate val and splice it into the first argument of subsequent forms.")
+  local function when_2a(condition, body1, ...)
+    assert(body1, "expected body")
+    return setmetatable({filename="src/fennel/macros.fnl", line=93, bytestart=2992, sym('if', nil, {quoted=true, filename="src/fennel/macros.fnl", line=93}), condition, setmetatable({filename="src/fennel/macros.fnl", line=94, bytestart=3014, sym('do', nil, {quoted=true, filename="src/fennel/macros.fnl", line=94}), body1, ...}, getmetatable(list()))}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(when_2a, "fnl/arglist", {"condition", "body1", "..."}, "fnl/docstring", "Evaluate body for side-effects only when condition is truthy.")
+  local function with_open_2a(closable_bindings, ...)
+    local bodyfn = setmetatable({filename="src/fennel/macros.fnl", line=102, bytestart=3312, sym('fn', nil, {quoted=true, filename="src/fennel/macros.fnl", line=102}), setmetatable({}, {filename="src/fennel/macros.fnl", line=102}), ...}, getmetatable(list()))
+    local closer = setmetatable({filename="src/fennel/macros.fnl", line=104, bytestart=3359, sym('fn', nil, {quoted=true, filename="src/fennel/macros.fnl", line=104}), sym('close-handlers_12_', nil, {filename="src/fennel/macros.fnl", line=104}), setmetatable({sym('ok_13_', nil, {filename="src/fennel/macros.fnl", line=104}), _VARARG}, {filename="src/fennel/macros.fnl", line=104}), setmetatable({filename="src/fennel/macros.fnl", line=105, bytestart=3407, sym('if', nil, {quoted=true, filename="src/fennel/macros.fnl", line=105}), sym('ok_13_', nil, {filename="src/fennel/macros.fnl", line=105}), _VARARG, setmetatable({filename="src/fennel/macros.fnl", line=105, bytestart=3419, sym('error', nil, {quoted=true, filename="src/fennel/macros.fnl", line=105}), _VARARG, 0}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))
+    local traceback = setmetatable({filename="src/fennel/macros.fnl", line=106, bytestart=3454, sym('.', nil, {quoted=true, filename="src/fennel/macros.fnl", line=106}), setmetatable({filename="src/fennel/macros.fnl", line=106, bytestart=3457, sym('or', nil, {quoted=true, filename="src/fennel/macros.fnl", line=106}), setmetatable({filename="src/fennel/macros.fnl", line=106, bytestart=3461, sym('?.', nil, {quoted=true, filename="src/fennel/macros.fnl", line=106}), sym('_G', nil, {quoted=true, filename="src/fennel/macros.fnl", line=106}), "package", "loaded", _G["fennel-module-name"]()}, getmetatable(list())), sym('_G.debug', nil, {quoted=true, filename="src/fennel/macros.fnl", line=107}), setmetatable({["traceback"]=setmetatable({filename=nil, line=nil, bytestart=nil, sym('hashfn', nil, {quoted=true, filename=nil, line=nil}), ""}, getmetatable(list()))}, {filename="src/fennel/macros.fnl", line=107})}, getmetatable(list())), "traceback"}, getmetatable(list()))
+    for i = 1, #closable_bindings, 2 do
+      assert(_G["sym?"](closable_bindings[i]), "with-open only allows symbols in bindings")
+      table.insert(closer, 4, setmetatable({filename="src/fennel/macros.fnl", line=111, bytestart=3752, sym(':', nil, {quoted=true, filename="src/fennel/macros.fnl", line=111}), closable_bindings[i], "close"}, getmetatable(list())))
+    end
+    return setmetatable({filename="src/fennel/macros.fnl", line=112, bytestart=3795, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=112}), closable_bindings, closer, setmetatable({filename="src/fennel/macros.fnl", line=114, bytestart=3841, sym('close-handlers_12_', nil, {filename="src/fennel/macros.fnl", line=114}), setmetatable({filename="src/fennel/macros.fnl", line=114, bytestart=3858, sym('_G.xpcall', nil, {quoted=true, filename="src/fennel/macros.fnl", line=114}), bodyfn, traceback}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(with_open_2a, "fnl/arglist", {"closable-bindings", "..."}, "fnl/docstring", "Like `let`, but invokes (v:close) on each binding after evaluating the body.\nThe body is evaluated inside `xpcall` so that bound values will be closed upon\nencountering an error before propagating it.")
+  local function extract_into(iter_tbl)
+    local into, iter_out, found_3f = {}, copy(iter_tbl)
+    for i = #iter_tbl, 2, -1 do
+      local item = iter_tbl[i]
+      if (_G["sym?"](item, "&into") or ("into" == item)) then
+        assert(not found_3f, "expected only one &into clause")
+        found_3f = true
+        into = iter_tbl[(i + 1)]
+        table.remove(iter_out, i)
+        table.remove(iter_out, i)
+      end
+    end
+    assert((not found_3f or _G["sym?"](into) or _G["table?"](into) or _G["list?"](into)), "expected table, function call, or symbol in &into clause")
+    return into, iter_out, found_3f
+  end
+  utils['fennel-module'].metadata:setall(extract_into, "fnl/arglist", {"iter-tbl"})
+  local function collect_2a(iter_tbl, key_expr, value_expr, ...)
+    assert((_G["sequence?"](iter_tbl) and (2 <= #iter_tbl)), "expected iterator binding table")
+    assert((nil ~= key_expr), "expected key and value expression")
+    assert((nil == ...), "expected 1 or 2 body expressions; wrap multiple expressions with do")
+    assert((value_expr or _G["list?"](key_expr)), "need key and value")
+    local kv_expr = nil
+    if (nil == value_expr) then
+      kv_expr = key_expr
+    else
+      kv_expr = setmetatable({filename="src/fennel/macros.fnl", line=151, bytestart=5514, sym('values', nil, {quoted=true, filename="src/fennel/macros.fnl", line=151}), key_expr, value_expr}, getmetatable(list()))
+    end
+    local into, iter = extract_into(iter_tbl)
+    return setmetatable({filename="src/fennel/macros.fnl", line=153, bytestart=5596, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=153}), setmetatable({sym('tbl_16_', nil, {filename="src/fennel/macros.fnl", line=153}), into}, {filename="src/fennel/macros.fnl", line=153}), setmetatable({filename="src/fennel/macros.fnl", line=154, bytestart=5621, sym('each', nil, {quoted=true, filename="src/fennel/macros.fnl", line=154}), iter, setmetatable({filename="src/fennel/macros.fnl", line=155, bytestart=5642, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=155}), setmetatable({setmetatable({filename="src/fennel/macros.fnl", line=155, bytestart=5648, sym('k_17_', nil, {filename="src/fennel/macros.fnl", line=155}), sym('v_18_', nil, {filename="src/fennel/macros.fnl", line=155})}, getmetatable(list())), kv_expr}, {filename="src/fennel/macros.fnl", line=155}), setmetatable({filename="src/fennel/macros.fnl", line=156, bytestart=5677, sym('if', nil, {quoted=true, filename="src/fennel/macros.fnl", line=156}), setmetatable({filename="src/fennel/macros.fnl", line=156, bytestart=5681, sym('and', nil, {quoted=true, filename="src/fennel/macros.fnl", line=156}), setmetatable({filename="src/fennel/macros.fnl", line=156, bytestart=5686, sym('not=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=156}), sym('k_17_', nil, {filename="src/fennel/macros.fnl", line=156}), sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=156})}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=156, bytestart=5700, sym('not=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=156}), sym('v_18_', nil, {filename="src/fennel/macros.fnl", line=156}), sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=156})}, getmetatable(list()))}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=157, bytestart=5728, sym('tset', nil, {quoted=true, filename="src/fennel/macros.fnl", line=157}), sym('tbl_16_', nil, {filename="src/fennel/macros.fnl", line=157}), sym('k_17_', nil, {filename="src/fennel/macros.fnl", line=157}), sym('v_18_', nil, {filename="src/fennel/macros.fnl", line=157})}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list())), sym('tbl_16_', nil, {filename="src/fennel/macros.fnl", line=158})}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(collect_2a, "fnl/arglist", {"iter-tbl", "key-expr", "value-expr", "..."}, "fnl/docstring", "Return a table made by running an iterator and evaluating an expression that\nreturns key-value pairs to be inserted sequentially into the table.  This can\nbe thought of as a table comprehension. The body should provide two expressions\n(used as key and value) or nil, which causes it to be omitted.\n\nFor example,\n  (collect [k v (pairs {:apple \"red\" :orange \"orange\"})]\n    (values v k))\nreturns\n  {:red \"apple\" :orange \"orange\"}\n\nSupports an &into clause after the iterator to put results in an existing table.\nSupports early termination with an &until clause.")
+  local function seq_collect(how, iter_tbl, value_expr, ...)
+    assert((nil ~= value_expr), "expected table value expression")
+    assert((nil == ...), "expected exactly one body expression. Wrap multiple expressions in do")
+    local into, iter, has_into_3f = extract_into(iter_tbl)
+    if has_into_3f then
+      return setmetatable({filename="src/fennel/macros.fnl", line=170, bytestart=6252, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=170}), setmetatable({sym('tbl_19_', nil, {filename="src/fennel/macros.fnl", line=170}), into}, {filename="src/fennel/macros.fnl", line=170}), setmetatable({filename="src/fennel/macros.fnl", line=171, bytestart=6281, how, iter, setmetatable({filename="src/fennel/macros.fnl", line=171, bytestart=6293, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=171}), setmetatable({sym('val_20_', nil, {filename="src/fennel/macros.fnl", line=171}), value_expr}, {filename="src/fennel/macros.fnl", line=171}), setmetatable({filename="src/fennel/macros.fnl", line=172, bytestart=6342, sym('table.insert', nil, {quoted=true, filename="src/fennel/macros.fnl", line=172}), sym('tbl_19_', nil, {filename="src/fennel/macros.fnl", line=172}), sym('val_20_', nil, {filename="src/fennel/macros.fnl", line=172})}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list())), sym('tbl_19_', nil, {filename="src/fennel/macros.fnl", line=173})}, getmetatable(list()))
+    else
+      return setmetatable({filename="src/fennel/macros.fnl", line=177, bytestart=6618, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=177}), setmetatable({sym('tbl_21_', nil, {filename="src/fennel/macros.fnl", line=177}), setmetatable({}, {filename="src/fennel/macros.fnl", line=177})}, {filename="src/fennel/macros.fnl", line=177}), setmetatable({filename="src/fennel/macros.fnl", line=178, bytestart=6644, sym('var', nil, {quoted=true, filename="src/fennel/macros.fnl", line=178}), sym('i_22_', nil, {filename="src/fennel/macros.fnl", line=178}), 0}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=179, bytestart=6666, how, iter, setmetatable({filename="src/fennel/macros.fnl", line=180, bytestart=6695, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=180}), setmetatable({sym('val_23_', nil, {filename="src/fennel/macros.fnl", line=180}), value_expr}, {filename="src/fennel/macros.fnl", line=180}), setmetatable({filename="src/fennel/macros.fnl", line=181, bytestart=6738, sym('when', nil, {quoted=true, filename="src/fennel/macros.fnl", line=181}), setmetatable({filename="src/fennel/macros.fnl", line=181, bytestart=6744, sym('not=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=181}), sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=181}), sym('val_23_', nil, {filename="src/fennel/macros.fnl", line=181})}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=182, bytestart=6781, sym('set', nil, {quoted=true, filename="src/fennel/macros.fnl", line=182}), sym('i_22_', nil, {filename="src/fennel/macros.fnl", line=182}), setmetatable({filename="src/fennel/macros.fnl", line=182, bytestart=6789, sym('+', nil, {quoted=true, filename="src/fennel/macros.fnl", line=182}), sym('i_22_', nil, {filename="src/fennel/macros.fnl", line=182}), 1}, getmetatable(list()))}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=183, bytestart=6820, sym('tset', nil, {quoted=true, filename="src/fennel/macros.fnl", line=183}), sym('tbl_21_', nil, {filename="src/fennel/macros.fnl", line=183}), sym('i_22_', nil, {filename="src/fennel/macros.fnl", line=183}), sym('val_23_', nil, {filename="src/fennel/macros.fnl", line=183})}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list())), sym('tbl_21_', nil, {filename="src/fennel/macros.fnl", line=184})}, getmetatable(list()))
+    end
+  end
+  utils['fennel-module'].metadata:setall(seq_collect, "fnl/arglist", {"how", "iter-tbl", "value-expr", "..."}, "fnl/docstring", "Common part between icollect and fcollect for producing sequential tables.\n\nIteration code only differs in using the for or each keyword, the rest\nof the generated code is identical.")
+  local function icollect_2a(iter_tbl, value_expr, ...)
+    assert((_G["sequence?"](iter_tbl) and (2 <= #iter_tbl)), "expected iterator binding table")
+    return seq_collect(sym('each', nil, {quoted=true, filename="src/fennel/macros.fnl", line=203}), iter_tbl, value_expr, ...)
+  end
+  utils['fennel-module'].metadata:setall(icollect_2a, "fnl/arglist", {"iter-tbl", "value-expr", "..."}, "fnl/docstring", "Return a sequential table made by running an iterator and evaluating an\nexpression that returns values to be inserted sequentially into the table.\nThis can be thought of as a table comprehension. If the body evaluates to nil\nthat element is omitted.\n\nFor example,\n  (icollect [_ v (ipairs [1 2 3 4 5])]\n    (when (not= v 3)\n      (* v v)))\nreturns\n  [1 4 16 25]\n\nSupports an &into clause after the iterator to put results in an existing table.\nSupports early termination with an &until clause.")
+  local function fcollect_2a(iter_tbl, value_expr, ...)
+    assert((_G["sequence?"](iter_tbl) and (2 < #iter_tbl)), "expected range binding table")
+    return seq_collect(sym('for', nil, {quoted=true, filename="src/fennel/macros.fnl", line=222}), iter_tbl, value_expr, ...)
+  end
+  utils['fennel-module'].metadata:setall(fcollect_2a, "fnl/arglist", {"iter-tbl", "value-expr", "..."}, "fnl/docstring", "Return a sequential table made by advancing a range as specified by\nfor, and evaluating an expression that returns values to be inserted\nsequentially into the table.  This can be thought of as a range\ncomprehension. If the body evaluates to nil that element is omitted.\n\nFor example,\n  (fcollect [i 1 10 2]\n    (when (not= i 3)\n      (* i i)))\nreturns\n  [1 25 49 81]\n\nSupports an &into clause after the range to put results in an existing table.\nSupports early termination with an &until clause.")
+  local function accumulate_impl(for_3f, iter_tbl, body, ...)
+    assert((_G["sequence?"](iter_tbl) and (4 <= #iter_tbl)), "expected initial value and iterator binding table")
+    assert((nil ~= body), "expected body expression")
+    assert((nil == ...), "expected exactly one body expression. Wrap multiple expressions with do")
+    local _25_ = iter_tbl
+    local accum_var = _25_[1]
+    local accum_init = _25_[2]
+    local iter = nil
+    local function _26_(...)
+      if for_3f then
+        return "for"
+      else
+        return "each"
+      end
+    end
+    iter = sym(_26_(...))
+    local function _27_(...)
+      if _G["list?"](accum_var) then
+        return list(sym("values"), unpack(accum_var))
+      else
+        return accum_var
+      end
+    end
+    return setmetatable({filename="src/fennel/macros.fnl", line=232, bytestart=8695, sym('do', nil, {quoted=true, filename="src/fennel/macros.fnl", line=232}), setmetatable({filename="src/fennel/macros.fnl", line=233, bytestart=8706, sym('var', nil, {quoted=true, filename="src/fennel/macros.fnl", line=233}), accum_var, accum_init}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=234, bytestart=8742, iter, {unpack(iter_tbl, 3)}, setmetatable({filename="src/fennel/macros.fnl", line=235, bytestart=8786, sym('set', nil, {quoted=true, filename="src/fennel/macros.fnl", line=235}), accum_var, body}, getmetatable(list()))}, getmetatable(list())), _27_(...)}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(accumulate_impl, "fnl/arglist", {"for?", "iter-tbl", "body", "..."})
+  local function accumulate_2a(iter_tbl, body, ...)
+    return accumulate_impl(false, iter_tbl, body, ...)
+  end
+  utils['fennel-module'].metadata:setall(accumulate_2a, "fnl/arglist", {"iter-tbl", "body", "..."}, "fnl/docstring", "Accumulation macro.\n\nIt takes a binding table and an expression as its arguments.  In the binding\ntable, the first form starts out bound to the second value, which is an initial\naccumulator. The rest are an iterator binding table in the format `each` takes.\n\nIt runs through the iterator in each step of which the given expression is\nevaluated, and the accumulator is set to the value of the expression. It\neventually returns the final value of the accumulator.\n\nFor example,\n  (accumulate [total 0\n               _ n (pairs {:apple 2 :orange 3})]\n    (+ total n))\nreturns 5")
+  local function faccumulate_2a(iter_tbl, body, ...)
+    return accumulate_impl(true, iter_tbl, body, ...)
+  end
+  utils['fennel-module'].metadata:setall(faccumulate_2a, "fnl/arglist", {"iter-tbl", "body", "..."}, "fnl/docstring", "Identical to accumulate, but after the accumulator the binding table is the\nsame as `for` instead of `each`. Like collect to fcollect, will iterate over a\nnumerical range like `for` rather than an iterator.")
+  local function partial_2a(f, ...)
+    assert(f, "expected a function to partially apply")
+    local bindings = {}
+    local args = {}
+    for _, arg in ipairs({...}) do
+      if utils["idempotent-expr?"](arg) then
+        table.insert(args, arg)
+      else
+        local name = gensym()
+        table.insert(bindings, name)
+        table.insert(bindings, arg)
+        table.insert(args, name)
+      end
+    end
+    local body = list(f, unpack(args))
+    table.insert(body, _VARARG)
+    if (nil == bindings[1]) then
+      return setmetatable({filename="src/fennel/macros.fnl", line=280, bytestart=10477, sym('fn', nil, {quoted=true, filename="src/fennel/macros.fnl", line=280}), setmetatable({_VARARG}, {filename="src/fennel/macros.fnl", line=280}), body}, getmetatable(list()))
+    else
+      return setmetatable({filename="src/fennel/macros.fnl", line=281, bytestart=10510, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=281}), bindings, setmetatable({filename="src/fennel/macros.fnl", line=282, bytestart=10538, sym('fn', nil, {quoted=true, filename="src/fennel/macros.fnl", line=282}), setmetatable({_VARARG}, {filename="src/fennel/macros.fnl", line=282}), body}, getmetatable(list()))}, getmetatable(list()))
+    end
+  end
+  utils['fennel-module'].metadata:setall(partial_2a, "fnl/arglist", {"f", "..."}, "fnl/docstring", "Return a function with all arguments partially applied to f.")
+  local function pick_args_2a(n, f)
+    if (_G.io and _G.io.stderr) then
+      do end (_G.io.stderr):write("-- WARNING: pick-args is deprecated and will be removed in the future.\n")
+    end
+    local bindings = {}
+    for i = 1, n do
+      bindings[i] = gensym()
+    end
+    return setmetatable({filename="src/fennel/macros.fnl", line=291, bytestart=10877, sym('fn', nil, {quoted=true, filename="src/fennel/macros.fnl", line=291}), bindings, setmetatable({filename="src/fennel/macros.fnl", line=291, bytestart=10891, f, unpack(bindings)}, getmetatable(list()))}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(pick_args_2a, "fnl/arglist", {"n", "f"}, "fnl/docstring", "Create a function of arity n that applies its arguments to f. Deprecated.")
+  local function lambda_2a(...)
+    local args = {...}
+    local args_len = #args
+    local has_internal_name_3f = _G["sym?"](args[1])
+    local arglist = nil
+    if has_internal_name_3f then
+      arglist = args[2]
+    else
+      arglist = args[1]
+    end
+    local metadata_position = nil
+    if has_internal_name_3f then
+      metadata_position = 3
+    else
+      metadata_position = 2
+    end
+    local _, check_position = _G["get-function-metadata"]({"lambda", ...}, arglist, metadata_position)
+    local empty_body_3f = (args_len < check_position)
+    local function check_21(a)
+      if _G["table?"](a) then
+        for _0, a0 in pairs(a) do
+          check_21(a0)
+        end
+        return nil
+      else
+        local _33_
+        do
+          local as = tostring(a)
+          local as1 = as:sub(1, 1)
+          _33_ = not (("_" == as1) or ("?" == as1) or ("&" == as) or ("..." == as) or ("&as" == as))
+        end
+        if _33_ then
+          return table.insert(args, check_position, setmetatable({filename="src/fennel/macros.fnl", line=312, bytestart=11826, sym('_G.assert', nil, {quoted=true, filename="src/fennel/macros.fnl", line=312}), setmetatable({filename="src/fennel/macros.fnl", line=312, bytestart=11837, sym('not=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=312}), sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=312}), a}, getmetatable(list())), ("Missing argument %s on %s:%s"):format(tostring(a), (a.filename or "unknown"), (a.line or "?"))}, getmetatable(list())))
+        end
+      end
+    end
+    utils['fennel-module'].metadata:setall(check_21, "fnl/arglist", {"a"})
+    assert(("table" == type(arglist)), "expected arg list")
+    for _0, a in ipairs(arglist) do
+      check_21(a)
+    end
+    if empty_body_3f then
+      table.insert(args, sym("nil"))
+    end
+    return setmetatable({filename="src/fennel/macros.fnl", line=321, bytestart=12271, sym('fn', nil, {quoted=true, filename="src/fennel/macros.fnl", line=321}), unpack(args)}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(lambda_2a, "fnl/arglist", {"..."}, "fnl/docstring", "Function literal with nil-checked arguments.\nLike `fn`, but will throw an exception if a declared argument is passed in as\nnil, unless that argument's name begins with a question mark.")
+  local function macro_2a(name, ...)
+    assert(_G["sym?"](name), "expected symbol for macro name")
+    local args = {...}
+    return setmetatable({filename="src/fennel/macros.fnl", line=327, bytestart=12423, sym('macros', nil, {quoted=true, filename="src/fennel/macros.fnl", line=327}), setmetatable({[tostring(name)]=setmetatable({filename="src/fennel/macros.fnl", line=327, bytestart=12449, sym('fn', nil, {quoted=true, filename="src/fennel/macros.fnl", line=327}), unpack(args)}, getmetatable(list()))}, {filename="src/fennel/macros.fnl", line=327})}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(macro_2a, "fnl/arglist", {"name", "..."}, "fnl/docstring", "Define a single macro.")
+  local function macrodebug_2a(form, return_3f)
+    local handle = nil
+    if return_3f then
+      handle = sym('do', nil, {quoted=true, filename="src/fennel/macros.fnl", line=332})
+    else
+      handle = sym('print', nil, {quoted=true, filename="src/fennel/macros.fnl", line=332})
+    end
+    return setmetatable({filename="src/fennel/macros.fnl", line=335, bytestart=12845, handle, view(macroexpand(form, _SCOPE), {["detect-cycles?"] = false})}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(macrodebug_2a, "fnl/arglist", {"form", "return?"}, "fnl/docstring", "Print the resulting form after performing macroexpansion.\nWith a second argument, returns expanded form as a string instead of printing.")
+  local function import_macros_2a(binding1, module_name1, ...)
+    assert((binding1 and module_name1 and (0 == (select("#", ...) % 2))), "expected even number of binding/modulename pairs")
+    for i = 1, select("#", binding1, module_name1, ...), 2 do
+      local binding, modname = select(i, binding1, module_name1, ...)
+      local scope = _G["get-scope"]()
+      local expr = setmetatable({filename="src/fennel/macros.fnl", line=354, bytestart=14006, sym('import-macros', nil, {quoted=true, filename="src/fennel/macros.fnl", line=354}), modname}, getmetatable(list()))
+      local filename = nil
+      if _G["list?"](modname) then
+        filename = modname[1].filename
+      else
+        filename = "unknown"
+      end
+      local _ = nil
+      expr.filename = filename
+      _ = nil
+      local macros_2a = _SPECIALS["require-macros"](expr, scope, {}, binding)
+      if _G["sym?"](binding) then
+        scope.macros[binding[1]] = macros_2a
+      elseif _G["table?"](binding) then
+        for macro_name, _38_0 in pairs(binding) do
+          local _39_ = _38_0
+          local import_key = _39_[1]
+          assert(("function" == type(macros_2a[macro_name])), ("macro " .. macro_name .. " not found in module " .. tostring(modname)))
+          scope.macros[import_key] = macros_2a[macro_name]
+        end
+      end
+    end
+    return nil
+  end
+  utils['fennel-module'].metadata:setall(import_macros_2a, "fnl/arglist", {"binding1", "module-name1", "..."}, "fnl/docstring", "Bind a table of macros from each macro module according to a binding form.\nEach binding form can be either a symbol or a k/v destructuring table.\nExample:\n  (import-macros mymacros                 :my-macros    ; bind to symbol\n                 {:macro1 alias : macro2} :proj.macros) ; import by name")
+  local function assert_repl_2a(condition, ...)
+    do local _ = {["fnl/arglist"] = {condition, _G["?message"], ...}} end
+    local function add_locals(_41_0, locals)
+      local _42_ = _41_0
+      local parent = _42_["parent"]
+      local symmeta = _42_["symmeta"]
+      for name in pairs(symmeta) do
+        locals[name] = sym(name)
+      end
+      if parent then
+        return add_locals(parent, locals)
+      else
+        return locals
+      end
+    end
+    utils['fennel-module'].metadata:setall(add_locals, "fnl/arglist", {"#<table>", "locals"})
+    return setmetatable({filename="src/fennel/macros.fnl", line=379, bytestart=15225, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=379}), setmetatable({sym('unpack_44_', nil, {filename="src/fennel/macros.fnl", line=379}), setmetatable({filename="src/fennel/macros.fnl", line=379, bytestart=15239, sym('or', nil, {quoted=true, filename="src/fennel/macros.fnl", line=379}), sym('table.unpack', nil, {quoted=true, filename="src/fennel/macros.fnl", line=379}), sym('_G.unpack', nil, {quoted=true, filename="src/fennel/macros.fnl", line=379})}, getmetatable(list())), sym('pack_46_', nil, {filename="src/fennel/macros.fnl", line=380}), setmetatable({filename="src/fennel/macros.fnl", line=380, bytestart=15282, sym('or', nil, {quoted=true, filename="src/fennel/macros.fnl", line=380}), sym('table.pack', nil, {quoted=true, filename="src/fennel/macros.fnl", line=380}), setmetatable({filename=nil, line=nil, bytestart=nil, sym('hashfn', nil, {quoted=true, filename=nil, line=nil}), setmetatable({filename="src/fennel/macros.fnl", line=380, bytestart=15298, sym('doto', nil, {quoted=true, filename="src/fennel/macros.fnl", line=380}), setmetatable({sym('$...', nil, {quoted=true, filename="src/fennel/macros.fnl", line=380})}, {filename="src/fennel/macros.fnl", line=380}), setmetatable({filename="src/fennel/macros.fnl", line=380, bytestart=15311, sym('tset', nil, {quoted=true, filename="src/fennel/macros.fnl", line=380}), "n", setmetatable({filename="src/fennel/macros.fnl", line=380, bytestart=15320, sym('select', nil, {quoted=true, filename="src/fennel/macros.fnl", line=380}), "#", sym('$...', nil, {quoted=true, filename="src/fennel/macros.fnl", line=380})}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list())), sym('vals_45_', nil, {filename="src/fennel/macros.fnl", line=383}), setmetatable({filename="src/fennel/macros.fnl", line=383, bytestart=15493, sym('pack_46_', nil, {filename="src/fennel/macros.fnl", line=383}), condition, ...}, getmetatable(list())), sym('condition_47_', nil, {filename="src/fennel/macros.fnl", line=384}), setmetatable({filename="src/fennel/macros.fnl", line=384, bytestart=15537, sym('.', nil, {quoted=true, filename="src/fennel/macros.fnl", line=384}), sym('vals_45_', nil, {filename="src/fennel/macros.fnl", line=384}), 1}, getmetatable(list())), sym('message_48_', nil, {filename="src/fennel/macros.fnl", line=385}), setmetatable({filename="src/fennel/macros.fnl", line=385, bytestart=15567, sym('or', nil, {quoted=true, filename="src/fennel/macros.fnl", line=385}), setmetatable({filename="src/fennel/macros.fnl", line=385, bytestart=15571, sym('.', nil, {quoted=true, filename="src/fennel/macros.fnl", line=385}), sym('vals_45_', nil, {filename="src/fennel/macros.fnl", line=385}), 2}, getmetatable(list())), "assertion failed, entering repl."}, getmetatable(list()))}, {filename="src/fennel/macros.fnl", line=379}), setmetatable({filename="src/fennel/macros.fnl", line=386, bytestart=15625, sym('if', nil, {quoted=true, filename="src/fennel/macros.fnl", line=386}), setmetatable({filename="src/fennel/macros.fnl", line=386, bytestart=15629, sym('not', nil, {quoted=true, filename="src/fennel/macros.fnl", line=386}), sym('condition_47_', nil, {filename="src/fennel/macros.fnl", line=386})}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=387, bytestart=15655, sym('let', nil, {quoted=true, filename="src/fennel/macros.fnl", line=387}), setmetatable({sym('opts_49_', nil, {filename="src/fennel/macros.fnl", line=387}), setmetatable({["assert-repl?"]=true}, {filename="src/fennel/macros.fnl", line=387}), sym('fennel_50_', nil, {filename="src/fennel/macros.fnl", line=388}), setmetatable({filename="src/fennel/macros.fnl", line=388, bytestart=15711, sym('require', nil, {quoted=true, filename="src/fennel/macros.fnl", line=388}), _G["fennel-module-name"]()}, getmetatable(list())), sym('locals_51_', nil, {filename="src/fennel/macros.fnl", line=389}), add_locals(_G["get-scope"](), {})}, {filename="src/fennel/macros.fnl", line=387}), setmetatable({filename="src/fennel/macros.fnl", line=390, bytestart=15807, sym('set', nil, {quoted=true, filename="src/fennel/macros.fnl", line=390}), sym('opts_49_.message', nil, {filename="src/fennel/macros.fnl", line=390}), setmetatable({filename="src/fennel/macros.fnl", line=390, bytestart=15826, sym('fennel_50_.traceback', nil, {filename="src/fennel/macros.fnl", line=390}), sym('message_48_', nil, {filename="src/fennel/macros.fnl", line=390})}, getmetatable(list()))}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=391, bytestart=15867, sym('each', nil, {quoted=true, filename="src/fennel/macros.fnl", line=391}), setmetatable({sym('k_52_', nil, {filename="src/fennel/macros.fnl", line=391}), sym('v_53_', nil, {filename="src/fennel/macros.fnl", line=391}), setmetatable({filename="src/fennel/macros.fnl", line=391, bytestart=15880, sym('pairs', nil, {quoted=true, filename="src/fennel/macros.fnl", line=391}), sym('_G', nil, {quoted=true, filename="src/fennel/macros.fnl", line=391})}, getmetatable(list()))}, {filename="src/fennel/macros.fnl", line=391}), setmetatable({filename="src/fennel/macros.fnl", line=392, bytestart=15905, sym('when', nil, {quoted=true, filename="src/fennel/macros.fnl", line=392}), setmetatable({filename="src/fennel/macros.fnl", line=392, bytestart=15911, sym('=', nil, {quoted=true, filename="src/fennel/macros.fnl", line=392}), sym('nil', nil, {quoted=true, filename="src/fennel/macros.fnl", line=392}), setmetatable({filename="src/fennel/macros.fnl", line=392, bytestart=15918, sym('.', nil, {quoted=true, filename="src/fennel/macros.fnl", line=392}), sym('locals_51_', nil, {filename="src/fennel/macros.fnl", line=392}), sym('k_52_', nil, {filename="src/fennel/macros.fnl", line=392})}, getmetatable(list()))}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=392, bytestart=15934, sym('tset', nil, {quoted=true, filename="src/fennel/macros.fnl", line=392}), sym('locals_51_', nil, {filename="src/fennel/macros.fnl", line=392}), sym('k_52_', nil, {filename="src/fennel/macros.fnl", line=392}), sym('v_53_', nil, {filename="src/fennel/macros.fnl", line=392})}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=393, bytestart=15968, sym('set', nil, {quoted=true, filename="src/fennel/macros.fnl", line=393}), sym('opts_49_.env', nil, {filename="src/fennel/macros.fnl", line=393}), sym('locals_51_', nil, {filename="src/fennel/macros.fnl", line=393})}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=394, bytestart=16003, sym('_G.assert', nil, {quoted=true, filename="src/fennel/macros.fnl", line=394}), setmetatable({filename="src/fennel/macros.fnl", line=394, bytestart=16014, sym('fennel_50_.repl', nil, {filename="src/fennel/macros.fnl", line=394}), sym('opts_49_', nil, {filename="src/fennel/macros.fnl", line=394})}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list())), setmetatable({filename="src/fennel/macros.fnl", line=395, bytestart=16046, sym('values', nil, {quoted=true, filename="src/fennel/macros.fnl", line=395}), setmetatable({filename="src/fennel/macros.fnl", line=395, bytestart=16054, sym('unpack_44_', nil, {filename="src/fennel/macros.fnl", line=395}), sym('vals_45_', nil, {filename="src/fennel/macros.fnl", line=395}), 1, sym('vals_45_.n', nil, {filename="src/fennel/macros.fnl", line=395})}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))}, getmetatable(list()))
+  end
+  utils['fennel-module'].metadata:setall(assert_repl_2a, "fnl/arglist", {"condition", "..."}, "fnl/docstring", "Enter into a debug REPL  and print the message when condition is false/nil.\nWorks as a drop-in replacement for Lua's `assert`.\nREPL `,return` command returns values to assert in place to continue execution.")
+  return {["->"] = __3e_2a, ["->>"] = __3e_3e_2a, ["-?>"] = __3f_3e_2a, ["-?>>"] = __3f_3e_3e_2a, ["?."] = _3fdot, ["\206\187"] = lambda_2a, ["assert-repl"] = assert_repl_2a, ["import-macros"] = import_macros_2a, ["pick-args"] = pick_args_2a, ["with-open"] = with_open_2a, accumulate = accumulate_2a, collect = collect_2a, doto = doto_2a, faccumulate = faccumulate_2a, fcollect = fcollect_2a, icollect = icollect_2a, lambda = lambda_2a, macro = macro_2a, macrodebug = macrodebug_2a, partial = partial_2a, when = when_2a}
+  ]===], env)
+  load_macros([===[local function copy(t)
+    local tbl_14_ = {}
+    for k, v in pairs(t) do
+      local k_15_, v_16_ = k, v
+      if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+        tbl_14_[k_15_] = v_16_
+      end
+    end
+    return tbl_14_
+  end
+  utils['fennel-module'].metadata:setall(copy, "fnl/arglist", {"t"})
+  local function double_eval_safe_3f(x, type)
+    return (("number" == type) or ("string" == type) or ("boolean" == type) or (_G["sym?"](x) and not _G["multi-sym?"](x)))
+  end
+  utils['fennel-module'].metadata:setall(double_eval_safe_3f, "fnl/arglist", {"x", "type"})
+  local function with(opts, k)
+    local _2_0 = copy(opts)
+    _2_0[k] = true
+    return _2_0
+  end
+  utils['fennel-module'].metadata:setall(with, "fnl/arglist", {"opts", "k"})
+  local function without(opts, k)
+    local _3_0 = copy(opts)
+    _3_0[k] = nil
+    return _3_0
+  end
+  utils['fennel-module'].metadata:setall(without, "fnl/arglist", {"opts", "k"})
+  local function case_values(vals, pattern, unifications, case_pattern, opts)
+    local condition = setmetatable({filename="src/fennel/match.fnl", line=20, bytestart=528, sym('and', nil, {quoted=true, filename="src/fennel/match.fnl", line=20})}, getmetatable(list()))
+    local bindings = {}
+    for i, pat in ipairs(pattern) do
+      local subcondition, subbindings = case_pattern({vals[i]}, pat, unifications, without(opts, "multival?"))
+      table.insert(condition, subcondition)
+      local tbl_17_ = bindings
+      local i_18_ = #tbl_17_
+      for _, b in ipairs(subbindings) do
+        local val_19_ = b
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+    end
+    return condition, bindings
+  end
+  utils['fennel-module'].metadata:setall(case_values, "fnl/arglist", {"vals", "pattern", "unifications", "case-pattern", "opts"})
+  local function case_table(val, pattern, unifications, case_pattern, opts, _3ftop)
+    local condition = nil
+    if ("table" == _3ftop) then
+      condition = setmetatable({filename="src/fennel/match.fnl", line=30, bytestart=1005, sym('and', nil, {quoted=true, filename="src/fennel/match.fnl", line=30})}, getmetatable(list()))
+    else
+      condition = setmetatable({filename="src/fennel/match.fnl", line=30, bytestart=1012, sym('and', nil, {quoted=true, filename="src/fennel/match.fnl", line=30}), setmetatable({filename="src/fennel/match.fnl", line=30, bytestart=1017, sym('=', nil, {quoted=true, filename="src/fennel/match.fnl", line=30}), setmetatable({filename="src/fennel/match.fnl", line=30, bytestart=1020, sym('_G.type', nil, {quoted=true, filename="src/fennel/match.fnl", line=30}), val}, getmetatable(list())), "table"}, getmetatable(list()))}, getmetatable(list()))
+    end
+    local bindings = {}
+    for k, pat in pairs(pattern) do
+      if _G["sym?"](pat, "&") then
+        local rest_pat = pattern[(k + 1)]
+        local rest_val = setmetatable({filename="src/fennel/match.fnl", line=35, bytestart=1195, sym('select', nil, {quoted=true, filename="src/fennel/match.fnl", line=35}), k, setmetatable({filename="src/fennel/match.fnl", line=35, bytestart=1206, setmetatable({filename="src/fennel/match.fnl", line=35, bytestart=1207, sym('or', nil, {quoted=true, filename="src/fennel/match.fnl", line=35}), sym('table.unpack', nil, {quoted=true, filename="src/fennel/match.fnl", line=35}), sym('_G.unpack', nil, {quoted=true, filename="src/fennel/match.fnl", line=35})}, getmetatable(list())), val}, getmetatable(list()))}, getmetatable(list()))
+        local subcondition = case_table(setmetatable({filename="src/fennel/match.fnl", line=36, bytestart=1284, sym('pick-values', nil, {quoted=true, filename="src/fennel/match.fnl", line=36}), 1, rest_val}, getmetatable(list())), rest_pat, unifications, case_pattern, without(opts, "multival?"))
+        if not _G["sym?"](rest_pat) then
+          table.insert(condition, subcondition)
+        end
+        assert((nil == pattern[(k + 2)]), "expected & rest argument before last parameter")
+        table.insert(bindings, rest_pat)
+        table.insert(bindings, {rest_val})
+      elseif _G["sym?"](k, "&as") then
+        table.insert(bindings, pat)
+        table.insert(bindings, val)
+      elseif (("number" == type(k)) and _G["sym?"](pat, "&as")) then
+        assert((nil == pattern[(k + 2)]), "expected &as argument before last parameter")
+        table.insert(bindings, pattern[(k + 1)])
+        table.insert(bindings, val)
+      elseif (("number" ~= type(k)) or (not _G["sym?"](pattern[(k - 1)], "&as") and not _G["sym?"](pattern[(k - 1)], "&"))) then
+        local subval = setmetatable({filename="src/fennel/match.fnl", line=58, bytestart=2418, sym('.', nil, {quoted=true, filename="src/fennel/match.fnl", line=58}), val, k}, getmetatable(list()))
+        local subcondition, subbindings = case_pattern({subval}, pat, unifications, without(opts, "multival?"))
+        table.insert(condition, subcondition)
+        local tbl_17_ = bindings
+        local i_18_ = #tbl_17_
+        for _, b in ipairs(subbindings) do
+          local val_19_ = b
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
+      end
+    end
+    return condition, bindings
+  end
+  utils['fennel-module'].metadata:setall(case_table, "fnl/arglist", {"val", "pattern", "unifications", "case-pattern", "opts", "?top"})
+  local function case_guard(vals, condition, guards, unifications, case_pattern, opts)
+    if guards[1] then
+      local pcondition, bindings = case_pattern(vals, condition, unifications, opts)
+      local condition0 = setmetatable({filename="src/fennel/match.fnl", line=69, bytestart=3002, sym('and', nil, {quoted=true, filename="src/fennel/match.fnl", line=69}), unpack(guards)}, getmetatable(list()))
+      return setmetatable({filename="src/fennel/match.fnl", line=70, bytestart=3042, sym('and', nil, {quoted=true, filename="src/fennel/match.fnl", line=70}), pcondition, setmetatable({filename="src/fennel/match.fnl", line=71, bytestart=3080, sym('let', nil, {quoted=true, filename="src/fennel/match.fnl", line=71}), bindings, condition0}, getmetatable(list()))}, getmetatable(list())), bindings
+    else
+      return case_pattern(vals, condition, unifications, opts)
+    end
+  end
+  utils['fennel-module'].metadata:setall(case_guard, "fnl/arglist", {"vals", "condition", "guards", "unifications", "case-pattern", "opts"})
+  local function symbols_in_pattern(pattern)
+    if _G["list?"](pattern) then
+      if (_G["sym?"](pattern[1], "where") or _G["sym?"](pattern[1], "=")) then
+        return symbols_in_pattern(pattern[2])
+      elseif _G["sym?"](pattern[2], "?") then
+        return symbols_in_pattern(pattern[1])
+      else
+        local result = {}
+        for _, child_pattern in ipairs(pattern) do
+          local tbl_14_ = result
+          for name, symbol in pairs(symbols_in_pattern(child_pattern)) do
+            local k_15_, v_16_ = name, symbol
+            if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+              tbl_14_[k_15_] = v_16_
+            end
+          end
+        end
+        return result
+      end
+    elseif _G["sym?"](pattern) then
+      if (not _G["sym?"](pattern, "or") and not _G["sym?"](pattern, "nil")) then
+        return {[tostring(pattern)] = pattern}
+      else
+        return {}
+      end
+    elseif (type(pattern) == "table") then
+      local result = {}
+      for key_pattern, value_pattern in pairs(pattern) do
+        do
+          local tbl_14_ = result
+          for name, symbol in pairs(symbols_in_pattern(key_pattern)) do
+            local k_15_, v_16_ = name, symbol
+            if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+              tbl_14_[k_15_] = v_16_
+            end
+          end
+        end
+        local tbl_14_ = result
+        for name, symbol in pairs(symbols_in_pattern(value_pattern)) do
+          local k_15_, v_16_ = name, symbol
+          if ((k_15_ ~= nil) and (v_16_ ~= nil)) then
+            tbl_14_[k_15_] = v_16_
+          end
+        end
+      end
+      return result
+    else
+      return {}
+    end
+  end
+  utils['fennel-module'].metadata:setall(symbols_in_pattern, "fnl/arglist", {"pattern"}, "fnl/docstring", "gives the set of symbols inside a pattern")
+  local function symbols_in_every_pattern(pattern_list, infer_unification_3f)
+    local _3fsymbols = nil
+    do
+      local _3fsymbols0 = nil
+      for _, pattern in ipairs(pattern_list) do
+        local in_pattern = symbols_in_pattern(pattern)
+        if _3fsymbols0 then
+          for name in pairs(_3fsymbols0) do
+            if not in_pattern[name] then
+              _3fsymbols0[name] = nil
+            end
+          end
+          _3fsymbols0 = _3fsymbols0
+        else
+          _3fsymbols0 = in_pattern
+        end
+      end
+      _3fsymbols = _3fsymbols0
+    end
+    local tbl_17_ = {}
+    local i_18_ = #tbl_17_
+    for _, symbol in pairs((_3fsymbols or {})) do
+      local val_19_ = nil
+      if not (infer_unification_3f and _G["in-scope?"](symbol)) then
+        val_19_ = symbol
+      else
+      val_19_ = nil
+      end
+      if (nil ~= val_19_) then
+        i_18_ = (i_18_ + 1)
+        tbl_17_[i_18_] = val_19_
+      end
+    end
+    return tbl_17_
+  end
+  utils['fennel-module'].metadata:setall(symbols_in_every_pattern, "fnl/arglist", {"pattern-list", "infer-unification?"}, "fnl/docstring", "gives a list of symbols that are present in every pattern in the list")
+  local function case_or(vals, pattern, guards, unifications, case_pattern, opts)
+    local pattern0 = {unpack(pattern, 2)}
+    local bindings = symbols_in_every_pattern(pattern0, opts["infer-unification?"])
+    if (nil == bindings[1]) then
+      local condition = nil
+      do
+        local tbl_17_ = setmetatable({filename="src/fennel/match.fnl", line=125, bytestart=5354, sym('or', nil, {quoted=true, filename="src/fennel/match.fnl", line=125})}, getmetatable(list()))
+        local i_18_ = #tbl_17_
+        for _, subpattern in ipairs(pattern0) do
+          local val_19_ = case_pattern(vals, subpattern, unifications, opts)
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
+        condition = tbl_17_
+      end
+      local _21_
+      if guards[1] then
+        _21_ = setmetatable({filename="src/fennel/match.fnl", line=128, bytestart=5495, sym('and', nil, {quoted=true, filename="src/fennel/match.fnl", line=128}), condition, unpack(guards)}, getmetatable(list()))
+      else
+        _21_ = condition
+      end
+      return _21_, {}
+    else
+      local matched_3f = gensym("matched?")
+      local bindings_mangled = nil
+      do
+        local tbl_17_ = {}
+        local i_18_ = #tbl_17_
+        for _, binding in ipairs(bindings) do
+          local val_19_ = gensym(tostring(binding))
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
+        bindings_mangled = tbl_17_
+      end
+      local pre_bindings = setmetatable({filename="src/fennel/match.fnl", line=135, bytestart=5870, sym('if', nil, {quoted=true, filename="src/fennel/match.fnl", line=135})}, getmetatable(list()))
+      for _, subpattern in ipairs(pattern0) do
+        local subcondition, subbindings = case_guard(vals, subpattern, guards, {}, case_pattern, opts)
+        table.insert(pre_bindings, subcondition)
+        table.insert(pre_bindings, setmetatable({filename="src/fennel/match.fnl", line=139, bytestart=6116, sym('let', nil, {quoted=true, filename="src/fennel/match.fnl", line=139}), subbindings, setmetatable({filename="src/fennel/match.fnl", line=140, bytestart=6176, sym('values', nil, {quoted=true, filename="src/fennel/match.fnl", line=140}), true, unpack(bindings)}, getmetatable(list()))}, getmetatable(list())))
+      end
+      return matched_3f, {setmetatable({filename="src/fennel/match.fnl", line=142, bytestart=6256, unpack(bindings)}, getmetatable(list())), setmetatable({filename="src/fennel/match.fnl", line=142, bytestart=6278, sym('values', nil, {quoted=true, filename="src/fennel/match.fnl", line=142}), unpack(bindings_mangled)}, getmetatable(list()))}, {setmetatable({filename="src/fennel/match.fnl", line=143, bytestart=6333, matched_3f, unpack(bindings_mangled)}, getmetatable(list())), pre_bindings}
+    end
+  end
+  utils['fennel-module'].metadata:setall(case_or, "fnl/arglist", {"vals", "pattern", "guards", "unifications", "case-pattern", "opts"})
+  local function case_pattern(vals, pattern, unifications, opts, _3ftop)
+    local _25_ = vals
+    local val = _25_[1]
+    if (_G["sym?"](pattern) and (_G["sym?"](pattern, "nil") or (opts["infer-unification?"] and _G["in-scope?"](pattern) and not _G["sym?"](pattern, "_")) or (opts["infer-unification?"] and _G["multi-sym?"](pattern) and _G["in-scope?"](_G["multi-sym?"](pattern)[1])))) then
+      return setmetatable({filename="src/fennel/match.fnl", line=177, bytestart=8254, sym('=', nil, {quoted=true, filename="src/fennel/match.fnl", line=177}), val, pattern}, getmetatable(list())), {}
+    elseif (_G["sym?"](pattern) and unifications[tostring(pattern)]) then
+      return setmetatable({filename="src/fennel/match.fnl", line=180, bytestart=8402, sym('=', nil, {quoted=true, filename="src/fennel/match.fnl", line=180}), unifications[tostring(pattern)], val}, getmetatable(list())), {}
+    elseif _G["sym?"](pattern) then
+      local wildcard_3f = tostring(pattern):find("^_")
+      if not wildcard_3f then
+        unifications[tostring(pattern)] = val
+      end
+      local _27_
+      if (wildcard_3f or string.find(tostring(pattern), "^?")) then
+        _27_ = true
+      else
+        _27_ = setmetatable({filename="src/fennel/match.fnl", line=186, bytestart=8741, sym('not=', nil, {quoted=true, filename="src/fennel/match.fnl", line=186}), sym("nil"), val}, getmetatable(list()))
+      end
+      return _27_, {pattern, val}
+    elseif (_G["list?"](pattern) and _G["sym?"](pattern[1], "=") and _G["sym?"](pattern[2])) then
+      local bind = pattern[2]
+      _G["assert-compile"]((2 == #pattern), "(=) should take only one argument", pattern)
+      _G["assert-compile"](not opts["infer-unification?"], "(=) cannot be used inside of match", pattern)
+      _G["assert-compile"](opts["in-where?"], "(=) must be used in (where) patterns", pattern)
+      _G["assert-compile"]((_G["sym?"](bind) and not _G["sym?"](bind, "nil") and "= has to bind to a symbol" and bind))
+      return setmetatable({filename="src/fennel/match.fnl", line=196, bytestart=9355, sym('=', nil, {quoted=true, filename="src/fennel/match.fnl", line=196}), val, bind}, getmetatable(list())), {}
+    elseif (_G["list?"](pattern) and _G["sym?"](pattern[1], "where") and _G["list?"](pattern[2]) and _G["sym?"](pattern[2][1], "or")) then
+      _G["assert-compile"](_3ftop, "can't nest (where) pattern", pattern)
+      return case_or(vals, pattern[2], {unpack(pattern, 3)}, unifications, case_pattern, with(opts, "in-where?"))
+    elseif (_G["list?"](pattern) and _G["sym?"](pattern[1], "where")) then
+      _G["assert-compile"](_3ftop, "can't nest (where) pattern", pattern)
+      return case_guard(vals, pattern[2], {unpack(pattern, 3)}, unifications, case_pattern, with(opts, "in-where?"))
+    elseif (_G["list?"](pattern) and _G["sym?"](pattern[1], "or")) then
+      _G["assert-compile"](_3ftop, "can't nest (or) pattern", pattern)
+      _G["assert-compile"](false, "(or) must be used in (where) patterns", pattern)
+      return case_or(vals, pattern, {}, unifications, case_pattern, opts)
+    elseif (_G["list?"](pattern) and _G["sym?"](pattern[2], "?")) then
+      _G["assert-compile"](opts["legacy-guard-allowed?"], "legacy guard clause not supported in case", pattern)
+      return case_guard(vals, pattern[1], {unpack(pattern, 3)}, unifications, case_pattern, opts)
+    elseif _G["list?"](pattern) then
+      _G["assert-compile"](opts["multival?"], "can't nest multi-value destructuring", pattern)
+      return case_values(vals, pattern, unifications, case_pattern, opts)
+    elseif (type(pattern) == "table") then
+      return case_table(val, pattern, unifications, case_pattern, opts, _3ftop)
+    else
+      return setmetatable({filename="src/fennel/match.fnl", line=228, bytestart=11092, sym('=', nil, {quoted=true, filename="src/fennel/match.fnl", line=228}), val, pattern}, getmetatable(list())), {}
+    end
+  end
+  utils['fennel-module'].metadata:setall(case_pattern, "fnl/arglist", {"vals", "pattern", "unifications", "opts", "?top"}, "fnl/docstring", "Take the AST of values and a single pattern and returns a condition\nto determine if it matches as well as a list of bindings to\nintroduce for the duration of the body if it does match.")
+  local function add_pre_bindings(out, pre_bindings)
+    if pre_bindings then
+      local tail = setmetatable({filename="src/fennel/match.fnl", line=237, bytestart=11490, sym('if', nil, {quoted=true, filename="src/fennel/match.fnl", line=237})}, getmetatable(list()))
+      table.insert(out, true)
+      table.insert(out, setmetatable({filename="src/fennel/match.fnl", line=239, bytestart=11555, sym('let', nil, {quoted=true, filename="src/fennel/match.fnl", line=239}), pre_bindings, tail}, getmetatable(list())))
+      return tail
+    else
+      return out
+    end
+  end
+  utils['fennel-module'].metadata:setall(add_pre_bindings, "fnl/arglist", {"out", "pre-bindings"}, "fnl/docstring", "Decide when to switch from the current `if` AST to a new one")
+  local function case_condition(vals, clauses, match_3f, top_table_3f)
+    local root = setmetatable({filename="src/fennel/match.fnl", line=248, bytestart=11896, sym('if', nil, {quoted=true, filename="src/fennel/match.fnl", line=248})}, getmetatable(list()))
+    do
+      local out = root
+      for i = 1, #clauses, 2 do
+        local pattern = clauses[i]
+        local body = clauses[(i + 1)]
+        local condition, bindings, pre_bindings = nil, nil, nil
+        local function _31_()
+          if top_table_3f then
+            return "table"
+          else
+            return true
+          end
+        end
+        condition, bindings, pre_bindings = case_pattern(vals, pattern, {}, {["infer-unification?"] = match_3f, ["legacy-guard-allowed?"] = match_3f, ["multival?"] = true}, _31_())
+        local out0 = add_pre_bindings(out, pre_bindings)
+        table.insert(out0, condition)
+        table.insert(out0, setmetatable({filename="src/fennel/match.fnl", line=261, bytestart=12633, sym('let', nil, {quoted=true, filename="src/fennel/match.fnl", line=261}), bindings, body}, getmetatable(list())))
+        out = out0
+      end
+    end
+    return root
+  end
+  utils['fennel-module'].metadata:setall(case_condition, "fnl/arglist", {"vals", "clauses", "match?", "top-table?"}, "fnl/docstring", "Construct the actual `if` AST for the given match values and clauses.")
+  local function count_case_multival(pattern)
+    if (_G["list?"](pattern) and _G["sym?"](pattern[2], "?")) then
+      return count_case_multival(pattern[1])
+    elseif (_G["list?"](pattern) and _G["sym?"](pattern[1], "where")) then
+      return count_case_multival(pattern[2])
+    elseif (_G["list?"](pattern) and _G["sym?"](pattern[1], "or")) then
+      local longest = 0
+      for _, child_pattern in ipairs(pattern) do
+        longest = math.max(longest, count_case_multival(child_pattern))
+      end
+      return longest
+    elseif _G["list?"](pattern) then
+      return #pattern
+    else
+      return 1
+    end
+  end
+  utils['fennel-module'].metadata:setall(count_case_multival, "fnl/arglist", {"pattern"}, "fnl/docstring", "Identify the amount of multival values that a pattern requires.")
+  local function case_count_syms(clauses)
+    local patterns = nil
+    do
+      local tbl_17_ = {}
+      local i_18_ = #tbl_17_
+      for i = 1, #clauses, 2 do
+        local val_19_ = clauses[i]
+        if (nil ~= val_19_) then
+          i_18_ = (i_18_ + 1)
+          tbl_17_[i_18_] = val_19_
+        end
+      end
+      patterns = tbl_17_
+    end
+    local longest = 0
+    for _, pattern in ipairs(patterns) do
+      longest = math.max(longest, count_case_multival(pattern))
+    end
+    return longest
+  end
+  utils['fennel-module'].metadata:setall(case_count_syms, "fnl/arglist", {"clauses"}, "fnl/docstring", "Find the length of the largest multi-valued clause")
+  local function maybe_optimize_table(val, clauses)
+    local _34_
+    do
+      local all = _G["sequence?"](val)
+      for i = 1, #clauses, 2 do
+        if not all then break end
+        local function _35_()
+          local all2 = next(clauses[i])
+          for _, d in ipairs(clauses[i]) do
+            if not all2 then break end
+            all2 = (all2 and (not _G["sym?"](d) or not tostring(d):find("^&")))
+          end
+          return all2
+        end
+        all = (_G["sequence?"](clauses[i]) and _35_())
+      end
+      _34_ = all
+    end
+    if _34_ then
+      local function _36_()
+        local tbl_17_ = {}
+        local i_18_ = #tbl_17_
+        for i = 1, #clauses do
+          local val_19_ = nil
+          if (1 == (i % 2)) then
+            val_19_ = list(unpack(clauses[i]))
+          else
+            val_19_ = clauses[i]
+          end
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
+        return tbl_17_
+      end
+      return setmetatable({filename="src/fennel/match.fnl", line=293, bytestart=13916, sym('values', nil, {quoted=true, filename="src/fennel/match.fnl", line=293}), unpack(val)}, getmetatable(list())), _36_()
+    else
+      return val, clauses
+    end
+  end
+  utils['fennel-module'].metadata:setall(maybe_optimize_table, "fnl/arglist", {"val", "clauses"})
+  local function case_impl(match_3f, init_val, ...)
+    assert((init_val ~= nil), "missing subject")
+    assert((0 == math.fmod(select("#", ...), 2)), "expected even number of pattern/body pairs")
+    assert((0 ~= select("#", ...)), "expected at least one pattern/body pair")
+    local val, clauses = maybe_optimize_table(init_val, {...})
+    local vals_count = case_count_syms(clauses)
+    local skips_multiple_eval_protection_3f = ((vals_count == 1) and double_eval_safe_3f(val))
+    if skips_multiple_eval_protection_3f then
+      return case_condition(list(val), clauses, match_3f, _G["table?"](init_val))
+    else
+      local vals = nil
+      do
+        local tbl_17_ = list()
+        local i_18_ = #tbl_17_
+        for _ = 1, vals_count do
+          local val_19_ = gensym()
+          if (nil ~= val_19_) then
+            i_18_ = (i_18_ + 1)
+            tbl_17_[i_18_] = val_19_
+          end
+        end
+        vals = tbl_17_
+      end
+      return list(sym('let', nil, {quoted=true, filename="src/fennel/match.fnl", line=315}), {vals, val}, case_condition(vals, clauses, match_3f, _G["table?"](init_val)))
+    end
+  end
+  utils['fennel-module'].metadata:setall(case_impl, "fnl/arglist", {"match?", "init-val", "..."}, "fnl/docstring", "The shared implementation of case and match.")
+  local function case_2a(val, ...)
+    return case_impl(false, val, ...)
+  end
+  utils['fennel-module'].metadata:setall(case_2a, "fnl/arglist", {"val", "..."}, "fnl/docstring", "Perform pattern matching on val. See reference for details.\n\nSyntax:\n\n(case data-expression\n  pattern body\n  (where pattern guards*) body\n  (where (or pattern patterns*) guards*) body)")
+  local function match_2a(val, ...)
+    return case_impl(true, val, ...)
+  end
+  utils['fennel-module'].metadata:setall(match_2a, "fnl/arglist", {"val", "..."}, "fnl/docstring", "Perform pattern matching on val, automatically unifying on variables in\nlocal scope. See reference for details.\n\nSyntax:\n\n(match data-expression\n  pattern body\n  (where pattern guards*) body\n  (where (or pattern patterns*) guards*) body)")
+  local function case_try_step(how, expr, _else, pattern, body, ...)
+    if ((nil == pattern) and (pattern == body)) then
+      return expr
+    else
+      return setmetatable({filename="src/fennel/match.fnl", line=346, bytestart=15867, setmetatable({filename="src/fennel/match.fnl", line=346, bytestart=15868, sym('fn', nil, {quoted=true, filename="src/fennel/match.fnl", line=346}), setmetatable({_VARARG}, {filename="src/fennel/match.fnl", line=346}), setmetatable({filename="src/fennel/match.fnl", line=347, bytestart=15888, how, _VARARG, pattern, case_try_step(how, body, _else, ...), unpack(_else)}, getmetatable(list()))}, getmetatable(list())), expr}, getmetatable(list()))
+    end
+  end
+  utils['fennel-module'].metadata:setall(case_try_step, "fnl/arglist", {"how", "expr", "else", "pattern", "body", "..."})
+  local function case_try_impl(how, expr, pattern, body, ...)
+    local clauses = {pattern, body, ...}
+    local last = clauses[#clauses]
+    local catch = nil
+    if _G["sym?"]((("table" == type(last)) and last[1]), "catch") then
+      local _43_ = table.remove(clauses)
+      local _ = _43_[1]
+      local e = {(table.unpack or unpack)(_43_, 2)}
+      catch = e
+    else
+      catch = {sym('__44_', nil, {filename="src/fennel/match.fnl", line=357}), _VARARG}
+    end
+    assert((0 == math.fmod(#clauses, 2)), "expected every pattern to have a body")
+    assert((0 == math.fmod(#catch, 2)), "expected every catch pattern to have a body")
+    return case_try_step(how, expr, catch, unpack(clauses))
+  end
+  utils['fennel-module'].metadata:setall(case_try_impl, "fnl/arglist", {"how", "expr", "pattern", "body", "..."})
+  local function case_try_2a(expr, pattern, body, ...)
+    return case_try_impl(sym('case', nil, {quoted=true, filename="src/fennel/match.fnl", line=375}), expr, pattern, body, ...)
+  end
+  utils['fennel-module'].metadata:setall(case_try_2a, "fnl/arglist", {"expr", "pattern", "body", "..."}, "fnl/docstring", "Perform chained pattern matching for a sequence of steps which might fail.\n\nThe values from the initial expression are matched against the first pattern.\nIf they match, the first body is evaluated and its values are matched against\nthe second pattern, etc.\n\nIf there is a (catch pat1 body1 pat2 body2 ...) form at the end, any mismatch\nfrom the steps will be tried against these patterns in sequence as a fallback\njust like a normal match. If there is no catch, the mismatched values will be\nreturned as the value of the entire expression.")
+  local function match_try_2a(expr, pattern, body, ...)
+    return case_try_impl(sym('match', nil, {quoted=true, filename="src/fennel/match.fnl", line=388}), expr, pattern, body, ...)
+  end
+  utils['fennel-module'].metadata:setall(match_try_2a, "fnl/arglist", {"expr", "pattern", "body", "..."}, "fnl/docstring", "Perform chained pattern matching for a sequence of steps which might fail.\n\nThe values from the initial expression are matched against the first pattern.\nIf they match, the first body is evaluated and its values are matched against\nthe second pattern, etc.\n\nIf there is a (catch pat1 body1 pat2 body2 ...) form at the end, any mismatch\nfrom the steps will be tried against these patterns in sequence as a fallback\njust like a normal match. If there is no catch, the mismatched values will be\nreturned as the value of the entire expression.")
+  return {["case-try"] = case_try_2a, ["match-try"] = match_try_2a, case = case_2a, match = match_2a}
+  ]===], env)
 end
 return mod
