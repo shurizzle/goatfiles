@@ -1,10 +1,10 @@
-(local {: path-join : realpath : symlink : unlink} (require :fs))
+(local {: path-join : realpath : symlink : unlink : home} (require :fs))
 (local {: create-symlink : remove-symlink} (require :pieces.util))
 (local {: is} (require :platform))
 (import-macros {: match-platform} :platform-macros)
 
 (local src (path-join *project* :config :mpv))
-(local dst (path-join (os.getenv :HOME) :.config :mpv))
+(local dst (path-join (home) :.config :mpv))
 
 (local os-srcs (let [j #(path-join *project* :config :mpv (.. :mpv.conf. $1))]
                  {:linux (j :linux) :macos (j :macos)}))

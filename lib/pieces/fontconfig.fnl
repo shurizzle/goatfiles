@@ -1,11 +1,11 @@
-(local {: path-join} (require :fs))
+(local {: path-join : home} (require :fs))
 (local {: create-symlink : remove-symlink : need-cmds} (require :pieces.util))
 (local {: exec} (require :os-util))
 (local {: is} (require :platform))
 
 (local src (path-join *project* :config :fontconfig))
 
-(local dst (path-join (os.getenv :HOME) :.config :fontconfig))
+(local dst (path-join (home) :.config :fontconfig))
 
 (fn up []
   (need-cmds :fc-cache)

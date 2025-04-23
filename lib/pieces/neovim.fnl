@@ -1,4 +1,4 @@
-(local {: path-join} (require :fs))
+(local {: path-join : home} (require :fs))
 (local {: clone-git-repo} (require :pieces.util))
 (import-macros {: match-platform} :platform-macros)
 
@@ -7,7 +7,7 @@
 ;; fnlfmt: skip
 (local dst
   (match-platform
-    unix (path-join (os.getenv :HOME) :.config :nvim)
+    unix (path-join (home) :.config :nvim)
     windows (path-join (os.getenv :LOCALAPPDATA) :nvim)))
 
 (fn up []

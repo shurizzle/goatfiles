@@ -1,4 +1,4 @@
-(local {: path-join} (require :fs))
+(local {: path-join : home} (require :fs))
 (local {: create-symlink : remove-symlink} (require :pieces.util))
 (import-macros {: match-platform} :platform-macros)
 
@@ -8,7 +8,7 @@
 ;; fnlfmt: skip
 (fn dst []
   (match-platform
-    unix (path-join (os.getenv :HOME) :.config :wezterm)
+    unix (path-join (home) :.config :wezterm)
     windows (path-join (os.getenv :userprofile) :.config :wezterm)))
 
 (fn up []

@@ -1,5 +1,6 @@
-(local {: path-join} (require :fs))
+(local {: path-join : home} (require :fs))
 (local {: create-symlink : remove-symlink} (require :pieces.util))
+(local {: is} (require :platform))
 (import-macros {: match-platform} :platform-macros)
 
 (fn src []
@@ -8,9 +9,9 @@
 ;; fnlfmt: skip
 (fn dst []
   (match-platform
-    macos (path-join (os.getenv :HOME) :Library "Application Support"
+    macos (path-join (home) :Library "Application Support"
                      :com.mitchellh.ghostty)
-    unix (path-join (os.getenv :HOME) :.config :ghostty)))
+    unix (path-join (home) :.config :ghostty)))
 
 (fn up []
   (create-symlink (src) (dst) nil {:dir true}))
@@ -18,5 +19,5 @@
 (fn down []
   (remove-symlink (src) (dst)))
 
-{:cond true : up : down}
+{:cond (not is.windows) : up : down}
 

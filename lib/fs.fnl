@@ -78,6 +78,9 @@
 
 (local {: uv-wrapper} (require :uv-util))
 
+(fn mkdir [path mode]
+  (let [(f cb) (uv-wrapper :fs_mkdir)]
+    (f path mode cb)))
 (fn realpath [path]
   (let [(f cb) (uv-wrapper :fs_realpath)]
     (f path cb)))
@@ -108,6 +111,11 @@
         (nil err _) (if err (error err) nil)
         (where entry (not= nil entry)) entry))))
 
+(fn home []
+  (if is.win
+      (.. (os.getenv :HOMEDRIVE) (os.getenv :HOMEPATH))
+      (os.getenv :HOME)))
+
 {:dir-sep *dir-sep*
  : dirname
  : filename
@@ -122,4 +130,6 @@
  : scandir
  : access
  : path-abs?
- : path-relative}
+ : path-relative
+ : mkdir
+ : home}
