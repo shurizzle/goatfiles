@@ -1,5 +1,6 @@
 (local {: realpath : symlink : lstat : unlink : path-join : path-relative}
        (require :fs))
+(local {: is} (require :platform))
 
 (local {: cmd? : exec} (require :os-util))
 
@@ -10,12 +11,25 @@
         (lua "return true"))))
   false)
 
+(local resolve (if is.win
+                   (let [{: readlink} (require :fs)]
+                     (fn [path]
+                       (var res nil)
+                       (var p path)
+                       (while (not res)
+                         (let [np (readlink p)]
+                           (if np
+                               (set p np)
+                               (set res p))))
+                       (realpath res)))
+                   realpath))
+
 (fn validate [src dest ?valid-dests]
   (case (lstat dest)
     (nil _ :ENOENT) :not-found
     (nil err _) (error err)
     md (if (= md.type :link)
-           (case (realpath dest)
+           (case (resolve dest)
              (nil _ :ENOENT) :not-found
              (nil err _) (error err)
              path (if (= path src) :same

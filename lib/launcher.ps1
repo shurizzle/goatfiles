@@ -8,22 +8,21 @@ Function Test-CommandExists
 
   $oldPreference = $ErrorActionPreference
 
-  $ErrorActionPreference = ‘stop’
+  $ErrorActionPreference = 'stop'
 
   try
   {
-    if(Get-Command $command)
+    if (Get-Command $command)
     {
       return $true
     }
   } Catch
   {
-    return $false
   } Finally
   {
     $ErrorActionPreference=$oldPreference
   }
-
+  return $false
 }
 
 if ((Test-CommandExists fennel) -and (fennel -e '(require :luv)' >$null 2>$null))

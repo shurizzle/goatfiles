@@ -84,6 +84,9 @@
 (fn realpath [path]
   (let [(f cb) (uv-wrapper :fs_realpath)]
     (f path cb)))
+(fn readlink [path]
+  (let [(f cb) (uv-wrapper :fs_readlink)]
+    (f path cb)))
 (fn symlink [path new-path ?flags]
   (let [(f cb) (uv-wrapper :fs_symlink)]
     (f path new-path ?flags cb)))
@@ -123,6 +126,7 @@
  : path-join
  : path-sep
  : realpath
+ : readlink
  : symlink
  : lstat
  : stat
