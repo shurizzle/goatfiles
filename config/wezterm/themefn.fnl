@@ -87,9 +87,11 @@
                             (where :sailor) (decorate ryukomatoi-sailor)
                             _ (decorate)))))
 
+(local *default* :none)
+
 (fn render-background [?appearance state]
   (let [light? (: (or ?appearance (get-appearance)) :match :Light)]
-    (render-state light? (or state :kamui))))
+    (render-state light? (or state *default*))))
 
 (fn rotate-background [window]
   (when (not wezterm.GLOBAL.backgrounds)
@@ -97,7 +99,7 @@
   (let [appearance (window:get_appearance)
         light? (appearance:match :Light)
         id (tostring (window:window_id))
-        state (match (or (. wezterm.GLOBAL.backgrounds id) :kamui)
+        state (match (or (. wezterm.GLOBAL.backgrounds id) *default*)
                 (where :kamui) :sailor
                 (where :sailor) :none
                 (where :none) :kamui)

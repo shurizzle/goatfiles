@@ -38,32 +38,32 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   do local _ = {nil, nil} end
   local function _7_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_21_auto = {}
-    local i_22_auto = 0
+    local tbl_21_ = {}
+    local i_22_ = 0
     for k, _ in pairs(t) do
-      local val_23_auto = k
-      if (nil ~= val_23_auto) then
-        i_22_auto = (i_22_auto + 1)
-        tbl_21_auto[i_22_auto] = val_23_auto
+      local val_23_ = k
+      if (nil ~= val_23_) then
+        i_22_ = (i_22_ + 1)
+        tbl_21_[i_22_] = val_23_
       else
       end
     end
-    return tbl_21_auto
+    return tbl_21_
   end
   _G.keys = _7_
   local function _9_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_21_auto = {}
-    local i_22_auto = 0
+    local tbl_21_ = {}
+    local i_22_ = 0
     for _, v in pairs(t) do
-      local val_23_auto = v
-      if (nil ~= val_23_auto) then
-        i_22_auto = (i_22_auto + 1)
-        tbl_21_auto[i_22_auto] = val_23_auto
+      local val_23_ = v
+      if (nil ~= val_23_) then
+        i_22_ = (i_22_ + 1)
+        tbl_21_[i_22_] = val_23_
       else
       end
     end
-    return tbl_21_auto
+    return tbl_21_
   end
   _G.vals = _9_
   local function _11_(xs)
@@ -510,9 +510,9 @@ package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
   wezterm.GLOBAL.bells = {}
   local function update(win_id)
-    local tmp_3_auto = wezterm.GLOBAL.bells[tostring(win_id)]
-    if (nil ~= tmp_3_auto) then
-      tmp_3_auto[tostring(wezterm.mux.get_window(win_id):active_tab():tab_id())] = nil
+    local tmp_3_ = wezterm.GLOBAL.bells[tostring(win_id)]
+    if (nil ~= tmp_3_) then
+      tmp_3_[tostring(wezterm.mux.get_window(win_id):active_tab():tab_id())] = nil
       return nil
     else
       return nil
@@ -640,9 +640,10 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     end
     render_state = _105_
   end
+  local _2adefault_2a = "none"
   local function render_background(_3fappearance, state)
     local light_3f = (_3fappearance or get_appearance()):match("Light")
-    return render_state(light_3f, (state or "kamui"))
+    return render_state(light_3f, (state or _2adefault_2a))
   end
   local function rotate_background(window)
     if not wezterm.GLOBAL.backgrounds then
@@ -654,7 +655,7 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local _111_ = (wezterm.GLOBAL.backgrounds[id] or "kamui")
+      local _111_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
       if (_111_ == "kamui") then
         state = "sailor"
       elseif (_111_ == "sailor") then
