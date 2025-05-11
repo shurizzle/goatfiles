@@ -1,4 +1,5 @@
 (local wezterm (require :wezterm))
+(local {: home} (require :platform))
 
 (local black "#282828")
 (local white "#eeeeee")
@@ -50,7 +51,7 @@
       "BlueSky Dark"))
 
 (fn ryukomatoi-sailor [light?]
-  {:source {:File (.. (os.getenv :HOME)
+  {:source {:File (.. (home)
                       :/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png)}
    :width (.. (/ 1024 5) :px)
    :height (.. (/ 1078 5) :px)
@@ -61,7 +62,7 @@
    :opacity (if light? 0.5 0.1)})
 
 (fn ryukomatoi-kamui [light?]
-  {:source {:File (.. (os.getenv :HOME)
+  {:source {:File (.. (home)
                       :/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png)}
    :width (.. (/ 8000 40) :px)
    :height (.. (/ 7646 40) :px)

@@ -34,7 +34,12 @@
 
 (tset _is :bsd (or _is.mac _is.fbsd _is.dfbsd _is.nbsd _is.obsd))
 
+(fn home []
+  (if _is.win
+      (.. (getenv :HOMEDRIVE) (getenv :HOMEPATH))
+      (getenv :HOME)))
+
 (fn ro [t]
   (setmetatable {} {:__index #(. t $2) :__newindex #nil}))
 
-(ro {: os :is (ro _is) : arch})
+(ro {: os :is (ro _is) : arch : home})
