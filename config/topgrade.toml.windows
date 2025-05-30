@@ -15,7 +15,7 @@
 # sudo_command = "sudo"
 
 # Disable specific steps - same options as the command line flag
-disable = ["winget"]
+disable = ["winget", "microsoft_store"]
 
 # Ignore failures for these steps
 # ignore_failures = ["powershell"]
