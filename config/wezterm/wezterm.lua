@@ -441,7 +441,7 @@ package.preload["domains"] = package.preload["domains"] or function(...)
     for _, dom in ipairs(ds) do
       dom.assume_shell = "Posix"
     end
-    for _, name in ipairs({"vercingetorige", "DomPerignon", "filottete"}) do
+    for _, name in ipairs({"vercingetorige", "wercingetorige", "DomPerignon", "filottete"}) do
       if (name ~= wezterm.hostname()) then
         local _75_
         if (name == "filottete") then
@@ -449,7 +449,13 @@ package.preload["domains"] = package.preload["domains"] or function(...)
         else
           _75_ = "WezTerm"
         end
-        table.insert(ds, {name = name, remote_address = (name .. ".local"), multiplexing = _75_, assume_shell = "Posix"})
+        local _77_
+        if (name == "wercingetorige") then
+          _77_ = "Unknown"
+        else
+          _77_ = "Posix"
+        end
+        table.insert(ds, {name = name, remote_address = (name .. ".local"), multiplexing = _75_, assume_shell = _77_})
       else
       end
     end
@@ -460,58 +466,58 @@ end
 __fnl_global__merge_21(config, (require("domains")))
 package.preload["font"] = package.preload["font"] or function(...)
   local wezterm = require("wezterm")
-  local _local_78_ = require("platform")
-  local is = _local_78_["is"]
+  local _local_80_ = require("platform")
+  local is = _local_80_["is"]
   local hostname = wezterm.hostname()
   local harfbuzz_features = {"ss01", "ss02=0", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "calt", "dlig"}
-  local _79_
+  local _81_
   if ("DomPerignon" == hostname) then
-    _79_ = 9
+    _81_ = 9
   else
-    _79_ = 10
+    _81_ = 10
   end
-  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font({family = "Monaspace Argon", harfbuzz_features = harfbuzz_features}), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", harfbuzz_features = harfbuzz_features, italic = false})}, {intensity = "Half", font = wezterm.font({family = "Monaspace Radon", weight = "Medium", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}, {intensity = "Bold", font = wezterm.font({family = "Monaspace Radon", weight = "Bold", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}}, font_size = _79_, warn_about_missing_glyphs = false}
+  return {allow_square_glyphs_to_overflow_width = "Always", harfbuzz_features = {"ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "zero", "onum", "dlig", "calt"}, font = wezterm.font({family = "Monaspace Argon", harfbuzz_features = harfbuzz_features}), font_rules = {{intensity = "Normal", italic = true, font = wezterm.font({family = "Monaspace Radon", weight = "Regular", harfbuzz_features = harfbuzz_features, italic = false})}, {intensity = "Half", font = wezterm.font({family = "Monaspace Radon", weight = "Medium", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}, {intensity = "Bold", font = wezterm.font({family = "Monaspace Radon", weight = "Bold", harfbuzz_features = harfbuzz_features, italic = false}), italic = false}}, font_size = _81_, warn_about_missing_glyphs = false}
 end
 __fnl_global__merge_21(config, (require("font")))
 package.preload["ui"] = package.preload["ui"] or function(...)
   local wezterm = require("wezterm")
-  local _local_81_ = require("platform")
-  local is = _local_81_["is"]
-  local _local_90_ = require("bell")
-  local update_bell = _local_90_["update"]
-  local bell_3f = _local_90_["bell?"]
+  local _local_83_ = require("platform")
+  local is = _local_83_["is"]
+  local _local_92_ = require("bell")
+  local update_bell = _local_92_["update"]
+  local bell_3f = _local_92_["bell?"]
   local function tab_title(tab, max_width)
-    local _91_
+    local _93_
     if bell_3f(tab.window_id, tab.tab_id) then
-      _91_ = "\240\159\148\148"
+      _93_ = "\240\159\148\148"
     else
-      _91_ = ""
+      _93_ = ""
     end
-    return wezterm.truncate_right((_91_ .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
+    return wezterm.truncate_right((_93_ .. string.gsub(tab.active_pane.title, "(.*: )(.*)", "%2")), (max_width - 2))
   end
-  local function _93_(tab, _, _0, _1, _2, max_width)
+  local function _95_(tab, _, _0, _1, _2, max_width)
     update_bell(tab.window_id)
     return (" " .. tab_title(tab, max_width) .. " ")
   end
-  wezterm.on("format-tab-title", _93_)
+  wezterm.on("format-tab-title", _95_)
   local gh_match = {regex = "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?", format = "https://www.github.com/$1/$3"}
-  local _94_
-  if ("DomPerignon" == wezterm.hostname()) then
-    _94_ = "OpenGL"
-  else
-    _94_ = "WebGpu"
-  end
   local _96_
+  if ("DomPerignon" == wezterm.hostname()) then
+    _96_ = "OpenGL"
+  else
+    _96_ = "WebGpu"
+  end
+  local _98_
   if is.linux then
     if os.getenv("WAYLAND_DISPLAY") then
-      _96_ = "RESIZE"
+      _98_ = "RESIZE"
     else
-      _96_ = "NONE"
+      _98_ = "NONE"
     end
   else
-    _96_ = "RESIZE"
+    _98_ = "RESIZE"
   end
-  return {front_end = _94_, window_decorations = _96_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  return {front_end = _96_, window_decorations = _98_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
@@ -525,7 +531,7 @@ package.preload["bell"] = package.preload["bell"] or function(...)
       return nil
     end
   end
-  local function _83_(window, pane)
+  local function _85_(window, pane)
     if os.getenv("WAYLAND_DISPLAY") then
       wezterm.background_child_process({"paplay", "/usr/share/sounds/freedesktop/stereo/bell.oga"})
     else
@@ -540,38 +546,38 @@ package.preload["bell"] = package.preload["bell"] or function(...)
       return nil
     end
   end
-  wezterm.on("bell", _83_)
+  wezterm.on("bell", _85_)
   local function bell_3f(win_id, tab_id)
-    local _87_
+    local _89_
     do
-      local t_86_ = wezterm.GLOBAL.bells
-      if (nil ~= t_86_) then
-        t_86_ = t_86_[tostring(win_id)]
+      local t_88_ = wezterm.GLOBAL.bells
+      if (nil ~= t_88_) then
+        t_88_ = t_88_[tostring(win_id)]
       else
       end
-      if (nil ~= t_86_) then
-        t_86_ = t_86_[tostring(tab_id)]
+      if (nil ~= t_88_) then
+        t_88_ = t_88_[tostring(tab_id)]
       else
       end
-      _87_ = t_86_
+      _89_ = t_88_
     end
-    return (_87_ == tab_id)
+    return (_89_ == tab_id)
   end
   return {update = update, ["bell?"] = bell_3f}
 end
 __fnl_global__merge_21(config, (require("ui")))
 package.preload["theme"] = package.preload["theme"] or function(...)
-  local _let_116_ = require("themefn")
-  local dark = _let_116_["dark"]
-  local light = _let_116_["light"]
-  local colorscheme = _let_116_["colorscheme"]
-  local render_background = _let_116_["render-background"]
+  local _let_118_ = require("themefn")
+  local dark = _let_118_["dark"]
+  local light = _let_118_["light"]
+  local colorscheme = _let_118_["colorscheme"]
+  local render_background = _let_118_["render-background"]
   return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
 end
 package.preload["themefn"] = package.preload["themefn"] or function(...)
   local wezterm = require("wezterm")
-  local _local_99_ = require("platform")
-  local home = _local_99_["home"]
+  local _local_101_ = require("platform")
+  local home = _local_101_["home"]
   local black = "#282828"
   local white = "#eeeeee"
   local ansi = {"#282828", "#c8213d", "#169C51", "#DAAF19", "#2F90FE", "#C14ABE", "#48C6DB", "#CBCBCB"}
@@ -594,44 +600,44 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     end
   end
   local function ryukomatoi_sailor(light_3f)
-    local _102_
-    if light_3f then
-      _102_ = 0.5
-    else
-      _102_ = 0.1
-    end
-    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _102_}
-  end
-  local function ryukomatoi_kamui(light_3f)
     local _104_
     if light_3f then
       _104_ = 0.5
     else
       _104_ = 0.1
     end
-    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _104_}
+    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _104_}
+  end
+  local function ryukomatoi_kamui(light_3f)
+    local _106_
+    if light_3f then
+      _106_ = 0.5
+    else
+      _106_ = 0.1
+    end
+    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _106_}
   end
   local function base_background(Color)
     return {source = {Color = Color}, width = "100%", height = "100%"}
   end
   local render_state
   if ("DomPerignon" == wezterm.hostname()) then
-    local function _106_()
+    local function _108_()
       return nil
     end
-    render_state = _106_
+    render_state = _108_
   else
-    local function _107_(light_3f, state)
+    local function _109_(light_3f, state)
       local function decorate(f)
         local base
-        local function _108_()
+        local function _110_()
           if light_3f then
             return white
           else
             return black
           end
         end
-        base = {base_background(_108_())}
+        base = {base_background(_110_())}
         if f then
           table.insert(base, f(light_3f))
         else
@@ -647,7 +653,7 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
         return decorate()
       end
     end
-    render_state = _107_
+    render_state = _109_
   end
   local _2adefault_2a = "none"
   local function render_background(_3fappearance, state)
@@ -664,12 +670,12 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local _113_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
-      if (_113_ == "kamui") then
+      local _115_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
+      if (_115_ == "kamui") then
         state = "sailor"
-      elseif (_113_ == "sailor") then
+      elseif (_115_ == "sailor") then
         state = "none"
-      elseif (_113_ == "none") then
+      elseif (_115_ == "none") then
         state = "kamui"
       else
         state = nil
@@ -681,22 +687,22 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     window:set_config_overrides(overrides)
     return nil
   end
-  local function _115_(window, _)
+  local function _117_(window, _)
     local overrides = (window:get_config_overrides() or {})
     local appearance = window:get_appearance()
     overrides.color_scheme = colorscheme(appearance)
     overrides.background = render_background(appearance, (wezterm.GLOBAL.backgrounds or {})[tostring(window:window_id())])
     return window:set_config_overrides(overrides)
   end
-  wezterm.on("window-config-reloaded", _115_)
+  wezterm.on("window-config-reloaded", _117_)
   return {["rotate-background"] = rotate_background, ["render-background"] = render_background, colorscheme = colorscheme, dark = dark, light = light}
 end
 __fnl_global__merge_21(config, (require("theme")))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_117_ = require("platform")
-  local is = _local_117_["is"]
+  local _local_119_ = require("platform")
+  local is = _local_119_["is"]
   local cpmods
   if is.macos then
     cpmods = "CMD"
