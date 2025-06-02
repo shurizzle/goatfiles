@@ -4,3 +4,5 @@ macos-force-dedicated-gpu=yes
 ytdl-raw-options-add=format-sort=vcodec:h264
 ytdl-raw-options-add=format=bv*[height=720]+ba
 osd-status-msg=${playback-time/full} / ${duration} (${percent-pos}%)\nframe: ${estimated-frame-number} / ${estimated-frame-count}
+keep-open=always
+keep-open-pause=no
