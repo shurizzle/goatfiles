@@ -17,5 +17,5 @@
   (remove-symlink src dst)
   (exec :fc-cache {:args [:-fv]}))
 
-{:cond is.unix : up : down}
+{:cond (and is.unix (not is.mac)) : up : down}
 
