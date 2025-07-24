@@ -3,7 +3,7 @@
 "$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
 
 
-[manager]
+[mgr]
 
 keymap = [
   { on = [
@@ -759,7 +759,7 @@ keymap = [
   ], run = "filter", desc = "Apply a filter for the help items" },
 ]
 
-[[manager.prepend_keymap]]
+[[mgr.prepend_keymap]]
 on = "<C-s>"
 run = 'plugin tmux'
 desc = "Open shell here"
