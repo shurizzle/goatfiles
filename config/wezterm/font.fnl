@@ -45,5 +45,5 @@
                                     :weight :Bold
                                     :italic false
                                     : harfbuzz_features})}]
- :font_size (if (= :DomPerignon hostname) 9 10)
+ :font_size (if (= :DomPerignon hostname) 9 is.mac 12 10)
  :warn_about_missing_glyphs false}

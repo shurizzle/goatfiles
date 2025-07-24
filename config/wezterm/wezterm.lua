@@ -473,6 +473,8 @@ package.preload["font"] = package.preload["font"] or function(...)
   local _81_
   if ("DomPerignon" == hostname) then
     _81_ = 9
+  elseif is.mac then
+    _81_ = 12
   else
     _81_ = 10
   end
