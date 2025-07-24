@@ -17,6 +17,13 @@
 (var gh-match {:regex "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?"
                :format "https://www.github.com/$1/$3"})
 
+(when is.mac
+  (wezterm.on :update-right-status
+              (fn [win]
+                (local data (wezterm.strftime "%d/%m/%Y %H:%M:%S"))
+                ;; TODO: set the right foreground color
+                (win:set_right_status (wezterm.format [{:Foreground {:AnsiColor :White}} {:Text data}])))))
+
 {:front_end (if (= :DomPerignon (wezterm.hostname)) :OpenGL :WebGpu)
  :window_decorations (if is.linux
                          (if (os.getenv :WAYLAND_DISPLAY) :RESIZE :NONE)
