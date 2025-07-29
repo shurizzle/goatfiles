@@ -2,8 +2,6 @@
 (local act wezterm.action)
 (local {: is} (require :platform))
 
-(local cpmods (if is.macos :CMD :CTRL|SHIFT))
-
 (fn common-keys []
   [{:key :q :mods :LEADER :action (act.CloseCurrentPane {:confirm true})}
    {:key :c :mods :LEADER :action (act.SpawnTab :CurrentPaneDomain)}
@@ -31,8 +29,8 @@
    {:key :v :mods :LEADER :action act.ActivateCopyMode}
    {:key "/" :mods :LEADER :action (act.Search {:CaseInSensitiveString ""})}
    {:key ":" :mods :LEADER :action act.ShowDebugOverlay}
-   {:key :v :mods cpmods :action (act.PasteFrom :Clipboard)}
-   {:key :c :mods cpmods :action (act.CopyTo :Clipboard)}
+   {:key :v :mods :CTRL|SHIFT :action (act.PasteFrom :Clipboard)}
+   {:key :c :mods :CTRL|SHIFT :action (act.CopyTo :Clipboard)}
    {:key "<" :mods :LEADER :action (act.MoveTabRelative -1)}
    {:key ">" :mods :LEADER :action (act.MoveTabRelative 1)}
    {:key "<" :mods :LEADER|SHIFT :action (act.MoveTabRelative -1)}
@@ -42,6 +40,8 @@
   (if is.macos
       [{:key "," :mods :CTRL :action (act.SendString "\027[44;5u")}
        {:key "," :mods :CTRL|SHIFT :action (act.SendString "\027[44;6u")}]
+       {:key :v :mods :CMD :action (act.PasteFrom :Clipboard)}
+       {:key :c :mods :CMD :action (act.CopyTo :Clipboard)}
       []))
 
 (local single-left-down {:Down {:streak 1 :button :Left}})

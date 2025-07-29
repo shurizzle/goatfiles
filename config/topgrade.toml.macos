@@ -15,7 +15,7 @@
 #no_retry = true
 
 # Run inside tmux
-#run_in_tmux = true
+run_in_tmux = true
 
 # List of remote machines with Topgrade installed on them
 #remote_topgrades = ["toothless", "pi", "parnas"]
@@ -66,6 +66,8 @@ repos = [
 # Custom commands
 [commands]
 "Homebrew clean" = "brew cleanup --prune=all"
+"Cargo clean" = "cargo clean-all -i -s 10MB ~/.cargo && cargo cache -a"
+"ghcup clean" = "if which ghcup >/dev/null 2>/dev/null; then ghcup gc; fi"
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
 # "Neovim" = "nvim --headless +'autocmd User PackerComplete quitall' +PackerSync"
 
