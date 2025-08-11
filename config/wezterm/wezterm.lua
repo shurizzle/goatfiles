@@ -400,7 +400,7 @@ package.preload["platform"] = package.preload["platform"] or function(...)
   for k, v in pairs({windows = "win", linux = "lin", macos = "mac", freebsd = "fbsd", dragonflybsd = "dfbsd", netbsd = "nbsd", openbsd = "obsd"}) do
     _is[k] = _is[v]
   end
-  _is["bsd"] = (_is.mac or _is.fbsd or _is.dfbsd or _is.nbsd or _is.obsd)
+  _is.bsd = (_is.mac or _is.fbsd or _is.dfbsd or _is.nbsd or _is.obsd)
   local function home()
     if _is.win then
       return (getenv("HOMEDRIVE") .. getenv("HOMEPATH"))
@@ -718,9 +718,7 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   end
   local function macos_keys()
     if is.macos then
-      return {{key = ",", mods = "CTRL", action = act.SendString("\27[44;5u")}, {key = ",", mods = "CTRL|SHIFT", action = act.SendString("\27[44;6u")}}
-    elseif {key = "v", mods = "CMD", action = act.PasteFrom("Clipboard")} then
-      return {key = "c", mods = "CMD", action = act.CopyTo("Clipboard")}
+      return {{key = ",", mods = "CTRL", action = act.SendString("\27[44;5u")}, {key = ",", mods = "CTRL|SHIFT", action = act.SendString("\27[44;6u")}, {key = "v", mods = "CMD", action = act.PasteFrom("Clipboard")}, {key = "c", mods = "CMD", action = act.CopyTo("Clipboard")}}
     else
       return {}
     end

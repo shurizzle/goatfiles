@@ -39,9 +39,9 @@
 (fn macos-keys []
   (if is.macos
       [{:key "," :mods :CTRL :action (act.SendString "\027[44;5u")}
-       {:key "," :mods :CTRL|SHIFT :action (act.SendString "\027[44;6u")}]
+       {:key "," :mods :CTRL|SHIFT :action (act.SendString "\027[44;6u")}
        {:key :v :mods :CMD :action (act.PasteFrom :Clipboard)}
-       {:key :c :mods :CMD :action (act.CopyTo :Clipboard)}
+       {:key :c :mods :CMD :action (act.CopyTo :Clipboard)}]
       []))
 
 (local single-left-down {:Down {:streak 1 :button :Left}})

@@ -13,15 +13,15 @@
 
 (local os (if (= :darwin os) :macos os))
 
-(var _is {:win (= os :windows)
-          :lin (= os :linux)
-          :mac (= os :macos)
-          :fbsd (= os :freebsd)
-          :dfbsd (= os :dragonflybsd)
-          :nbsd (= os :netbsd)
-          :obsd (= os :openbsd)
-          :termux (not (nil? (getenv :TERMUX_APP_PID)))
-          :unknown (= os :unknown)})
+(local _is {:win (= os :windows)
+            :lin (= os :linux)
+            :mac (= os :macos)
+            :fbsd (= os :freebsd)
+            :dfbsd (= os :dragonflybsd)
+            :nbsd (= os :netbsd)
+            :obsd (= os :openbsd)
+            :termux (not (nil? (getenv :TERMUX_APP_PID)))
+            :unknown (= os :unknown)})
 
 (each [k v (pairs {:windows :win
                    :linux :lin
@@ -32,7 +32,7 @@
                    :openbsd :obsd})]
   (tset _is k (. _is v)))
 
-(tset _is :bsd (or _is.mac _is.fbsd _is.dfbsd _is.nbsd _is.obsd))
+(set _is.bsd (or _is.mac _is.fbsd _is.dfbsd _is.nbsd _is.obsd))
 
 (fn home []
   (if _is.win
@@ -43,3 +43,4 @@
   (setmetatable {} {:__index #(. t $2) :__newindex #nil}))
 
 (ro {: os :is (ro _is) : arch : home})
+
