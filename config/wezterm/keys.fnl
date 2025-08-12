@@ -34,7 +34,10 @@
    {:key "<" :mods :LEADER :action (act.MoveTabRelative -1)}
    {:key ">" :mods :LEADER :action (act.MoveTabRelative 1)}
    {:key "<" :mods :LEADER|SHIFT :action (act.MoveTabRelative -1)}
-   {:key ">" :mods :LEADER|SHIFT :action (act.MoveTabRelative 1)}])
+   {:key ">" :mods :LEADER|SHIFT :action (act.MoveTabRelative 1)}
+   {:key "=" :mods :CTRL :action act.IncreaseFontSize}
+   {:key "-" :mods :CTRL :action act.DecreaseFontSize}
+   {:key :0 :mods :CTRL :action act.ResetFontSize}])
 
 (fn macos-keys []
   (if is.macos
