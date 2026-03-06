@@ -9,3 +9,4 @@ border=no
 osd-fractions
 keep-open=always
 keep-open-pause=no
+glsl-shaders=""

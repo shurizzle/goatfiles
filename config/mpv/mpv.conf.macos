@@ -6,3 +6,4 @@ ytdl-raw-options-add=format=bv*[height=720]+ba
 osd-status-msg=${playback-time/full} / ${duration} (${percent-pos}%)\nframe: ${estimated-frame-number} / ${estimated-frame-count}
 keep-open=always
 keep-open-pause=no
+glsl-shaders=""

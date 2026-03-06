@@ -32,5 +32,10 @@
     "git": "https://github.com/shurizzle/animeunity-downloader",
     "whitelist": "mpv/au%.lua",
     "dest": "~~/scripts"
+  },
+  {
+    "git": "https://github.com/bloc97/Anime4K",
+    "whitelist": "^glsl/restore/anime4k_restore_cnn_m%.glsl$|^glsl/upscale%+denoise/anime4k_upscale_denoise_cnn_x2_m%.glsl$",
+    "dest": "~~/shaders"
   }
 ]
