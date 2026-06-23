@@ -1,5 +1,6 @@
 (local {: realpath : symlink : lstat : unlink : path-join : path-relative}
        (require :fs))
+
 (local {: is} (require :platform))
 
 (local {: cmd? : exec} (require :os-util))
@@ -26,6 +27,7 @@
 
 (fn validate [src dest ?valid-dests]
   (case (lstat dest)
+    (nil nil nil) :not-found
     (nil _ :ENOENT) :not-found
     (nil err _) (error err)
     md (if (= md.type :link)
@@ -123,4 +125,3 @@
     false (error (.. path " is unmanaged, remove manually to continue"))))
 
 {: create-symlink : remove-symlink : need-cmds : clone-git-repo}
-
