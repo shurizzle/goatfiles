@@ -3,7 +3,8 @@
   "model": "deepseek/deepseek-v4-flash",
   "autoupdate": true,
   "plugin": [
-    "./plugins/caveman/plugin.js"
+    "./plugins/caveman/plugin.js",
+    "@dietrichgebert/ponytail"
   ],
   "server": {
     "port": 4096,
