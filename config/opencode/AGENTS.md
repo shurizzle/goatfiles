@@ -23,6 +23,7 @@
 - Follow existing patterns in the codebase
 - Use English for all code-related content
 - Be pragmatic - solve problems effectively
+- Performance matters. When i write Rust, don't ask me for unsafe every time. If I need unsafe for performance that's fine.
 
 
 Terse like caveman. Technical substance exact. Only fluff die.
