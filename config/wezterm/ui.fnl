@@ -26,7 +26,7 @@
 
 {:front_end (if (= :DomPerignon (wezterm.hostname)) :OpenGL :WebGpu)
  :window_decorations (if is.linux
-                         (if (os.getenv :WAYLAND_DISPLAY) :RESIZE :NONE)
+                         (if (os.getenv :WAYLAND_DISPLAY) :NONE :RESIZE)
                          :RESIZE)
  :window_padding {:left 0 :right 0 :top 0 :bottom 0}
  :use_ime true

@@ -38,32 +38,32 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   do local _ = {nil, nil} end
   local function _7_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_21_ = {}
-    local i_22_ = 0
+    local tbl_26_ = {}
+    local i_27_ = 0
     for k, _ in pairs(t) do
-      local val_23_ = k
-      if (nil ~= val_23_) then
-        i_22_ = (i_22_ + 1)
-        tbl_21_[i_22_] = val_23_
+      local val_28_ = k
+      if (nil ~= val_28_) then
+        i_27_ = (i_27_ + 1)
+        tbl_26_[i_27_] = val_28_
       else
       end
     end
-    return tbl_21_
+    return tbl_26_
   end
   _G.keys = _7_
   local function _9_(t)
     assert(__fnl_global__table_3f(t), ("Expected table, got " .. type(t)))
-    local tbl_21_ = {}
-    local i_22_ = 0
+    local tbl_26_ = {}
+    local i_27_ = 0
     for _, v in pairs(t) do
-      local val_23_ = v
-      if (nil ~= val_23_) then
-        i_22_ = (i_22_ + 1)
-        tbl_21_[i_22_] = val_23_
+      local val_28_ = v
+      if (nil ~= val_28_) then
+        i_27_ = (i_27_ + 1)
+        tbl_26_[i_27_] = val_28_
       else
       end
     end
-    return tbl_21_
+    return tbl_26_
   end
   _G.vals = _9_
   local function _11_(xs)
@@ -157,8 +157,8 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   end
   _G.trim = _28_
   local function copy_2a(x, cache)
-    local _29_ = type(x)
-    if (_29_ == "table") then
+    local case_29_ = type(x)
+    if (case_29_ == "table") then
       if cache[x] then
         return cache[x]
       else
@@ -170,10 +170,10 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
         end
         return setmetatable(copy, mt)
       end
-    elseif ((_29_ == "number") or (_29_ == "string") or (_29_ == "nil") or (_29_ == "boolean") or (_29_ == "function")) then
+    elseif ((case_29_ == "number") or (case_29_ == "string") or (case_29_ == "nil") or (case_29_ == "boolean") or (case_29_ == "function")) then
       return x
-    elseif (nil ~= _29_) then
-      local other = _29_
+    elseif (nil ~= case_29_) then
+      local other = case_29_
       return error(("Cannot deepcopy object of type " .. other))
     else
       return nil
@@ -341,12 +341,12 @@ package.preload["stdlib"] = package.preload["stdlib"] or function(...)
   _G["strip-suffix"] = _G.__fnl_global__strip_2dsuffix
   do local _ = {nil, nil} end
   local function _60_(path)
-    local _61_, _62_ = io.open(path, "r")
-    if ((_61_ == nil) and true) then
-      local _msg = _62_
+    local case_61_, case_62_ = io.open(path, "r")
+    if ((case_61_ == nil) and true) then
+      local _msg = case_62_
       return nil
-    elseif (nil ~= _61_) then
-      local f = _61_
+    elseif (nil ~= case_61_) then
+      local f = case_61_
       local content = f:read("*all")
       f:close()
       return content
@@ -375,8 +375,8 @@ require("stdlib")
 local wezterm = require("wezterm")
 package.preload["platform"] = package.preload["platform"] or function(...)
   local wezterm = require("wezterm")
-  local getenv = os["getenv"]
-  local arch, os = nil, nil
+  local getenv = os.getenv
+  local arch, os
   do
     local i1 = string.find(wezterm.target_triple, "-")
     local arch0 = string.sub(wezterm.target_triple, 1, (i1 - 1))
@@ -420,7 +420,7 @@ package.preload["platform"] = package.preload["platform"] or function(...)
   return ro({os = os0, is = ro(_is), arch = arch, home = home})
 end
 local _local_72_ = require("platform")
-local is = _local_72_["is"]
+local is = _local_72_.is
 local config
 if wezterm.config_builder then
   config = wezterm.config_builder()
@@ -467,11 +467,11 @@ __fnl_global__merge_21(config, (require("domains")))
 package.preload["font"] = package.preload["font"] or function(...)
   local wezterm = require("wezterm")
   local _local_80_ = require("platform")
-  local is = _local_80_["is"]
+  local is = _local_80_.is
   local hostname = wezterm.hostname()
   local harfbuzz_features = {"ss01", "ss02=0", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "calt", "dlig"}
   local _81_
-  if ("DomPerignon" == hostname) then
+  if (("DomPerignon" == hostname) or ("filottete" == hostname)) then
     _81_ = 9
   elseif is.mac then
     _81_ = 12
@@ -484,9 +484,9 @@ __fnl_global__merge_21(config, (require("font")))
 package.preload["ui"] = package.preload["ui"] or function(...)
   local wezterm = require("wezterm")
   local _local_83_ = require("platform")
-  local is = _local_83_["is"]
+  local is = _local_83_.is
   local _local_92_ = require("bell")
-  local update_bell = _local_92_["update"]
+  local update_bell = _local_92_.update
   local bell_3f = _local_92_["bell?"]
   local function tab_title(tab, max_width)
     local _93_
@@ -520,9 +520,9 @@ package.preload["ui"] = package.preload["ui"] or function(...)
   local _100_
   if is.linux then
     if os.getenv("WAYLAND_DISPLAY") then
-      _100_ = "RESIZE"
-    else
       _100_ = "NONE"
+    else
+      _100_ = "RESIZE"
     end
   else
     _100_ = "RESIZE"
@@ -578,16 +578,16 @@ end
 __fnl_global__merge_21(config, (require("ui")))
 package.preload["theme"] = package.preload["theme"] or function(...)
   local _let_120_ = require("themefn")
-  local dark = _let_120_["dark"]
-  local light = _let_120_["light"]
-  local colorscheme = _let_120_["colorscheme"]
+  local dark = _let_120_.dark
+  local light = _let_120_.light
+  local colorscheme = _let_120_.colorscheme
   local render_background = _let_120_["render-background"]
   return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
 end
 package.preload["themefn"] = package.preload["themefn"] or function(...)
   local wezterm = require("wezterm")
   local _local_103_ = require("platform")
-  local home = _local_103_["home"]
+  local home = _local_103_.home
   local black = "#282828"
   local white = "#eeeeee"
   local ansi = {"#282828", "#c8213d", "#169C51", "#DAAF19", "#2F90FE", "#C14ABE", "#48C6DB", "#CBCBCB"}
@@ -680,12 +680,12 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local _117_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
-      if (_117_ == "kamui") then
+      local case_117_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
+      if (case_117_ == "kamui") then
         state = "sailor"
-      elseif (_117_ == "sailor") then
+      elseif (case_117_ == "sailor") then
         state = "none"
-      elseif (_117_ == "none") then
+      elseif (case_117_ == "none") then
         state = "kamui"
       else
         state = nil
@@ -712,7 +712,7 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
   local _local_121_ = require("platform")
-  local is = _local_121_["is"]
+  local is = _local_121_.is
   local function common_keys()
     return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "b", mods = "LEADER", action = wezterm.action_callback(require("themefn")["rotate-background"])}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard")}, {key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}, {key = "=", mods = "CTRL", action = act.IncreaseFontSize}, {key = "-", mods = "CTRL", action = act.DecreaseFontSize}, {key = "0", mods = "CTRL", action = act.ResetFontSize}}
   end
