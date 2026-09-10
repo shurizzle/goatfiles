@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "deepseek/deepseek-v4-flash",
+  "model": "deepseek/deepseek-v4.1-flash",
   "autoupdate": true,
   "plugin": [
     "./plugins/caveman/plugin.js",
@@ -45,7 +45,15 @@
     },
     "deepseek": {
       "models": {
+        "deepseek-v4.1-flash": {
+          "id": "deepseek-flash",
+          "name": "DeepSeek V4.1 Flash",
+          "interleaved": {
+            "field": "reasoning_content"
+          }
+        },
         "deepseek-v4-flash": {
+          "id": "deepseek-v4-flash",
           "interleaved": {
             "field": "reasoning_content"
           }
@@ -176,15 +184,15 @@
   "lsp": true,
   "agent": {
     "build": {
-      "model": "deepseek/deepseek-v4-flash",
+      "model": "deepseek/deepseek-v4.1-flash",
       "temperature": 0.2,
     },
     "plan": {
-      "model": "deepseek/deepseek-v4-flash",
+      "model": "deepseek/deepseek-v4.1-flash",
       "temperature": 0,
     },
     "discovery": {
-      "model": "deepseek/deepseek-v4-flash",
+      "model": "deepseek/deepseek-v4.1-flash",
       "tools": {
         "websearch": true,
         "read": true,
