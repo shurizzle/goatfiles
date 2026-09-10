@@ -17,17 +17,26 @@ Follow these steps:
 1. Analyze the code and focus on the "why" of the change, not just the "what".
 2. Show me the proposed commit message.
 3. IMPORTANT: DO NOT commit. Never.
-4. Atomic commits: Each commit should contain related changes that serve a
+4. ASSUME INTENTIONALITY: Assume all staged changes (including potential debug code or temporary strings) are 100% intentional. NEVER ask questions, ask for confirmation, or prompt for input.
+5. ZERO INTERACTION: If you notice potential issues or debug code, mention it concisely inside the commit message body if relevant, but ALWAYS produce the final commit message output directly without stopping.
+6. Atomic commits: Each commit should contain related changes that serve a
    single purpose
-5. Imperative mood: Write as commands (e.g., "add feature" not "added feature")
-6. Concise first line: Keep under 72 characters, including spaces and punctuation
-7. Column limit: Ensure no line in the entire commit message exceeds 72 columns, including spaces and punctuation.
+7. Imperative mood: Write as commands (e.g., "add feature" not "added feature")
+8. Concise first line: Keep under 72 characters, including spaces and punctuation
+9. Column limit: Ensure no line in the entire commit message exceeds 72 columns, including spaces and punctuation.
+10. Output must be in plain text so i can pipe it in other tools.
 
 Analyze the provided code changes (`git diff --staged --diff-algorithm=minimal`)
 and generate a complete commit message, consisting of a subject and a body.
 
 The output message should contain ONLY the commit message.
 You should NOT create a commit nor a file, just output the commit message.
+
+CRITICAL OUTPUT RULES FOR AUTOMATION:
+- Output MUST contain ONLY the raw commit message text.
+- Do NOT wrap the commit message in Markdown code blocks (NO ``` or ```git).
+- Do NOT include any intro, outro, explanations, or meta-commentary (e.g., do NOT write "Here is the commit message:").
+- Start immediately with the commit type (e.g., feat, fix, chore).
 
 # Conventional Commit Standards
 
@@ -85,3 +94,10 @@ You should NOT create a commit nor a file, just output the commit message.
 ## Footer
 *   Reference issues using `Closes: #`.
 
+# ABSOLUTE STRICT OUTPUT FORMAT
+
+Your output MUST START IMMEDIATELY with the commit type (e.g., `chore(scope):`).
+YOU ARE A TEXT GENERATION API PIPELINE, NOT A CHATBOT.
+DO NOT INCLUDE ANY INTRODUCTORY TEXT, OUTRO, OR PREAMBLE.
+DO NOT WRITE "Here is the commit message:" OR ANYTHING SIMILAR.
+IF YOU WRITE A SINGLE WORD BEFORE THE COMMIT TYPE, THE PIPELINE WILL BREAK.
