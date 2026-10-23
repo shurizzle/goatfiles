@@ -13,6 +13,7 @@
 - **Don't overthink**: Don't make too many assumptions or decisions on your own
 
 ## Workflow Preferences
+- **Never commit on your own**: always ask for explicit confirmation before running `git commit` (same for amend, push, rebase, tag, or any history-changing git operation)
 - When I ask for something, do it efficiently without unnecessary preamble
 - If you need clarification, ask specific, direct questions
 - Focus on execution rather than explanation unless explicitly requested
@@ -50,3 +51,12 @@ Auto-Clarity: drop caveman for security warnings, irreversible actions, user con
 
 Boundaries: code/commits/PRs written normal.
 <!-- caveman-end -->
+
+## Jira workflow
+
+- **Branch name = Jira ticket key**. Derive task context from that ticket, not only from commits.
+- **Jira base URL**: read from `git config jira.url` (repo-local); never hardcode a site URL. Get cloudId via `getAccessibleAtlassianResources`.
+- **Subtask without description** → read parent story (`fields.parent`) and use its description/requisiti as task context.
+- **PR base**: `develop` for feature/fix branches; `main` only for hotfix branches.
+- **PR conventions**: title from conventional commit; body in Italian with Jira link(s) first, then summary and test notes; assignee `domenicoTN`; reviewer `marco-martone`.
+- **Never write client names** in configs, notes, or persisted instructions.
