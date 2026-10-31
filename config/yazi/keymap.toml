@@ -10,6 +10,6 @@ prepend_keymap = [
 
   { on = ["g", "V"], run = "cd ~/Videos", desc = "Go to ~/Videos" },
 
-  # New tmux window in the CWD when inside tmux, otherwise drop to $SHELL
-  { on = "<C-s>", for = "unix", run = 'shell --block -- if [ -n "$TMUX" ]; then tmux new-window -c "$PWD" -e YAZI_ID="$YAZI_ID" -e YAZI_LEVEL="$YAZI_LEVEL"; else "$SHELL"; fi', desc = "Open shell here" },
+  # New tmux window (priority) or WezTerm tab in the CWD, otherwise drop to $SHELL
+  { on = "<C-s>", for = "unix", run = 'shell --block -- if [ -n "$TMUX" ]; then tmux new-window -c "$PWD" -e YAZI_ID="$YAZI_ID" -e YAZI_LEVEL="$YAZI_LEVEL"; elif [ -n "$WEZTERM_PANE" ]; then YAZI_ID="$YAZI_ID" YAZI_LEVEL="$YAZI_LEVEL" wezterm cli spawn --cwd "$PWD"; else "$SHELL"; fi', desc = "Open shell here" },
 ]
