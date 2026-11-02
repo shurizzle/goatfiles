@@ -577,11 +577,11 @@ package.preload["bell"] = package.preload["bell"] or function(...)
 end
 __fnl_global__merge_21(config, (require("ui")))
 package.preload["theme"] = package.preload["theme"] or function(...)
-  local _let_120_ = require("themefn")
-  local dark = _let_120_.dark
-  local light = _let_120_.light
-  local colorscheme = _let_120_.colorscheme
-  local render_background = _let_120_["render-background"]
+  local _let_122_ = require("themefn")
+  local dark = _let_122_.dark
+  local light = _let_122_.light
+  local colorscheme = _let_122_.colorscheme
+  local render_background = _let_122_["render-background"]
   return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
 end
 package.preload["themefn"] = package.preload["themefn"] or function(...)
@@ -602,52 +602,64 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
       return "Dark"
     end
   end
-  local function colorscheme(_3fappearance)
-    if (_3fappearance or get_appearance()):match("Light") then
-      return "BlueSky Light"
+  local function scheme_file_3f(name)
+    local f = io.open((wezterm.config_dir .. "/colors" .. "/" .. name .. ".toml"))
+    if f then
+      f:close()
     else
-      return "BlueSky Dark"
+    end
+    return (nil ~= f)
+  end
+  local function colorscheme(_3fappearance)
+    if scheme_file_3f("Noctalia") then
+      return "Noctalia"
+    else
+      if (_3fappearance or get_appearance()):match("Light") then
+        return "BlueSky Light"
+      else
+        return "BlueSky Dark"
+      end
     end
   end
   local function ryukomatoi_sailor(light_3f)
-    local _106_
-    if light_3f then
-      _106_ = 0.5
-    else
-      _106_ = 0.1
-    end
-    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _106_}
-  end
-  local function ryukomatoi_kamui(light_3f)
     local _108_
     if light_3f then
       _108_ = 0.5
     else
       _108_ = 0.1
     end
-    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _108_}
+    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _108_}
+  end
+  local function ryukomatoi_kamui(light_3f)
+    local _110_
+    if light_3f then
+      _110_ = 0.5
+    else
+      _110_ = 0.1
+    end
+    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _110_}
   end
   local function base_background(Color)
     return {source = {Color = Color}, width = "100%", height = "100%"}
   end
   local render_state
   if ("DomPerignon" == wezterm.hostname()) then
-    local function _110_()
+    local function _112_()
       return nil
     end
-    render_state = _110_
+    render_state = _112_
   else
-    local function _111_(light_3f, state)
+    local function _113_(light_3f, state)
       local function decorate(f)
         local base
-        local function _112_()
+        local function _114_()
           if light_3f then
             return white
           else
             return black
           end
         end
-        base = {base_background(_112_())}
+        base = {base_background(_114_())}
         if f then
           table.insert(base, f(light_3f))
         else
@@ -663,7 +675,7 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
         return decorate()
       end
     end
-    render_state = _111_
+    render_state = _113_
   end
   local _2adefault_2a = "none"
   local function render_background(_3fappearance, state)
@@ -680,12 +692,12 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local case_117_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
-      if (case_117_ == "kamui") then
+      local case_119_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
+      if (case_119_ == "kamui") then
         state = "sailor"
-      elseif (case_117_ == "sailor") then
+      elseif (case_119_ == "sailor") then
         state = "none"
-      elseif (case_117_ == "none") then
+      elseif (case_119_ == "none") then
         state = "kamui"
       else
         state = nil
@@ -697,22 +709,22 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     window:set_config_overrides(overrides)
     return nil
   end
-  local function _119_(window, _)
+  local function _121_(window, _)
     local overrides = (window:get_config_overrides() or {})
     local appearance = window:get_appearance()
     overrides.color_scheme = colorscheme(appearance)
     overrides.background = render_background(appearance, (wezterm.GLOBAL.backgrounds or {})[tostring(window:window_id())])
     return window:set_config_overrides(overrides)
   end
-  wezterm.on("window-config-reloaded", _119_)
+  wezterm.on("window-config-reloaded", _121_)
   return {["rotate-background"] = rotate_background, ["render-background"] = render_background, colorscheme = colorscheme, dark = dark, light = light}
 end
 __fnl_global__merge_21(config, (require("theme")))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_121_ = require("platform")
-  local is = _local_121_.is
+  local _local_123_ = require("platform")
+  local is = _local_123_.is
   local function common_keys()
     return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "b", mods = "LEADER", action = wezterm.action_callback(require("themefn")["rotate-background"])}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard")}, {key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}, {key = "=", mods = "CTRL", action = act.IncreaseFontSize}, {key = "-", mods = "CTRL", action = act.DecreaseFontSize}, {key = "0", mods = "CTRL", action = act.ResetFontSize}}
   end
@@ -738,4 +750,5 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
 __fnl_global__merge_21(config, (require("keys")))
+config.color_scheme = "Noctalia"
 return config

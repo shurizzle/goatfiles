@@ -45,10 +45,17 @@
   (if wezterm.gui
       (wezterm.gui.get_appearance) :Dark))
 
+(fn scheme-file? [name]
+  (let [f (io.open (.. wezterm.config_dir :/colors :/ name :.toml))]
+    (when f (f:close))
+    (not= nil f)))
+
 (fn colorscheme [?appearance]
-  (if (: (or ?appearance (get-appearance)) :match :Light)
-      "BlueSky Light"
-      "BlueSky Dark"))
+  (if (scheme-file? :Noctalia)
+      :Noctalia
+      (if (: (or ?appearance (get-appearance)) :match :Light)
+          "BlueSky Light"
+          "BlueSky Dark")))
 
 (fn ryukomatoi-sailor [light?]
   {:source {:File (.. (home)
