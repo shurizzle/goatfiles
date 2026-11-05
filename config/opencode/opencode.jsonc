@@ -3,6 +3,7 @@
   "model": "deepseek/deepseek-flash",
   "plugins": [
     "./plugins/caveman",
+    "./plugins/rtk",
     "@dietrichgebert/ponytail"
   ],
   "lsp": true,
