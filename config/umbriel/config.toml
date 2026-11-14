@@ -269,7 +269,7 @@ hide_when_typing = false                        # Keep visible while typing
 hide_timeout_ms = 0                             # Idle hide timeout, 0 disables; maximum is 3600000
 
 [input.focus]
-follows_mouse = true                            # Focus the pointer target after pointer motion
+follows_mouse = "sloppy"                        # Focus the pointer target after pointer motion
 # Refuse hover focus when revealing a window would scroll farther than this
 # many viewport widths. Omit the key for no limit.
 # follows_mouse_max_scroll = 0.5
@@ -524,6 +524,14 @@ match.title = "^(Picture-in-Picture|Picture in picture)$"
 default_floating = true
 default_maximize = false
 default_position = { x = 20, y = 20, anchor = "bottom_right" }
+
+# Google Meet Document PiP: only the title differs from the main window,
+# which always ends with " - Chromium".
+[[window_rule]]
+match.app_id = "^chromium$"
+match.title = "^Meet - [a-z]{3}-[a-z]{4}-[a-z]{3}$"
+default_floating = true
+default_pinned = true
 
 # Keep Steam notification toasts in the bottom-right corner without stealing
 # focus, and pin them so workspace switches do not hide them.
