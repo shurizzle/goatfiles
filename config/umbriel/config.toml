@@ -311,7 +311,7 @@ follows_mouse = true                            # Focus the pointer target after
 [keybinds]
 
 # Applications and session
-"Mod+Return" = "spawn wezterm start"            # Terminal (labwc default)
+"Mod+Return" = "spawn wezterm start --always-new-process"            # Terminal (labwc default)
 "Mod+Space" = "spawn noctalia msg panel-toggle launcher"
 "Mod+Q" = "window-close"
 "Mod+Shift+Q" = "session-quit"                  # Quit session (jay/labwc W-S-Q)
