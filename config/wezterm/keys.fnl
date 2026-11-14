@@ -49,6 +49,29 @@
                                                            new-pane))
                                      (wezterm.log_error err)))))))
 
+(local set-default-domain
+       (wezterm.action_callback (fn [_ _ id]
+                                  (when id
+                                    (wezterm.mux.set_default_domain (wezterm.mux.get_domain id))))))
+
+;; Pick the mux default domain (used by DefaultDomain spawns) for this GUI.
+(local choose-default-domain
+       (wezterm.action_callback (fn [win pane]
+                                  (let [current (: (wezterm.mux.get_domain)
+                                                   :name)]
+                                    (win:perform_action (act.InputSelector {:title "Default domain"
+                                                                            :fuzzy true
+                                                                            :action set-default-domain
+                                                                            :choices (icollect [_ d (ipairs (wezterm.mux.all_domains))]
+                                                                                       (when (d:is_spawnable)
+                                                                                         {:id (d:name)
+                                                                                          :label (if (= (d:name)
+                                                                                                        current)
+                                                                                                     (.. (d:name)
+                                                                                                         " *")
+                                                                                                     (d:name))}))})
+                                                        pane)))))
+
 (fn common-keys []
   [{:key :q :mods :LEADER :action (act.CloseCurrentPane {:confirm true})}
    {:key :c :mods :LEADER :action (spawn-tab-right)}
@@ -74,6 +97,7 @@
    {:key :s
     :mods :LEADER
     :action (act.ShowLauncherArgs {:flags :FUZZY|WORKSPACES})}
+   {:key :d :mods :LEADER :action choose-default-domain}
    {:key :a :mods :LEADER|CTRL :action (act.SendString "\001")}
    {:key ":" :mods :SHIFT|LEADER :action act.ShowDebugOverlay}
    {:key :v :mods :LEADER :action act.ActivateCopyMode}
