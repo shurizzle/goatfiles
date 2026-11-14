@@ -71,6 +71,9 @@
     :mods :LEADER
     :action (act.SplitVertical {:domain :CurrentPaneDomain})}
    {:key " " :mods :LEADER :action act.ShowLauncher}
+   {:key :s
+    :mods :LEADER
+    :action (act.ShowLauncherArgs {:flags :FUZZY|WORKSPACES})}
    {:key :a :mods :LEADER|CTRL :action (act.SendString "\001")}
    {:key ":" :mods :SHIFT|LEADER :action act.ShowDebugOverlay}
    {:key :v :mods :LEADER :action act.ActivateCopyMode}
