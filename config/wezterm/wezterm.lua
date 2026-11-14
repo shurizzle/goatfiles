@@ -503,31 +503,35 @@ package.preload["ui"] = package.preload["ui"] or function(...)
   end
   wezterm.on("format-tab-title", _95_)
   local gh_match = {regex = "[\"]?([\\w\\d]{2}[-\\w\\d]+)(/){1}([-\\w\\d\\.]+)[\"]?", format = "https://www.github.com/$1/$3"}
-  if is.mac then
-    local function _96_(win)
-      local data = wezterm.strftime("%d/%m/%Y %H:%M:%S")
-      return win:set_right_status(wezterm.format({{Foreground = {AnsiColor = "White"}}, {Text = data}}))
+  local function _96_(win, pane)
+    local data
+    local _97_
+    if is.mac then
+      _97_ = (" " .. wezterm.strftime("%d/%m/%Y %H:%M:%S"))
+    else
+      _97_ = ""
     end
-    wezterm.on("update-right-status", _96_)
-  else
+    data = (pane:get_domain_name() .. _97_)
+    return win:set_right_status(wezterm.format({{Foreground = {AnsiColor = "White"}}, {Text = data}}))
   end
-  local _98_
+  wezterm.on("update-status", _96_)
+  local _99_
   if ("DomPerignon" == wezterm.hostname()) then
-    _98_ = "OpenGL"
+    _99_ = "OpenGL"
   else
-    _98_ = "WebGpu"
+    _99_ = "WebGpu"
   end
-  local _100_
+  local _101_
   if is.linux then
     if os.getenv("WAYLAND_DISPLAY") then
-      _100_ = "NONE"
+      _101_ = "NONE"
     else
-      _100_ = "RESIZE"
+      _101_ = "RESIZE"
     end
   else
-    _100_ = "RESIZE"
+    _101_ = "RESIZE"
   end
-  return {front_end = _98_, window_decorations = _100_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, switch_to_last_active_tab_when_closing_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  return {front_end = _99_, window_decorations = _101_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, switch_to_last_active_tab_when_closing_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
@@ -577,17 +581,17 @@ package.preload["bell"] = package.preload["bell"] or function(...)
 end
 __fnl_global__merge_21(config, (require("ui")))
 package.preload["theme"] = package.preload["theme"] or function(...)
-  local _let_122_ = require("themefn")
-  local dark = _let_122_.dark
-  local light = _let_122_.light
-  local colorscheme = _let_122_.colorscheme
-  local render_background = _let_122_["render-background"]
+  local _let_123_ = require("themefn")
+  local dark = _let_123_.dark
+  local light = _let_123_.light
+  local colorscheme = _let_123_.colorscheme
+  local render_background = _let_123_["render-background"]
   return {color_schemes = {["BlueSky Dark"] = dark, ["BlueSky Light"] = light}, color_scheme = colorscheme(), background = render_background()}
 end
 package.preload["themefn"] = package.preload["themefn"] or function(...)
   local wezterm = require("wezterm")
-  local _local_103_ = require("platform")
-  local home = _local_103_.home
+  local _local_104_ = require("platform")
+  local home = _local_104_.home
   local black = "#282828"
   local white = "#eeeeee"
   local ansi = {"#282828", "#c8213d", "#169C51", "#DAAF19", "#2F90FE", "#C14ABE", "#48C6DB", "#CBCBCB"}
@@ -622,44 +626,44 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     end
   end
   local function ryukomatoi_sailor(light_3f)
-    local _108_
+    local _109_
     if light_3f then
-      _108_ = 0.5
+      _109_ = 0.5
     else
-      _108_ = 0.1
+      _109_ = 0.1
     end
-    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _108_}
+    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-manga-anime-mako-mankanshoku-png.png")}, width = ((1024 / 5) .. "px"), height = ((1078 / 5) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _109_}
   end
   local function ryukomatoi_kamui(light_3f)
-    local _110_
+    local _111_
     if light_3f then
-      _110_ = 0.5
+      _111_ = 0.5
     else
-      _110_ = 0.1
+      _111_ = 0.1
     end
-    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _110_}
+    return {source = {File = (home() .. "/Pictures/imgbin_ryuko-matoi-senketsu-desktop-png.png")}, width = ((8000 / 40) .. "px"), height = ((7646 / 40) .. "px"), repeat_x = "NoRepeat", repeat_y = "NoRepeat", vertical_align = "Bottom", horizontal_align = "Right", opacity = _111_}
   end
   local function base_background(Color)
     return {source = {Color = Color}, width = "100%", height = "100%"}
   end
   local render_state
   if ("DomPerignon" == wezterm.hostname()) then
-    local function _112_()
+    local function _113_()
       return nil
     end
-    render_state = _112_
+    render_state = _113_
   else
-    local function _113_(light_3f, state)
+    local function _114_(light_3f, state)
       local function decorate(f)
         local base
-        local function _114_()
+        local function _115_()
           if light_3f then
             return white
           else
             return black
           end
         end
-        base = {base_background(_114_())}
+        base = {base_background(_115_())}
         if f then
           table.insert(base, f(light_3f))
         else
@@ -675,7 +679,7 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
         return decorate()
       end
     end
-    render_state = _113_
+    render_state = _114_
   end
   local _2adefault_2a = "none"
   local function render_background(_3fappearance, state)
@@ -692,12 +696,12 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     local id = tostring(window:window_id())
     local state
     do
-      local case_119_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
-      if (case_119_ == "kamui") then
+      local case_120_ = (wezterm.GLOBAL.backgrounds[id] or _2adefault_2a)
+      if (case_120_ == "kamui") then
         state = "sailor"
-      elseif (case_119_ == "sailor") then
+      elseif (case_120_ == "sailor") then
         state = "none"
-      elseif (case_119_ == "none") then
+      elseif (case_120_ == "none") then
         state = "kamui"
       else
         state = nil
@@ -709,30 +713,30 @@ package.preload["themefn"] = package.preload["themefn"] or function(...)
     window:set_config_overrides(overrides)
     return nil
   end
-  local function _121_(window, _)
+  local function _122_(window, _)
     local overrides = (window:get_config_overrides() or {})
     local appearance = window:get_appearance()
     overrides.color_scheme = colorscheme(appearance)
     overrides.background = render_background(appearance, (wezterm.GLOBAL.backgrounds or {})[tostring(window:window_id())])
     return window:set_config_overrides(overrides)
   end
-  wezterm.on("window-config-reloaded", _121_)
+  wezterm.on("window-config-reloaded", _122_)
   return {["rotate-background"] = rotate_background, ["render-background"] = render_background, colorscheme = colorscheme, dark = dark, light = light}
 end
 __fnl_global__merge_21(config, (require("theme")))
 package.preload["keys"] = package.preload["keys"] or function(...)
   local wezterm = require("wezterm")
   local act = wezterm.action
-  local _local_123_ = require("platform")
-  local is = _local_123_.is
+  local _local_124_ = require("platform")
+  local is = _local_124_.is
   local function readable_3f(path)
-    local case_124_ = io.open(path)
-    if (nil ~= case_124_) then
-      local f = case_124_
+    local case_125_ = io.open(path)
+    if (nil ~= case_125_) then
+      local f = case_125_
       f:close()
       return true
     else
-      local _ = case_124_
+      local _ = case_125_
       return false
     end
   end
@@ -752,7 +756,7 @@ package.preload["keys"] = package.preload["keys"] or function(...)
     else
       candidates = {...}
     end
-    local function _128_(win, pane)
+    local function _129_(win, pane)
       local mux_win = win:mux_window()
       local idx
       do
@@ -773,13 +777,13 @@ package.preload["keys"] = package.preload["keys"] or function(...)
         if tab then break end
         if (__fnl_global__nil_3f(opts.args) or in_path_3f(opts.args[1])) then
           opts.domain = domain
-          local case_130_, case_131_, case_132_ = pcall(mux_win.spawn_tab, mux_win, opts)
-          if ((case_130_ == true) and (nil ~= case_131_) and (nil ~= case_132_)) then
-            local t = case_131_
-            local p = case_132_
+          local case_131_, case_132_, case_133_ = pcall(mux_win.spawn_tab, mux_win, opts)
+          if ((case_131_ == true) and (nil ~= case_132_) and (nil ~= case_133_)) then
+            local t = case_132_
+            local p = case_133_
             tab, new_pane = t, p
-          elseif ((case_130_ == false) and (nil ~= case_131_)) then
-            local e = case_131_
+          elseif ((case_131_ == false) and (nil ~= case_132_)) then
+            local e = case_132_
             err = e
           else
           end
@@ -793,34 +797,34 @@ package.preload["keys"] = package.preload["keys"] or function(...)
         return wezterm.log_error(err)
       end
     end
-    return wezterm.action_callback(_128_)
+    return wezterm.action_callback(_129_)
   end
   local set_default_domain
-  local function _136_(_, _0, id)
+  local function _137_(_, _0, id)
     if id then
       return wezterm.mux.set_default_domain(wezterm.mux.get_domain(id))
     else
       return nil
     end
   end
-  set_default_domain = wezterm.action_callback(_136_)
+  set_default_domain = wezterm.action_callback(_137_)
   local choose_default_domain
-  local function _138_(win, pane)
+  local function _139_(win, pane)
     local current = wezterm.mux.get_domain():name()
-    local _139_
+    local _140_
     do
       local tbl_26_ = {}
       local i_27_ = 0
       for _, d in ipairs(wezterm.mux.all_domains()) do
         local val_28_
         if d:is_spawnable() then
-          local _140_
+          local _141_
           if (d:name() == current) then
-            _140_ = (d:name() .. " *")
+            _141_ = (d:name() .. " *")
           else
-            _140_ = d:name()
+            _141_ = d:name()
           end
-          val_28_ = {id = d:name(), label = _140_}
+          val_28_ = {id = d:name(), label = _141_}
         else
           val_28_ = nil
         end
@@ -830,13 +834,13 @@ package.preload["keys"] = package.preload["keys"] or function(...)
         else
         end
       end
-      _139_ = tbl_26_
+      _140_ = tbl_26_
     end
-    return win:perform_action(act.InputSelector({title = "Default domain", fuzzy = true, action = set_default_domain, choices = _139_}), pane)
+    return win:perform_action(act.InputSelector({title = "Default domain", fuzzy = true, action = set_default_domain, choices = _140_}), pane)
   end
-  choose_default_domain = wezterm.action_callback(_138_)
+  choose_default_domain = wezterm.action_callback(_139_)
   local function common_keys()
-    local function _144_()
+    local function _145_()
       local tbl_26_ = {}
       local i_27_ = 0
       for _, bin in ipairs({"btm", "htop", "top"}) do
@@ -849,7 +853,7 @@ package.preload["keys"] = package.preload["keys"] or function(...)
       end
       return tbl_26_
     end
-    local function _146_()
+    local function _147_()
       local tbl_26_ = {}
       local i_27_ = 0
       for _, bin in ipairs({"claude", "opencode"}) do
@@ -862,7 +866,7 @@ package.preload["keys"] = package.preload["keys"] or function(...)
       end
       return tbl_26_
     end
-    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = spawn_tab_right()}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "b", mods = "LEADER", action = wezterm.action_callback(require("themefn")["rotate-background"])}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "s", mods = "LEADER", action = act.ShowLauncherArgs({flags = "FUZZY|WORKSPACES"})}, {key = "d", mods = "LEADER", action = choose_default_domain}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard")}, {key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}, {key = "=", mods = "CTRL", action = act.IncreaseFontSize}, {key = "-", mods = "CTRL", action = act.DecreaseFontSize}, {key = "0", mods = "CTRL", action = act.ResetFontSize}, {key = "t", mods = "LEADER", action = spawn_tab_right(unpack(_144_()))}, {key = "i", mods = "LEADER", action = spawn_tab_right(unpack(_146_()))}}
+    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = spawn_tab_right()}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "b", mods = "LEADER", action = wezterm.action_callback(require("themefn")["rotate-background"])}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "s", mods = "LEADER", action = act.ShowLauncherArgs({flags = "FUZZY|WORKSPACES"})}, {key = "d", mods = "LEADER", action = choose_default_domain}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard")}, {key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}, {key = "=", mods = "CTRL", action = act.IncreaseFontSize}, {key = "-", mods = "CTRL", action = act.DecreaseFontSize}, {key = "0", mods = "CTRL", action = act.ResetFontSize}, {key = "t", mods = "LEADER", action = spawn_tab_right(unpack(_145_()))}, {key = "i", mods = "LEADER", action = spawn_tab_right(unpack(_147_()))}}
   end
   local function macos_keys()
     if is.macos then
