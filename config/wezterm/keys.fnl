@@ -88,6 +88,11 @@
    {:key :t
     :mods :LEADER
     :action (spawn-tab-right (unpack (icollect [_ bin (ipairs [:btm :htop :top])]
+                                       {:args [bin] :cwd wezterm.home_dir})))}
+   {:key :i
+    :mods :LEADER
+    :action (spawn-tab-right (unpack (icollect [_ bin (ipairs [:claude
+                                                               :opencode])]
                                        {:args [bin] :cwd wezterm.home_dir})))}])
 
 (fn macos-keys []
