@@ -527,7 +527,7 @@ package.preload["ui"] = package.preload["ui"] or function(...)
   else
     _100_ = "RESIZE"
   end
-  return {front_end = _98_, window_decorations = _100_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
+  return {front_end = _98_, window_decorations = _100_, window_padding = {left = 0, right = 0, top = 0, bottom = 0}, use_ime = true, ime_preedit_rendering = "System", enable_tab_bar = true, hide_tab_bar_if_only_one_tab = true, switch_to_last_active_tab_when_closing_tab = true, tab_bar_at_bottom = true, audible_bell = "SystemBeep", enable_wayland = true, default_cursor_style = "SteadyBar", hyperlink_rules = __fnl_global__merge_21(wezterm.default_hyperlink_rules(), {gh_match}), show_new_tab_button_in_tab_bar = false, show_tab_index_in_tab_bar = false, use_fancy_tab_bar = false}
 end
 package.preload["bell"] = package.preload["bell"] or function(...)
   local wezterm = require("wezterm")
@@ -725,8 +725,91 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   local act = wezterm.action
   local _local_123_ = require("platform")
   local is = _local_123_.is
+  local function readable_3f(path)
+    local case_124_ = io.open(path)
+    if (nil ~= case_124_) then
+      local f = case_124_
+      f:close()
+      return true
+    else
+      local _ = case_124_
+      return false
+    end
+  end
+  local function in_path_3f(bin)
+    if not is.windows then
+      return wezterm.run_child_process({"sh", "-c", "command -v \"$1\"", "sh", bin})
+    elseif bin:find("[/\\]") then
+      return readable_3f(bin)
+    else
+      return wezterm.run_child_process({"where.exe", "/Q", bin})
+    end
+  end
+  local function spawn_tab_right(...)
+    local candidates
+    if (0 == select("#", ...)) then
+      candidates = {{}}
+    else
+      candidates = {...}
+    end
+    local function _128_(win, pane)
+      local mux_win = win:mux_window()
+      local idx
+      do
+        local i = 0
+        for _, t in ipairs(mux_win:tabs_with_info()) do
+          if t.is_active then
+            i = t.index
+          else
+            i = i
+          end
+        end
+        idx = i
+      end
+      local domain = {DomainName = pane:get_domain_name()}
+      local tab, new_pane, err = nil
+      err = "no spawn candidate found in PATH"
+      for _, opts in ipairs(candidates) do
+        if tab then break end
+        if (__fnl_global__nil_3f(opts.args) or in_path_3f(opts.args[1])) then
+          opts.domain = domain
+          local case_130_, case_131_, case_132_ = pcall(mux_win.spawn_tab, mux_win, opts)
+          if ((case_130_ == true) and (nil ~= case_131_) and (nil ~= case_132_)) then
+            local t = case_131_
+            local p = case_132_
+            tab, new_pane = t, p
+          elseif ((case_130_ == false) and (nil ~= case_131_)) then
+            local e = case_131_
+            err = e
+          else
+          end
+        else
+        end
+      end
+      if tab then
+        tab:activate()
+        return win:perform_action(act.MoveTab((idx + 1)), new_pane)
+      else
+        return wezterm.log_error(err)
+      end
+    end
+    return wezterm.action_callback(_128_)
+  end
   local function common_keys()
-    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain")}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "b", mods = "LEADER", action = wezterm.action_callback(require("themefn")["rotate-background"])}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard")}, {key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}, {key = "=", mods = "CTRL", action = act.IncreaseFontSize}, {key = "-", mods = "CTRL", action = act.DecreaseFontSize}, {key = "0", mods = "CTRL", action = act.ResetFontSize}}
+    local function _136_()
+      local tbl_26_ = {}
+      local i_27_ = 0
+      for _, bin in ipairs({"btm", "htop", "top"}) do
+        local val_28_ = {args = {bin}, cwd = wezterm.home_dir}
+        if (nil ~= val_28_) then
+          i_27_ = (i_27_ + 1)
+          tbl_26_[i_27_] = val_28_
+        else
+        end
+      end
+      return tbl_26_
+    end
+    return {{key = "q", mods = "LEADER", action = act.CloseCurrentPane({confirm = true})}, {key = "c", mods = "LEADER", action = spawn_tab_right()}, {key = "h", mods = "CTRL|LEADER", action = act.ActivateTabRelative(-1)}, {key = "l", mods = "CTRL|LEADER", action = act.ActivateTabRelative(1)}, {key = "h", mods = "LEADER", action = act.ActivatePaneDirection("Left")}, {key = "j", mods = "LEADER", action = act.ActivatePaneDirection("Down")}, {key = "k", mods = "LEADER", action = act.ActivatePaneDirection("Up")}, {key = "l", mods = "LEADER", action = act.ActivatePaneDirection("Right")}, {key = "b", mods = "LEADER", action = wezterm.action_callback(require("themefn")["rotate-background"])}, {key = "|", mods = "LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "|", mods = "SHIFT|LEADER", action = act.SplitHorizontal({domain = "CurrentPaneDomain"})}, {key = "-", mods = "LEADER", action = act.SplitVertical({domain = "CurrentPaneDomain"})}, {key = " ", mods = "LEADER", action = act.ShowLauncher}, {key = "a", mods = "LEADER|CTRL", action = act.SendString("\1")}, {key = ":", mods = "SHIFT|LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "LEADER", action = act.ActivateCopyMode}, {key = "/", mods = "LEADER", action = act.Search({CaseInSensitiveString = ""})}, {key = ":", mods = "LEADER", action = act.ShowDebugOverlay}, {key = "v", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard")}, {key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard")}, {key = "<", mods = "LEADER", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER", action = act.MoveTabRelative(1)}, {key = "<", mods = "LEADER|SHIFT", action = act.MoveTabRelative(-1)}, {key = ">", mods = "LEADER|SHIFT", action = act.MoveTabRelative(1)}, {key = "=", mods = "CTRL", action = act.IncreaseFontSize}, {key = "-", mods = "CTRL", action = act.DecreaseFontSize}, {key = "0", mods = "CTRL", action = act.ResetFontSize}, {key = "t", mods = "LEADER", action = spawn_tab_right(unpack(_136_()))}}
   end
   local function macos_keys()
     if is.macos then
@@ -750,5 +833,4 @@ package.preload["keys"] = package.preload["keys"] or function(...)
   return {disable_default_key_bindings = true, disable_default_mouse_bindings = true, leader = {key = "a", mods = "CTRL", timeout_milliseconds = 1000}, keys = __fnl_global__concat_21(common_keys(), macos_keys()), mouse_bindings = mouse()}
 end
 __fnl_global__merge_21(config, (require("keys")))
-config.color_scheme = "Noctalia"
 return config

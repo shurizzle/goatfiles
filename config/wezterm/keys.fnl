@@ -2,9 +2,56 @@
 (local act wezterm.action)
 (local {: is} (require :platform))
 
+(fn readable? [path]
+  (case (io.open path)
+    f (do
+        (f:close)
+        true)
+    _ false))
+
+;; shortcut: checks the GUI process PATH, not the remote one for non-local domains.
+(fn in-path? [bin]
+  (if (not is.windows)
+      ;; Lua can't check the exec bit; `command -v` resolves PATH and requires +x
+      (wezterm.run_child_process [:sh :-c "command -v \"$1\"" :sh bin])
+      (bin:find "[/\\]")
+      (readable? bin)
+      ;; where.exe resolves PATH + PATHEXT; exit code 0 when found
+      (wezterm.run_child_process [:where.exe :/Q bin])))
+
+;; Spawn a tab right after the active one instead of at the end.
+;; Each arg is a spawn_tab options table; the first whose command is
+;; found in PATH wins (spawn_tab doesn't raise on a missing binary:
+;; it opens a tab showing the error instead).
+(fn spawn-tab-right [...]
+  (let [candidates (if (= 0 (select :# ...)) [{}] [...])]
+    (wezterm.action_callback (fn [win pane]
+                               (let [mux-win (win:mux_window)
+                                     idx (accumulate [i 0 _ t (ipairs (mux-win:tabs_with_info))]
+                                           (if t.is_active t.index i))
+                                     domain {:DomainName (pane:get_domain_name)}]
+                                 (var (tab new-pane err) nil)
+                                 (set err "no spawn candidate found in PATH")
+                                 (each [_ opts (ipairs candidates) &until tab]
+                                   (when (or (nil? opts.args)
+                                             (in-path? (. opts.args 1)))
+                                     (set opts.domain domain)
+                                     (case (pcall mux-win.spawn_tab mux-win
+                                                  opts)
+                                       (true t p) (set (tab new-pane)
+                                                       (values t p))
+                                       (false e) (set err e))))
+                                 (if tab
+                                     (do
+                                       (tab:activate)
+                                       (win:perform_action (act.MoveTab (+ idx
+                                                                           1))
+                                                           new-pane))
+                                     (wezterm.log_error err)))))))
+
 (fn common-keys []
   [{:key :q :mods :LEADER :action (act.CloseCurrentPane {:confirm true})}
-   {:key :c :mods :LEADER :action (act.SpawnTab :CurrentPaneDomain)}
+   {:key :c :mods :LEADER :action (spawn-tab-right)}
    {:key :h :mods :CTRL|LEADER :action (act.ActivateTabRelative -1)}
    {:key :l :mods :CTRL|LEADER :action (act.ActivateTabRelative 1)}
    {:key :h :mods :LEADER :action (act.ActivatePaneDirection :Left)}
@@ -37,7 +84,11 @@
    {:key ">" :mods :LEADER|SHIFT :action (act.MoveTabRelative 1)}
    {:key "=" :mods :CTRL :action act.IncreaseFontSize}
    {:key "-" :mods :CTRL :action act.DecreaseFontSize}
-   {:key :0 :mods :CTRL :action act.ResetFontSize}])
+   {:key :0 :mods :CTRL :action act.ResetFontSize}
+   {:key :t
+    :mods :LEADER
+    :action (spawn-tab-right (unpack (icollect [_ bin (ipairs [:btm :htop :top])]
+                                       {:args [bin] :cwd wezterm.home_dir})))}])
 
 (fn macos-keys []
   (if is.macos
@@ -127,4 +178,3 @@
  :leader {:key :a :mods :CTRL :timeout_milliseconds 1000}
  :keys (concat! (common-keys) (macos-keys))
  :mouse_bindings (mouse)}
-
