@@ -13,7 +13,12 @@
 (fn in-path? [bin]
   (if (not is.windows)
       ;; Lua can't check the exec bit; `command -v` resolves PATH and requires +x
-      (wezterm.run_child_process [:sh :-c "PATH=\"$2\" command -v \"$1\"" :sh bin path])
+      (wezterm.run_child_process [:sh
+                                  :-c
+                                  "PATH=\"$2\" command -v \"$1\""
+                                  :sh
+                                  bin
+                                  path])
       (bin:find "[/\\]")
       (readable? bin)
       ;; where.exe resolves PATH + PATHEXT; exit code 0 when found
@@ -75,6 +80,9 @@
 (fn common-keys []
   [{:key :q :mods :LEADER :action (act.CloseCurrentPane {:confirm true})}
    {:key :c :mods :LEADER :action (spawn-tab-right)}
+   {:key :c
+    :mods :LEADER|SHIFT
+    :action (spawn-tab-right {:cwd wezterm.home_dir})}
    {:key :h :mods :CTRL|LEADER :action (act.ActivateTabRelative -1)}
    {:key :l :mods :CTRL|LEADER :action (act.ActivateTabRelative 1)}
    {:key :h :mods :LEADER :action (act.ActivatePaneDirection :Left)}
@@ -120,7 +128,7 @@
     :mods :LEADER
     :action (spawn-tab-right (unpack (icollect [_ bin (ipairs [:claude
                                                                :opencode])]
-                                       {:args [bin] :cwd wezterm.home_dir})))}])
+                                       {:args [bin]})))}])
 
 (fn macos-keys []
   (if is.macos
