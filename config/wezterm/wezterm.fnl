@@ -1,7 +1,7 @@
 (include :stdlib)
 
 (local wezterm (require :wezterm))
-(local {: is} (require :platform))
+(local {: is : path} (require :platform))
 
 (var config (if wezterm.config_builder (wezterm.config_builder) {}))
 
@@ -9,6 +9,9 @@
 
 (when is.windows
   (set config.default_prog [:pwsh]))
+
+(when is.mac
+  (set config.set_environment_variables {:PATH path}))
 
 (set config.mux_env_remove {})
 (set config.enable_kitty_keyboard true)

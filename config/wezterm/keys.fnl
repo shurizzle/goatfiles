@@ -1,6 +1,6 @@
 (local wezterm (require :wezterm))
 (local act wezterm.action)
-(local {: is} (require :platform))
+(local {: is : path} (require :platform))
 
 (fn readable? [path]
   (case (io.open path)
@@ -13,7 +13,7 @@
 (fn in-path? [bin]
   (if (not is.windows)
       ;; Lua can't check the exec bit; `command -v` resolves PATH and requires +x
-      (wezterm.run_child_process [:sh :-c "command -v \"$1\"" :sh bin])
+      (wezterm.run_child_process [:sh :-c "PATH=\"$2\" command -v \"$1\"" :sh bin path])
       (bin:find "[/\\]")
       (readable? bin)
       ;; where.exe resolves PATH + PATHEXT; exit code 0 when found

@@ -39,8 +39,15 @@
       (.. (getenv :HOMEDRIVE) (getenv :HOMEPATH))
       (getenv :HOME)))
 
+(local path
+       (let [p (getenv :PATH)]
+         ;; GUI apps on macOS get launchd's minimal PATH, which ignores Homebrew
+         (if (and _is.mac (not (string.find (.. ":" p ":") ":/opt/homebrew/bin:" 1 true)))
+             (.. "/opt/homebrew/bin:/opt/homebrew/sbin:" p)
+             p)))
+
 (fn ro [t]
   (setmetatable {} {:__index #(. t $2) :__newindex #nil}))
 
-(ro {: os :is (ro _is) : arch : home})
+(ro {: os :is (ro _is) : arch : home : path})
 
