@@ -39,15 +39,25 @@
       (.. (getenv :HOMEDRIVE) (getenv :HOMEPATH))
       (getenv :HOME)))
 
-(local path
-       (let [p (getenv :PATH)]
-         ;; GUI apps on macOS get launchd's minimal PATH, which ignores Homebrew
-         (if (and _is.mac (not (string.find (.. ":" p ":") ":/opt/homebrew/bin:" 1 true)))
-             (.. "/opt/homebrew/bin:/opt/homebrew/sbin:" p)
-             p)))
+(local path (let [p (or (getenv :PATH) "")
+                  h (home)
+                  user-dirs [(.. h :/.local/bin) (.. h :/.cargo/bin)]
+                  ;; GUI apps on macOS get launchd's minimal PATH, which ignores Homebrew
+                  dirs (if _is.win [] _is.mac
+                           (doto user-dirs
+                             (table.insert :/opt/homebrew/bin)
+                             (table.insert :/opt/homebrew/sbin))
+                           user-dirs)
+                  missing (icollect [_ d (ipairs dirs)]
+                            (when (not (string.find (.. ":" p ":")
+                                                    (.. ":" d ":") 1 true))
+                              d))]
+              (if (= 0 (length missing)) p
+                  ;; avoid a trailing ":" (= cwd in PATH) when PATH was empty
+                  (= "" p) (table.concat missing ":")
+                  (.. (table.concat missing ":") ":" p))))
 
 (fn ro [t]
   (setmetatable {} {:__index #(. t $2) :__newindex #nil}))
 
 (ro {: os :is (ro _is) : arch : home : path})
-

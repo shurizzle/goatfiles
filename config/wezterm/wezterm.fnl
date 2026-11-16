@@ -3,14 +3,14 @@
 (local wezterm (require :wezterm))
 (local {: is : path} (require :platform))
 
-(var config (if wezterm.config_builder (wezterm.config_builder) {}))
+(local config (if wezterm.config_builder (wezterm.config_builder) {}))
 
 ;; (set config.term "xterm-kitty")
 
 (when is.windows
   (set config.default_prog [:pwsh]))
 
-(when is.mac
+(when (not is.windows)
   (set config.set_environment_variables {:PATH path}))
 
 (set config.mux_env_remove {})

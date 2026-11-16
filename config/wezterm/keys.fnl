@@ -128,7 +128,18 @@
     :mods :LEADER
     :action (spawn-tab-right (unpack (icollect [_ bin (ipairs [:claude
                                                                :opencode])]
-                                       {:args [bin]})))}])
+                                       {:args [bin]})))}
+   {:key :r
+    :mods :LEADER
+    :action (act.PromptInputLine {:description "Run:"
+                                  :action (wezterm.action_callback (fn [win
+                                                                        pane
+                                                                        line]
+                                                                     (when (and line
+                                                                                (not= line
+                                                                                      ""))
+                                                                       (win:perform_action (spawn-tab-right {:args (wezterm.shell_split line)})
+                                                                                           pane))))})}])
 
 (fn macos-keys []
   (if is.macos
