@@ -21,6 +21,10 @@ prepend_rules = [
 ]
 
 [plugin]
+prepend_preloaders = [
+  { mime = "audio/*", run = "mediainfo" },
+]
 prepend_previewers = [
+  { mime = "audio/*", run = "mediainfo" },
   { url = "*.{md,markdown}", run = 'piper -- CLICOLOR_FORCE=1 glow -w=$w -s="$([ "$t" = light ] && echo light || echo dark)" "$1"' },
 ]
